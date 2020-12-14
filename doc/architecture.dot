@@ -1,0 +1,72 @@
+digraph World {
+
+subgraph cluster_tezos_node1 {
+        node[shape=rectangle];
+        tezos_node_rpc1[label="RPC"];
+        label="Tezos Node 1"
+}
+
+subgraph cluster_tezos_node2 {
+        node[shape=rectangle];
+        tezos_node_rpc2[label="RPC"];
+        label="Tezos Node 2"
+}
+
+subgraph cluster_tezos_nodeN {
+        node[shape=rectangle];
+        tezos_node_rpcN[label="RPC"];
+        label="Tezos Node N"
+}
+
+subgraph cluster_kiln {
+        node[shape=rectangle];
+        node_monitor[label="Node Monitor", style="filled"];
+        baker_monitor[label="Baker Monitor", style="filled"]
+        node_monitor -> notification_handler [label="node event", color="darkorange"];
+        baker_monitor -> notification_handler [label="baker event", color="red"];
+        tezos_node_rpc1 -> baker_monitor [label="block data", color="darkgreen"];
+        tezos_node_rpc1 -> node_monitor [label="node stats", color="blue"];
+        tezos_node_rpc2 -> node_monitor [label="node stats", color="blue"];
+        tezos_node_rpcN -> node_monitor [label="node stats", color="blue"];
+        label = "Kiln";
+        subgraph cluster_notifier {
+                style=filled
+                node[shape=circle];
+                notification_handler[shape=rectangle,
+                                     label="Notification Handler"]
+                channel_email[label="Email"];
+                channel_desktop[label="Desktop"];
+                channel_telegram[label="Telegram"];
+                channel_slack[label="Slack"];
+
+                notification_handler -> channel_email
+                notification_handler -> channel_desktop
+                notification_handler -> channel_telegram
+                notification_handler -> channel_slack
+                label="Notifier"
+
+                config_notifier [shape="record", label="{<f0> Enable Email | <f1> Enable Desktop| <f2> Enable Telegram | <f3> Enable Slack}"];
+                config_notifier -> notification_handler
+
+                config_email [shape=record, label="{<f0> Email address | <f1> SMTP config}"]
+                config_email -> channel_email;
+
+                config_telegram [shape=record, label="{<f0> HTTP API Key}"]
+                config_telegram -> channel_telegram;
+
+                config_desktop [shape=record, label="{<f0> Duration | <f1> Urgency}"]
+                config_desktop -> channel_desktop;
+
+                config_slack [shape=record, label="{<f0> Webhook URL}"]
+                config_slack -> channel_slack;
+
+        }
+
+        config_baker_monitor [shape="record", label="{<f0> RPC URL|<f1> tz... address list}"];
+        config_baker_monitor -> baker_monitor;
+
+        config_node_monitor [shape="record", label="<f0> RPC URL list"];
+        config_node_monitor -> node_monitor;
+
+}
+}
