@@ -21,6 +21,14 @@ Check the format of the code using Prettier.
 
 Fix any format mistakes in the code using Prettier.
 
+### `yarn tsc:lint`
+
+Lint TypeScript.
+
+### `yarn build`
+
+Compile server from TypeScript to JavaScript in `dist/` directory.
+
 ## Folder Structure
 
 ```bash

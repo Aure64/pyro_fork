@@ -5,9 +5,24 @@ cache:
   paths:
     - backend/node_modules/
 
-backend_prettier:
-  stage: test
+build:
+  stage: build
   script:
     - cd backend
     - yarn install
+
+backend_prettier:
+  stage: test
+  dependencies: 
+    - build
+  script:
+    - cd backend
     - yarn prettier:lint
+
+backend_tsc:
+  stage: test
+  dependencies: 
+    - build
+  script:
+    - cd backend
+    - yarn tsc:lint
