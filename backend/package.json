@@ -4,6 +4,11 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier:lint": "prettier --check 'src/**/*.js'",
+    "prettier:fix": "prettier --write 'src/**/*.js'"
+  },
+  "devDependencies": {
+    "prettier": "2.2.1"
   }
 }

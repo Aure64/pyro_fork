@@ -1,0 +1,13 @@
+# https://hub.docker.com/r/library/node/tags/
+image: node:latest
+
+cache:
+  paths:
+    - backend/node_modules/
+
+backend_prettier:
+  stage: test
+  script:
+    - cd backend
+    - yarn install
+    - yarn prettier:lint
