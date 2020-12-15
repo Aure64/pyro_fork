@@ -13,6 +13,14 @@ Starts the server up in development mode.
 
 Tests the codebase.
 
+### `yarn prettier:lint`
+
+Check the format of the code using Prettier.
+
+### `yarn prettier:fix`
+
+Fix any format mistakes in the code using Prettier.
+
 ## Folder Structure
 
 ```bash
