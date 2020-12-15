@@ -26,3 +26,11 @@ backend_tsc:
   script:
     - cd backend
     - yarn tsc:lint
+
+backend_eslint:
+  stage: test
+  dependencies: 
+    - build
+  script:
+    - cd backend
+    - yarn eslint:lint

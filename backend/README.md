@@ -29,6 +29,18 @@ Lint TypeScript.
 
 Compile server from TypeScript to JavaScript in `dist/` directory.
 
+### `yarn eslint:lint`
+
+Check the format of the code using ESLint.
+
+### `yarn eslint:fix`
+
+Attempt to fix any format mistakes in the code using ESLint. Not all mistakes can be fixed automatically by this script.
+
+### `yarn lint`
+
+Lint the code using all linting scripts (scripts ending in `:lint`).
+
 ## Folder Structure
 
 ```bash
