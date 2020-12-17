@@ -5,6 +5,11 @@ cache:
   paths:
     - backend/node_modules/
 
+stages:
+  - build
+  - test
+  - publish
+
 build:
   stage: build
   script:
@@ -34,3 +39,17 @@ backend_eslint:
   script:
     - cd backend
     - yarn eslint:lint
+
+# gitlab registry docs: https://docs.gitlab.com/12.10/ee/user/packages/npm_registry/index.html#authenticating-to-the-gitlab-npm-registry
+publish_pre_release:
+  stage: publish
+  only:
+    refs:
+      - master
+  script:
+    - cd backend
+    - npm config set @kiln:registry https://gitlab.com/api/v4/packages/npm/
+    - npm config set '//gitlab.com/api/v4/packages/npm/:_authToken' ${CI_JOB_TOKEN}
+    - npm config set '//gitlab.com/api/v4/projects/22897259/packages/npm/:_authToken' ${CI_JOB_TOKEN}
+    - npm version prerelease -preid $(git rev-parse --short HEAD) -no-git-tag-version
+    - npm publish --tag=dev

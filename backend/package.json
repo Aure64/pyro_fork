@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "@tezos-kiln/backend",
   "version": "0.0.1",
   "main": "dist/server.js",
   "scripts": {
@@ -26,5 +26,8 @@
   },
   "engines": {
     "node": ">= 15.4.0"
+  },
+  "publishConfig": {
+    "@tezos-kiln:registry":"https://gitlab.com/api/v4/projects/22897259/packages/npm/"
   }
 }

@@ -2,6 +2,25 @@
 
 Backend runs the Kiln monitor and serves the API for the frontend.
 
+## Installation
+
+### Via Git
+
+```
+# HTTPS
+git clone https://gitlab.com/tezos-kiln/kiln-next.git
+# or via SSH
+git@gitlab.com:tezos-kiln/kiln-next.git
+```
+
+### Via NPM / Yarn
+
+```
+npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
+yarn add @tezos-kiln/backend
+```
+
+While this repository is private, you'll need to authenticate before connecting. Follow [Gitlab's Instructions](https://docs.gitlab.com/ee/user/packages/npm_registry/index.html#authenticate-to-the-package-registry) for authenticating.
 
 ## Scripts
 
