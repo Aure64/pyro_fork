@@ -2,11 +2,11 @@
   "name": "@tezos-kiln/backend",
   "version": "0.0.1",
   "license": "MIT",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
-    "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only src/index.ts",
     "eslint:fix": "eslint . --ext .ts --fix",
     "eslint:lint": "eslint . --ext .ts",
     "lint": "yarn eslint:lint && yarn tsc:lint && yarn prettier:lint",
