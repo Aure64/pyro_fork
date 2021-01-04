@@ -26,7 +26,7 @@ While this repository is private, you'll need to authenticate before connecting.
 
 ### `yarn dev`
 
-Starts the server up in development mode.
+Starts the backend up in development mode.
 
 ### `yarn test`
 
@@ -46,7 +46,7 @@ Lint TypeScript.
 
 ### `yarn build`
 
-Compile server from TypeScript to JavaScript in `dist/` directory.
+Compile backend from TypeScript to JavaScript in `dist/` directory.
 
 ### `yarn eslint:lint`
 
@@ -64,9 +64,10 @@ Lint the code using all linting scripts (scripts ending in `:lint`).
 
 ```bash
 .
-├── README.md       # you are here
-├── package.json    # node project config
-├── src             # code root
-│   └── server.js   # application entry point
-└── yarn.lock       # lockfile for node dependencies. Do not modify directly.
+├── README.md               # you are here
+├── package.json            # node config
+├── src
+│   ├── index.ts            # Application entry point
+│   └── types.ts            # Shared types used by multiple modules
+└── yarn.lock               # lockfile for node dependencies. Do not modify directly.
 ```
