@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "skipLibCheck": true,
-    "target": "es2020",
-    "module": "commonjs",
-    "lib": ["esnext"],
+    "lib": ["es2020"],
+    "module": "es2020",
+    "moduleResolution": "node",
+    "outDir": "dist",
     "rootDir": "src",
+    "skipLibCheck": true,
     "strict": true,
-    "outDir": "dist"
+    "target": "es2020"
   }
 }
