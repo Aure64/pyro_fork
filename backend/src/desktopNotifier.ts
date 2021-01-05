@@ -1,4 +1,5 @@
 import { notify as desktopNotify } from "node-notifier";
+import { Notify } from "./types";
 
 type Config = { enableSound: boolean };
 
@@ -10,19 +11,8 @@ export const create = (config: Config): DesktopNotifier => {
   return { config };
 };
 
-// TODO: replace this event with common shared event
-type TezosNodeEvent = {
-  kind: string;
-  message: string;
-};
-
-type NotifyResult = "success" | { error: Error };
-
-export const notify = async (
-  notifier: DesktopNotifier,
-  event: TezosNodeEvent
-): Promise<NotifyResult> => {
-  return new Promise((resolve) => {
+export const notify: Notify<DesktopNotifier> = async (notifier, event) =>
+  new Promise((resolve) => {
     desktopNotify(
       {
         title: `Kiln Event: ${event.kind}`,
@@ -38,4 +28,3 @@ export const notify = async (
       }
     );
   });
-};
