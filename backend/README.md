@@ -60,6 +60,38 @@ Attempt to fix any format mistakes in the code using ESLint. Not all mistakes ca
 
 Lint the code using all linting scripts (scripts ending in `:lint`).
 
+## Design decisions
+
+- prefer async/await over promise
+```typescript
+// do this:
+const result = await fetch();
+// handle result
+
+// not this:
+fetch().then(result => {
+  // handle result
+});
+```
+- use [await-to-js](https://github.com/scopsy/await-to-js) instead of try/catch.  Try/catch can lead to catching more greedily than intended, making debugging difficult.
+```typescript
+// do this:
+const [error, result] = await to(asyncFunctionThatCanFail());
+if (error) {
+  // handle error
+} else {
+  // handle success
+}
+
+// not this:
+try {
+  const result = await asyncFunctionThatCanFail();
+  // handle success
+} catch(error) {
+  // handle error
+}
+```
+
 ## Folder Structure
 
 ```bash
