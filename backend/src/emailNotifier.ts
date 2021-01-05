@@ -42,8 +42,8 @@ export const notify: Notify<EmailNotifier> = async (notifier, event) => {
     })
   );
   if (error) {
-    return { error };
+    return { kind: "error", error };
   } else {
-    return "success";
+    return { kind: "success" };
   }
 };

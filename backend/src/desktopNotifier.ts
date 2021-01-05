@@ -21,9 +21,9 @@ export const notify: Notify<DesktopNotifier> = async (notifier, event) =>
       },
       (error) => {
         if (error) {
-          resolve({ error });
+          resolve({ kind: "error", error });
         } else {
-          resolve("success");
+          resolve({ kind: "success" });
         }
       }
     );

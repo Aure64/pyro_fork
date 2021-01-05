@@ -3,7 +3,9 @@ export type PeerNodeEvent = { kind: string; message: string };
 
 export type TezosNodeEvent = BakerNodeEvent | PeerNodeEvent;
 
-export type NotifyResult = "success" | { error: Error };
+export type NotifyResult =
+  | { kind: "success" }
+  | { kind: "error"; error: Error };
 
 export type Notify<T> = (
   notifier: T,
