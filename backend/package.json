@@ -16,7 +16,7 @@
     "tsc:lint": "tsc --noEmit -p ."
   },
   "devDependencies": {
-    "@types/jest": "26.0.19",
+    "@types/jest": "26.0.20",
     "@types/node": "14.14.20",
     "@types/node-notifier": "8.0.0",
     "@types/nodemailer": "6.4.0",
