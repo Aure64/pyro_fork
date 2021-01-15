@@ -6,7 +6,6 @@ export const start = (): NodeJS.Timeout => {
 };
 
 export const halt = (timeout: NodeJS.Timeout): void => {
+  console.log("Halting server");
   clearInterval(timeout);
 };
-
-export default { start, halt };
