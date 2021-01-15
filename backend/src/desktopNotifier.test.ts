@@ -14,7 +14,11 @@ const notifier = {
 
 describe("notify", () => {
   test("sends desktop notification", () => {
-    notify(notifier, { kind: "some kind", message: "some error message" });
+    notify(notifier, {
+      type: "PEER",
+      kind: "some kind",
+      message: "some error message",
+    });
     expect(mockedNotifier.mock.calls.length).toBe(1);
     expect(mockedNotifier.mock.calls[0][0]).toEqual({
       message: "some error message",
@@ -30,6 +34,7 @@ describe("notify", () => {
     });
 
     const result = notify(notifier, {
+      type: "PEER",
       kind: "some kind",
       message: "some error message",
     });
@@ -43,6 +48,7 @@ describe("notify", () => {
       return {} as NodeNotifier;
     });
     const result = notify(notifier, {
+      type: "PEER",
       kind: "some kind",
       message: "some error message",
     });

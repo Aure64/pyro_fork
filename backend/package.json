@@ -6,7 +6,7 @@
   "scripts": {
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
-    "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only src/index.ts",
+    "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only --exit-child src/index.ts",
     "eslint:fix": "eslint . --ext .ts --fix",
     "eslint:lint": "eslint . --ext .ts",
     "lint": "yarn eslint:lint && yarn tsc:lint && yarn prettier:lint",
@@ -16,6 +16,7 @@
     "tsc:lint": "tsc --noEmit -p ."
   },
   "devDependencies": {
+    "@types/args": "3.0.0",
     "@types/jest": "26.0.20",
     "@types/node": "14.14.20",
     "@types/node-notifier": "8.0.0",
@@ -37,6 +38,8 @@
     "@tezos-kiln:registry": "https://gitlab.com/api/v4/projects/22897259/packages/npm/"
   },
   "dependencies": {
+    "@taquito/taquito": "7.1.0-beta.0",
+    "args": "5.0.1",
     "await-to-js": "2.1.1",
     "node-notifier": "9.0.0",
     "nodemailer": "6.4.17"

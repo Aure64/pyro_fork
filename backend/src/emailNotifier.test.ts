@@ -19,7 +19,11 @@ describe("notify", () => {
     const notifier = { config, transporter };
     const mockedTransporter = mocked(transporter);
 
-    notify(notifier, { kind: "some kind", message: "some error message" });
+    notify(notifier, {
+      type: "PEER",
+      kind: "some kind",
+      message: "some error message",
+    });
     expect(mockedTransporter.sendMail.mock.calls.length).toBe(1);
     expect(mockedTransporter.sendMail.mock.calls[0][0]).toEqual({
       text: "some error message",
@@ -36,6 +40,7 @@ describe("notify", () => {
     const notifier = { config, transporter };
 
     const result = notify(notifier, {
+      type: "PEER",
       kind: "some kind",
       message: "some error message",
     });
@@ -50,6 +55,7 @@ describe("notify", () => {
     const notifier = { config, transporter };
 
     const result = notify(notifier, {
+      type: "PEER",
       kind: "some kind",
       message: "some error message",
     });
