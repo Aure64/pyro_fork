@@ -123,7 +123,7 @@ export const getBlockBakingEvents = async ({
   blockBaker,
   blockLevel,
 }: GetBlockBakingEventsArgs): Promise<BakerNodeEvent | null> => {
-  // Taquito currentky has a bug that causes it to return all priorities:
+  // Taquito currently has a bug that causes it to return all priorities:
   // https://github.com/ecadlabs/taquito/issues/580
   const [bakingRightsError, bakingRightsResponse] = await to(
     rpc.getBakingRights(
