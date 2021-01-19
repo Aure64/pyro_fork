@@ -5,12 +5,16 @@ import {
   Subscription,
   TezosToolkit,
 } from "@taquito/taquito";
-import { BakingRightsResponse, RpcClient } from "@taquito/rpc";
+import {
+  BakingRightsQueryArguments,
+  BakingRightsResponse,
+  BlockMetadata,
+} from "@taquito/rpc";
 import to from "await-to-js";
 
 type Monitor = {
   subscription: Subscription<string>;
-  toolkit: TezosToolkit;
+  rpc: Rpc;
   baker: string;
 };
 
@@ -20,16 +24,36 @@ type StartArgs = {
   onEvent: (event: BakerNodeEvent | RpcEvent) => void;
 };
 
+type GetBakingRights = (
+  args: BakingRightsQueryArguments,
+  { block }: { block: string }
+) => Promise<BakingRightsResponse>;
+
+type GetBlockMetadata = ({
+  block,
+}: {
+  block: string;
+}) => Promise<BlockMetadata>;
+
+export type Rpc = {
+  getBakingRights: GetBakingRights;
+  getBlockMetadata: GetBlockMetadata;
+};
+
 export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc);
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
-  const monitor: Monitor = { subscription, toolkit, baker };
+  const rpc: Rpc = {
+    getBakingRights: makeMemoizedGetBakingRights(toolkit.rpc.getBakingRights),
+    getBlockMetadata: toolkit.rpc.getBlockMetadata,
+  };
+  const monitor: Monitor = { subscription, rpc, baker };
 
   subscription.on("data", async (blockHash) => {
     const events = await checkBlockByHash({
-      rpc: monitor.toolkit.rpc,
+      rpc: monitor.rpc,
       baker: monitor.baker,
       blockHash,
     });
@@ -54,7 +78,7 @@ export const halt = (monitor: Monitor): void => {
 };
 
 type CheckBlockByHashArgs = {
-  rpc: RpcClient;
+  rpc: Rpc;
   baker: string;
   blockHash: string;
 };
@@ -103,12 +127,40 @@ const checkBlockByHash = async ({
 };
 
 type GetBlockBakingEventsArgs = {
-  rpc: RpcClient;
+  rpc: Rpc;
   blockHash: string;
   cycle: number;
   baker: string;
   blockBaker: string;
   blockLevel: number;
+};
+
+/**
+ * Create a memoized getBakingRights function.  The request memoizes based on cycle and delegate
+ * in order to support using it for multiple delegates simultaneously.
+ */
+export const makeMemoizedGetBakingRights = (
+  originalFunction: GetBakingRights
+): GetBakingRights => {
+  const cache: Record<string, BakingRightsResponse> = {};
+
+  return async (
+    args: BakingRightsQueryArguments,
+    { block }: { block: string }
+  ) => {
+    const key = `${args.cycle}:${args.delegate}`;
+    if (cache[key]) {
+      console.log(`Memoized getBakingRights cache hit for ${key}`);
+      return cache[key];
+    } else {
+      console.log(`Memoized getBakingRights cache miss for ${key}`);
+      const bakingRightsResponse = await originalFunction(args, {
+        block,
+      });
+      cache[key] = bakingRightsResponse;
+      return bakingRightsResponse;
+    }
+  };
 };
 
 /**
