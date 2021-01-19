@@ -41,6 +41,7 @@
     "@taquito/taquito": "7.1.0-preview-lambdaview.0",
     "args": "5.0.1",
     "await-to-js": "2.1.1",
+    "loglevel": "1.7.1",
     "node-notifier": "9.0.0",
     "nodemailer": "6.4.17"
   }
