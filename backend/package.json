@@ -38,7 +38,7 @@
     "@tezos-kiln:registry": "https://gitlab.com/api/v4/projects/22897259/packages/npm/"
   },
   "dependencies": {
-    "@taquito/taquito": "7.1.0-beta.0",
+    "@taquito/taquito": "7.1.0-preview-lambdaview.0",
     "args": "5.0.1",
     "await-to-js": "2.1.1",
     "node-notifier": "9.0.0",
