@@ -4,6 +4,8 @@ import {
   makeMemoizedGetBakingRights,
 } from "./bakerMonitor";
 import { BakingRightsResponseItem, BakingRightsResponse } from "@taquito/rpc";
+import { setLevel } from "loglevel";
+setLevel("SILENT");
 
 const responseWithLowerPriorities: BakingRightsResponse = [
   {

@@ -4,22 +4,47 @@ import * as BakerMonitor from "./bakerMonitor";
 import * as Server from "./server";
 import * as Notifier from "./notifier";
 import * as args from "args";
+import { debug, info, setLevel, LogLevelDesc, warn } from "loglevel";
+
+const logLevelFromString = (value: string): LogLevelDesc => {
+  switch (value) {
+    case "trace":
+      return "TRACE";
+    case "info":
+      return "INFO";
+    case "debug":
+      return "DEBUG";
+    case "warn":
+      return "WARN";
+    case "error":
+      return "ERROR";
+    default:
+      warn("Unknown logLevel, using info");
+      return "INFO";
+  }
+};
 
 args
   .option("baker", "Node to watch for baking events.")
   .option(
+    "logLevel",
+    "(optional) Level of logging. [trace, debug, info, warn, error]"
+  )
+  .option(
     "rpc",
-    "Tezos RPC URL to query for baker and chain info",
+    "(optional) Tezos RPC URL to query for baker and chain info",
     "https://mainnet-tezos.giganode.io/"
   );
 
 const options = args.parse(process.argv);
 const baker: string | null = options.baker;
 const rpcNode: string = options.rpc;
+const logLevel = logLevelFromString(options.logLevel);
+
+setLevel(logLevel);
 
 if (!baker) {
-  console.error("Baker parameter is required");
-  console.error("Run 'yarn dev help'");
+  args.showHelp();
   process.exit(1);
 }
 
@@ -32,10 +57,10 @@ const nodeMonitor = NodeMonitor.start(onEvent);
 const server = Server.start();
 
 process.on("SIGINT", () => {
-  console.log("server is shutting down");
+  debug("Shutting down");
   BakerMonitor.halt(bakerMonitor);
   NodeMonitor.halt(nodeMonitor);
   Server.halt(server);
 });
 
-console.log("Kiln started");
+info("Kiln started");

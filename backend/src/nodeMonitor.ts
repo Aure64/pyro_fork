@@ -1,11 +1,12 @@
 import { PeerNodeEvent } from "./types";
+import { debug } from "loglevel";
 
 type Monitor = { pid: number };
 
 export const start = (onEvent: (event: PeerNodeEvent) => void): Monitor => {
   const monitor: Monitor = { pid: 1 };
 
-  console.log(`Node monitor started`);
+  debug(`Node monitor started`);
   onEvent({ type: "PEER", kind: "START", message: "Node monitor started" });
 
   // start internal monitoring
@@ -15,6 +16,6 @@ export const start = (onEvent: (event: PeerNodeEvent) => void): Monitor => {
 };
 
 export const halt = (monitor: Monitor): void => {
-  console.log(`Halting node monitor ${monitor}`);
+  debug(`Halting node monitor ${monitor}`);
   // cleanup ongoing processes
 };

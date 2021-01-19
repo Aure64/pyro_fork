@@ -1,4 +1,5 @@
 import { BakerNodeEvent, RpcEvent } from "./types";
+import { debug, warn, info } from "loglevel";
 import {
   Context,
   PollingSubscribeProvider,
@@ -46,12 +47,16 @@ export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
   const rpc: Rpc = {
-    getBakingRights: makeMemoizedGetBakingRights(toolkit.rpc.getBakingRights),
-    getBlockMetadata: toolkit.rpc.getBlockMetadata,
+    getBakingRights: makeMemoizedGetBakingRights(
+      toolkit.rpc.getBakingRights.bind(toolkit.rpc)
+    ),
+    getBlockMetadata: toolkit.rpc.getBlockMetadata.bind(toolkit.rpc),
   };
   const monitor: Monitor = { subscription, rpc, baker };
 
   subscription.on("data", async (blockHash) => {
+    debug(`Subscription received block: ${blockHash}`);
+
     const events = await checkBlockByHash({
       rpc: monitor.rpc,
       baker: monitor.baker,
@@ -60,6 +65,7 @@ export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
     events.map(onEvent);
   });
   subscription.on("error", (error) => {
+    warn(`Baking subscription error: ${error.message}`);
     onEvent({
       type: "RPC",
       kind: "SUBSCRIPTION_ERROR",
@@ -67,13 +73,13 @@ export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
     });
   });
 
-  console.log(`Baker monitor started`);
+  debug(`Baker monitor started`);
 
   return monitor;
 };
 
 export const halt = (monitor: Monitor): void => {
-  console.log(`Halting monitor for baker ${monitor.baker}`);
+  info(`Halting monitor for baker ${monitor.baker}`);
   monitor.subscription.close();
 };
 
@@ -96,6 +102,7 @@ const checkBlockByHash = async ({
     rpc.getBlockMetadata({ block: blockHash })
   );
   if (metadataError) {
+    warn(`Error fetching block metadata: ${metadataError.message}`);
     events.push({
       type: "BAKER",
       kind: "GET_METADATA_ERROR",
@@ -103,6 +110,7 @@ const checkBlockByHash = async ({
       baker,
     });
   } else if (!metadata) {
+    warn("Error fetching block metadata: no metadata");
     events.push({
       type: "BAKER",
       kind: "GET_METADATA_ERROR",
@@ -150,10 +158,10 @@ export const makeMemoizedGetBakingRights = (
   ) => {
     const key = `${args.cycle}:${args.delegate}`;
     if (cache[key]) {
-      console.log(`Memoized getBakingRights cache hit for ${key}`);
+      debug(`Memoized getBakingRights cache hit for ${key}`);
       return cache[key];
     } else {
-      console.log(`Memoized getBakingRights cache miss for ${key}`);
+      debug(`Memoized getBakingRights cache miss for ${key}`);
       const bakingRightsResponse = await originalFunction(args, {
         block,
       });
@@ -189,6 +197,7 @@ export const getBlockBakingEvents = async ({
   );
 
   if (bakingRightsError) {
+    warn(`Baking rights error: ${bakingRightsError.message}`);
     return {
       type: "BAKER",
       kind: "GET_BAKING_RIGHTS_ERROR",
@@ -196,10 +205,12 @@ export const getBlockBakingEvents = async ({
       baker,
     };
   } else if (!bakingRightsResponse) {
+    const message = "Error loading block baking rights";
+    warn(message);
     return {
       type: "BAKER",
       kind: "GET_BAKING_RIGHTS_ERROR",
-      message: "Error loading block baking rights",
+      message,
       baker,
     };
   }
@@ -249,13 +260,13 @@ export const checkBlockBakingRights = ({
   for (const bakingRights of bakingRightsResponse) {
     // For now just check for missed bakes where baker was the first in line
     if (bakingRights.level === blockLevel && bakingRights.priority === 0) {
-      console.log("found baking slot for priority 0");
+      debug("found baking slot for priority 0");
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (blockBaker !== baker) {
-        console.log("Missed bake detected");
+        info("Missed bake detected");
         return "MISSED";
       } else {
-        console.log("Successful bake detected");
+        info("Successful bake detected");
         return "SUCCESS";
       }
     }

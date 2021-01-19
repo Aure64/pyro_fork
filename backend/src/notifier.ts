@@ -1,15 +1,16 @@
 import { TezosNodeEvent } from "./types";
+import { debug } from "loglevel";
 
 export const notify = (event: TezosNodeEvent): void => {
   switch (event.type) {
     case "BAKER":
-      console.log(`Baker event received: ${event.kind}\n${event.message}`);
+      debug(`Baker event received: ${event.kind}\n${event.message}`);
       break;
     case "PEER":
-      console.log(`Peer event received: ${event.kind}\n${event.message}`);
+      debug(`Peer event received: ${event.kind}\n${event.message}`);
       break;
     case "RPC":
-      console.log(`RPC event received: ${event.kind}\n${event.message}`);
+      debug(`RPC event received: ${event.kind}\n${event.message}`);
       break;
   }
 };
