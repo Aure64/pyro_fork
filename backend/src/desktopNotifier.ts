@@ -1,9 +1,9 @@
 import { notify as desktopNotify } from "node-notifier";
 import { Notify } from "./types";
 
-type Config = { enableSound: boolean };
+export type Config = { enableSound: boolean };
 
-type DesktopNotifier = {
+export type DesktopNotifier = {
   config: Config;
 };
 
@@ -21,9 +21,9 @@ export const notify: Notify<DesktopNotifier> = async (notifier, event) =>
       },
       (error) => {
         if (error) {
-          resolve({ kind: "error", error });
+          resolve({ kind: "ERROR", error });
         } else {
-          resolve({ kind: "success" });
+          resolve({ kind: "SUCCESS" });
         }
       }
     );

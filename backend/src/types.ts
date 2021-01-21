@@ -17,8 +17,8 @@ export type RpcEvent = { kind: string; type: "RPC"; message: string };
 export type TezosNodeEvent = BakerNodeEvent | PeerNodeEvent | RpcEvent;
 
 export type NotifyResult =
-  | { kind: "success" }
-  | { kind: "error"; error: Error };
+  | { kind: "SUCCESS" }
+  | { kind: "ERROR"; error: Error };
 
 export type Notify<T> = (
   notifier: T,

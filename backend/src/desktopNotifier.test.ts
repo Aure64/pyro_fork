@@ -38,7 +38,7 @@ describe("notify", () => {
       kind: "some kind",
       message: "some error message",
     });
-    return expect(result).resolves.toEqual({ kind: "success" });
+    return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
   test("resolves to error object when unsuccessful", () => {
@@ -52,6 +52,6 @@ describe("notify", () => {
       kind: "some kind",
       message: "some error message",
     });
-    return expect(result).resolves.toEqual({ kind: "error", error });
+    return expect(result).resolves.toEqual({ kind: "ERROR", error });
   });
 });

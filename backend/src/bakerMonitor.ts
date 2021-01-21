@@ -222,6 +222,7 @@ export const getBlockBakingEvents = async ({
     bakingRightsResponse,
   });
   if (bakeResult === "MISSED") {
+    debug(`Missed bake for block ${blockHash}`);
     return {
       type: "BAKER",
       kind: "MISSED_BAKE",
@@ -229,6 +230,7 @@ export const getBlockBakingEvents = async ({
       baker,
     };
   } else if (bakeResult === "SUCCESS") {
+    debug(`Succcessful bake for block ${blockHash}`);
     return {
       type: "BAKER",
       kind: "SUCCESSFUL_BAKE",
@@ -236,6 +238,7 @@ export const getBlockBakingEvents = async ({
       baker,
     };
   }
+  debug(`No bake event for block ${blockHash}`);
   return null;
 };
 
