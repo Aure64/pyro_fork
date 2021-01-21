@@ -40,6 +40,14 @@ backend_eslint:
     - cd backend
     - yarn eslint:lint
 
+backend_test:
+  stage: test
+  dependencies: 
+    - build
+  script:
+    - cd backend
+    - yarn test
+
 # gitlab registry docs: https://docs.gitlab.com/12.10/ee/user/packages/npm_registry/index.html#authenticating-to-the-gitlab-npm-registry
 publish_pre_release:
   stage: publish
