@@ -13,7 +13,7 @@ export type Config = {
   email: string;
 };
 
-type EmailNotifier = {
+export type EmailNotifier = {
   config: Config;
   transporter: Transporter;
 };
@@ -42,8 +42,8 @@ export const notify: Notify<EmailNotifier> = async (notifier, event) => {
     })
   );
   if (error) {
-    return { kind: "error", error };
+    return { kind: "ERROR", error };
   } else {
-    return { kind: "success" };
+    return { kind: "SUCCESS" };
   }
 };

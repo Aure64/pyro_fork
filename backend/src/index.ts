@@ -28,7 +28,8 @@ args
   .option("baker", "Node to watch for baking events.")
   .option(
     "logLevel",
-    "(optional) Level of logging. [trace, debug, info, warn, error]"
+    "(optional) Level of logging. [trace, debug, info, warn, error]",
+    "info"
   )
   .option(
     "rpc",
@@ -48,8 +49,16 @@ if (!baker) {
   process.exit(1);
 }
 
+const notifierConfig: Notifier.Config = {
+  desktopConfig: { enableSound: false },
+  maxRetries: 10,
+  retryDelay: 60000,
+};
+
+const notifier = Notifier.create(notifierConfig);
+
 const onEvent = (event: TezosNodeEvent) => {
-  Notifier.notify(event);
+  Notifier.notify(notifier, event);
 };
 
 const bakerMonitor = BakerMonitor.start({ baker, onEvent, rpcNode });
