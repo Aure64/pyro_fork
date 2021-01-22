@@ -1,4 +1,4 @@
-import { BakerNodeEvent, RpcEvent } from "./types";
+import { BakerNodeEvent, TezosNodeEvent } from "./types";
 import { debug, warn, info } from "loglevel";
 import {
   Context,
@@ -16,13 +16,13 @@ import to from "await-to-js";
 type Monitor = {
   subscription: Subscription<string>;
   rpc: Rpc;
-  baker: string;
+  bakers: string[];
 };
 
 type StartArgs = {
-  baker: string;
+  bakers: string[];
   rpcNode: string;
-  onEvent: (event: BakerNodeEvent | RpcEvent) => void;
+  onEvent: (event: TezosNodeEvent) => void;
 };
 
 type GetBakingRights = (
@@ -41,7 +41,7 @@ export type Rpc = {
   getBlockMetadata: GetBlockMetadata;
 };
 
-export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
+export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc);
   const provider = new PollingSubscribeProvider(context);
@@ -52,14 +52,14 @@ export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
     ),
     getBlockMetadata: toolkit.rpc.getBlockMetadata.bind(toolkit.rpc),
   };
-  const monitor: Monitor = { subscription, rpc, baker };
+  const monitor: Monitor = { subscription, rpc, bakers };
 
   subscription.on("data", async (blockHash) => {
     debug(`Subscription received block: ${blockHash}`);
 
     const events = await checkBlockByHash({
       rpc: monitor.rpc,
-      baker: monitor.baker,
+      bakers,
       blockHash,
     });
     events.map(onEvent);
@@ -79,13 +79,13 @@ export const start = ({ baker, rpcNode, onEvent }: StartArgs): Monitor => {
 };
 
 export const halt = (monitor: Monitor): void => {
-  info(`Halting monitor for baker ${monitor.baker}`);
+  info("Halting baker monitor");
   monitor.subscription.close();
 };
 
 type CheckBlockByHashArgs = {
   rpc: Rpc;
-  baker: string;
+  bakers: string[];
   blockHash: string;
 };
 
@@ -94,41 +94,45 @@ type CheckBlockByHashArgs = {
  */
 const checkBlockByHash = async ({
   rpc,
-  baker,
+  bakers,
   blockHash,
-}: CheckBlockByHashArgs): Promise<BakerNodeEvent[]> => {
-  const events: BakerNodeEvent[] = [];
+}: CheckBlockByHashArgs): Promise<TezosNodeEvent[]> => {
+  const events: TezosNodeEvent[] = [];
   const [metadataError, metadata] = await to(
     rpc.getBlockMetadata({ block: blockHash })
   );
   if (metadataError) {
     warn(`Error fetching block metadata: ${metadataError.message}`);
     events.push({
-      type: "BAKER",
+      type: "RPC",
       kind: "GET_METADATA_ERROR",
       message: metadataError.message,
-      baker,
     });
   } else if (!metadata) {
     warn("Error fetching block metadata: no metadata");
     events.push({
-      type: "BAKER",
+      type: "RPC",
       kind: "GET_METADATA_ERROR",
       message: "Error loading block metadata",
-      baker,
     });
   }
 
   if (metadata) {
-    const bakingEvent = await getBlockBakingEvents({
-      rpc,
-      blockBaker: metadata.baker,
-      blockLevel: metadata.level.level,
-      cycle: metadata.level.cycle,
-      baker,
-      blockHash,
-    });
-    if (bakingEvent) events.push(bakingEvent);
+    const bakingEvents = await Promise.all(
+      bakers.map((baker) =>
+        getBlockBakingEvents({
+          rpc,
+          blockBaker: metadata.baker,
+          blockLevel: metadata.level.level,
+          cycle: metadata.level.cycle,
+          baker,
+          blockHash,
+        })
+      )
+    );
+    for (const bakingEvent of bakingEvents) {
+      if (bakingEvent) events.push(bakingEvent);
+    }
   }
 
   return events;
@@ -197,7 +201,9 @@ export const getBlockBakingEvents = async ({
   );
 
   if (bakingRightsError) {
-    warn(`Baking rights error: ${bakingRightsError.message}`);
+    warn(
+      `Baking rights error: ${bakingRightsError.message} for baker ${baker}`
+    );
     return {
       type: "BAKER",
       kind: "GET_BAKING_RIGHTS_ERROR",
@@ -205,7 +211,7 @@ export const getBlockBakingEvents = async ({
       baker,
     };
   } else if (!bakingRightsResponse) {
-    const message = "Error loading block baking rights";
+    const message = `Error loading block baking rights for baker ${baker}`;
     warn(message);
     return {
       type: "BAKER",
@@ -222,23 +228,25 @@ export const getBlockBakingEvents = async ({
     bakingRightsResponse,
   });
   if (bakeResult === "MISSED") {
-    debug(`Missed bake for block ${blockHash}`);
+    const message = `Missed bake for block ${blockHash} for baker ${baker}`;
+    debug(message);
     return {
       type: "BAKER",
       kind: "MISSED_BAKE",
-      message: `Baker missed opportunity for block ${blockHash}`,
+      message,
       baker,
     };
   } else if (bakeResult === "SUCCESS") {
-    debug(`Succcessful bake for block ${blockHash}`);
+    const message = `Successful bake for block ${blockHash} for baker ${baker}`;
+    debug(message);
     return {
       type: "BAKER",
       kind: "SUCCESSFUL_BAKE",
-      message: `Baker baked for block ${blockHash}`,
+      message,
       baker,
     };
   }
-  debug(`No bake event for block ${blockHash}`);
+  debug(`No bake event for block ${blockHash} for baker ${baker}`);
   return null;
 };
 
@@ -251,6 +259,8 @@ type CheckBlockBakingRightsArgs = {
   bakingRightsResponse: BakingRightsResponse;
 };
 
+// For now just check for missed bakes where baker was the top priority
+const priority = 0;
 /**
  * Check the baking rights for a block to see if the provided baker had a successful or missed bake.
  */
@@ -261,15 +271,17 @@ export const checkBlockBakingRights = ({
   bakingRightsResponse,
 }: CheckBlockBakingRightsArgs): BakeResult => {
   for (const bakingRights of bakingRightsResponse) {
-    // For now just check for missed bakes where baker was the first in line
-    if (bakingRights.level === blockLevel && bakingRights.priority === 0) {
-      debug("found baking slot for priority 0");
+    if (
+      bakingRights.level === blockLevel &&
+      bakingRights.priority === priority
+    ) {
+      debug(`found baking slot for priority ${priority} for baker ${baker}`);
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (blockBaker !== baker) {
-        info("Missed bake detected");
+        info(`Missed bake detected for baker ${baker}`);
         return "MISSED";
       } else {
-        info("Successful bake detected");
+        info(`Successful bake detected for baker ${baker}`);
         return "SUCCESS";
       }
     }
