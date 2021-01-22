@@ -122,7 +122,8 @@ describe("checkBlockBakingRights", () => {
       return expect(result).resolves.toEqual({
         baker: delegate,
         kind: "SUCCESSFUL_BAKE",
-        message: "Baker baked for block some_hash",
+        message:
+          "Successful bake for block some_hash for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
         type: "BAKER",
       });
     });

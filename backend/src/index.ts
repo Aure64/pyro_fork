@@ -19,15 +19,18 @@ const logLevelFromString = (value: string): LogLevelDesc => {
     case "error":
       return "ERROR";
     default:
-      warn("Unknown logLevel, using info");
+      warn("Unknown logging level, using info");
       return "INFO";
   }
 };
 
 args
-  .option("baker", "Node to watch for baking events.")
   .option(
-    "logLevel",
+    "bakers",
+    "Comma-delimited list (no spaces) of nodes to watch for baking events."
+  )
+  .option(
+    "logging",
     "(optional) Level of logging. [trace, debug, info, warn, error]",
     "info"
   )
@@ -38,16 +41,18 @@ args
   );
 
 const options = args.parse(process.argv);
-const baker: string | null = options.baker;
+const bakersString: string | null = options.bakers;
 const rpcNode: string = options.rpc;
-const logLevel = logLevelFromString(options.logLevel);
+const logLevel = logLevelFromString(options.logging);
 
 setLevel(logLevel);
 
-if (!baker) {
+if (!bakersString) {
   args.showHelp();
   process.exit(1);
 }
+
+const bakers = bakersString.split(",");
 
 const notifierConfig: Notifier.Config = {
   desktopConfig: { enableSound: false },
@@ -61,7 +66,7 @@ const onEvent = (event: TezosNodeEvent) => {
   Notifier.notify(notifier, event);
 };
 
-const bakerMonitor = BakerMonitor.start({ baker, onEvent, rpcNode });
+const bakerMonitor = BakerMonitor.start({ bakers, onEvent, rpcNode });
 const nodeMonitor = NodeMonitor.start(onEvent);
 const server = Server.start();
 
