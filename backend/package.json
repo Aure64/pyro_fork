@@ -43,14 +43,10 @@
     "args": "5.0.1",
     "await-to-js": "2.1.1",
     "better-queue": "3.8.10",
-    "better-queue-sqlite": "1.0.5",
+    "better-queue-sqlite": "git://github.com/diamondio/better-queue-sqlite#225e0f0",
     "loglevel": "1.7.1",
     "node-gyp": "7.1.2",
     "node-notifier": "9.0.0",
-    "nodemailer": "6.4.17",
-    "sqlite3": "5.0.1"
-  },
-  "resolutions": {
-    "sqlite3": "5.0.1"
+    "nodemailer": "6.4.17"
   }
 }
