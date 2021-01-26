@@ -11,12 +11,16 @@ stages:
   - publish
 
 build:
+  only:
+    - merge_requests
   stage: build
   script:
     - cd backend
     - yarn install
 
 backend_prettier:
+  only:
+    - merge_requests
   stage: test
   dependencies: 
     - build
@@ -25,6 +29,8 @@ backend_prettier:
     - yarn prettier:lint
 
 backend_tsc:
+  only:
+    - merge_requests
   stage: test
   dependencies: 
     - build
@@ -33,6 +39,8 @@ backend_tsc:
     - yarn tsc:lint
 
 backend_eslint:
+  only:
+    - merge_requests
   stage: test
   dependencies: 
     - build
@@ -41,6 +49,8 @@ backend_eslint:
     - yarn eslint:lint
 
 backend_test:
+  only:
+    - merge_requests
   stage: test
   dependencies: 
     - build
