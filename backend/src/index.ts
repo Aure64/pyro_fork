@@ -67,7 +67,7 @@ const onEvent = (event: TezosNodeEvent) => {
 };
 
 const bakerMonitor = BakerMonitor.start({ bakers, onEvent, rpcNode });
-const nodeMonitor = NodeMonitor.start(onEvent);
+const nodeMonitor = NodeMonitor.start({ onEvent, node: rpcNode });
 const server = Server.start();
 
 process.on("SIGINT", () => {

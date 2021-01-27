@@ -106,7 +106,7 @@ type CheckBlockByHashArgs = {
 };
 
 /**
- * Fetch and analyze the provided block for any significant events for the provided baker.
+ * Fetch and analyze the provided block for any significant events for the provided bakers.
  */
 const checkBlockByHash = async ({
   rpc,
