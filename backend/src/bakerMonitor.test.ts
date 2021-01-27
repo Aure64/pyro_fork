@@ -1,75 +1,19 @@
 import {
   checkBlockBakingRights,
+  checkBlockEndorsingRights,
   getBlockBakingEvents,
   makeMemoizedGetBakingRights,
 } from "./bakerMonitor";
-import { BakingRightsResponseItem, BakingRightsResponse } from "@taquito/rpc";
 import { setLevel } from "loglevel";
+import { responseWithPriorityZero, priorityZero } from "./testFixtures/baking";
+import {
+  endorsementsWithMiss,
+  endorsementsWithSuccess,
+  endorsingRightsResponse,
+  baker as endorsementBaker,
+  level as endorsementLevel,
+} from "./testFixtures/endorsing";
 setLevel("SILENT");
-
-const responseWithLowerPriorities: BakingRightsResponse = [
-  {
-    level: 1298433,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 24,
-  },
-  {
-    level: 1298441,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 62,
-  },
-  {
-    level: 1298449,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 37,
-  },
-  {
-    level: 1298454,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 13,
-  },
-  {
-    level: 1298460,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 47,
-  },
-  {
-    level: 1298465,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 19,
-  },
-  {
-    level: 1298475,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 52,
-  },
-  {
-    level: 1298476,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 25,
-  },
-  {
-    level: 1298490,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 25,
-  },
-  {
-    level: 1298498,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-    priority: 46,
-  },
-];
-
-const priorityZero: BakingRightsResponseItem = {
-  level: 1299013,
-  delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-  priority: 0,
-};
-
-export const responseWithPriorityZero: BakingRightsResponse = [
-  ...responseWithLowerPriorities,
-  priorityZero,
-];
 
 const { delegate, level } = priorityZero;
 
@@ -103,53 +47,55 @@ describe("checkBlockBakingRights", () => {
     });
     expect(result).toBe("NONE");
   });
+});
 
-  describe("getBlockBakingEvents", () => {
-    it("fetches baking rights from rpc", () => {
-      const rpc = {
-        getBakingRights: jest.fn().mockResolvedValue(responseWithPriorityZero),
-        getBlockMetadata: jest.fn(),
-      };
+describe("getBlockBakingEvents", () => {
+  it("fetches baking rights from rpc", () => {
+    const rpc = {
+      getBakingRights: jest.fn().mockResolvedValue(responseWithPriorityZero),
+      getBlockMetadata: jest.fn(),
+      getBlock: jest.fn(),
+      getEndorsingRights: jest.fn(),
+    };
 
-      const result = getBlockBakingEvents({
-        blockLevel: level,
-        baker: delegate,
-        blockHash: "some_hash",
-        cycle: 100,
-        blockBaker: delegate,
-        rpc,
-      });
-      return expect(result).resolves.toEqual({
-        baker: delegate,
-        kind: "SUCCESSFUL_BAKE",
-        message:
-          "Successful bake for block some_hash for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-        type: "BAKER",
-      });
+    const result = getBlockBakingEvents({
+      blockLevel: level,
+      baker: delegate,
+      blockHash: "some_hash",
+      cycle: 100,
+      blockBaker: delegate,
+      rpc,
     });
+    return expect(result).resolves.toEqual({
+      baker: delegate,
+      kind: "SUCCESSFUL_BAKE",
+      message:
+        "Successful bake for block some_hash for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      type: "BAKER",
+    });
+  });
 
-    it("returns error for failed metadata fetch", () => {
-      const rpc = {
-        getBakingRights: jest
-          .fn()
-          .mockRejectedValue(new Error("Network error")),
-        getBlockMetadata: jest.fn(),
-      };
+  it("returns error for failed metadata fetch", () => {
+    const rpc = {
+      getBakingRights: jest.fn().mockRejectedValue(new Error("Network error")),
+      getBlockMetadata: jest.fn(),
+      getBlock: jest.fn(),
+      getEndorsingRights: jest.fn(),
+    };
 
-      const result = getBlockBakingEvents({
-        blockLevel: level,
-        baker: delegate,
-        blockHash: "some_hash",
-        cycle: 100,
-        blockBaker: delegate,
-        rpc,
-      });
-      return expect(result).resolves.toEqual({
-        baker: delegate,
-        kind: "GET_BAKING_RIGHTS_ERROR",
-        message: "Network error",
-        type: "BAKER",
-      });
+    const result = getBlockBakingEvents({
+      blockLevel: level,
+      baker: delegate,
+      blockHash: "some_hash",
+      cycle: 100,
+      blockBaker: delegate,
+      rpc,
+    });
+    return expect(result).resolves.toEqual({
+      baker: delegate,
+      kind: "GET_BAKING_RIGHTS_ERROR",
+      message: "Network error",
+      type: "BAKER",
     });
   });
 });
@@ -182,5 +128,47 @@ describe("makeMemoizedGetBakingRights", () => {
     await getBakingRights(args, { block: "a different block" });
     expect(result).toEqual([]);
     expect(apiCall.mock.calls.length).toEqual(1);
+  });
+});
+
+describe("checkBlockEndorsingRights", () => {
+  it("returns success when present in rights and endorsement was made", () => {
+    const result = checkBlockEndorsingRights({
+      baker: endorsementBaker,
+      endorsementOperations: endorsementsWithSuccess,
+      blockLevel: endorsementLevel + 1,
+      endorsingRightsResponse,
+    });
+    expect(result).toBe("SUCCESS");
+  });
+
+  it("returns missed when present in rights but no endorsement was made", () => {
+    const result = checkBlockEndorsingRights({
+      baker: endorsementBaker,
+      endorsementOperations: endorsementsWithMiss,
+      blockLevel: endorsementLevel + 1,
+      endorsingRightsResponse,
+    });
+    expect(result).toBe("MISSED");
+  });
+
+  it("returns none when not in rights and endorsement was not made", () => {
+    const result = checkBlockEndorsingRights({
+      baker: "another_baker",
+      endorsementOperations: endorsementsWithMiss,
+      blockLevel: endorsementLevel + 1,
+      endorsingRightsResponse,
+    });
+    expect(result).toBe("NONE");
+  });
+
+  it("returns none when in rights but with different level and endorsement was not made", () => {
+    const result = checkBlockEndorsingRights({
+      baker: endorsementBaker,
+      endorsementOperations: endorsementsWithMiss,
+      blockLevel: 12,
+      endorsingRightsResponse,
+    });
+    expect(result).toBe("NONE");
   });
 });
