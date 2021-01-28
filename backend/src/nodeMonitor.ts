@@ -7,7 +7,7 @@ import {
   TezosToolkit,
 } from "@taquito/taquito";
 import { RpcClient } from "@taquito/rpc";
-import "cross-fetch";
+import fetch from "cross-fetch";
 import to from "await-to-js";
 
 type Monitor = {
