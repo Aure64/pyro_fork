@@ -18,6 +18,7 @@ describe("notify", () => {
       type: "PEER",
       kind: "some kind",
       message: "some error message",
+      node: "http://somenode",
     });
     expect(mockedNotifier.mock.calls.length).toBe(1);
     expect(mockedNotifier.mock.calls[0][0]).toEqual({
@@ -37,6 +38,7 @@ describe("notify", () => {
       type: "PEER",
       kind: "some kind",
       message: "some error message",
+      node: "http://somenode",
     });
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
@@ -51,6 +53,7 @@ describe("notify", () => {
       type: "PEER",
       kind: "some kind",
       message: "some error message",
+      node: "http://somenode",
     });
     return expect(result).resolves.toEqual({ kind: "ERROR", error });
   });

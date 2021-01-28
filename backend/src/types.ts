@@ -13,7 +13,12 @@ export type BakerNodeEvent = {
   message: string;
   baker: string;
 };
-export type PeerNodeEvent = { kind: string; type: "PEER"; message: string };
+export type PeerNodeEvent = {
+  kind: string;
+  type: "PEER";
+  message: string;
+  node: string;
+};
 
 export type RpcEvent = { kind: string; type: "RPC"; message: string };
 
