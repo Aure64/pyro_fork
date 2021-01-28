@@ -10,7 +10,7 @@
     "strict": true,
     "target": "es2020",
     "paths": {
-      "*": ["*", "typeDefs/*"]
+      "*": ["*", "@types/*"]
     }
   }
 }

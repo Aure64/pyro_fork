@@ -20,7 +20,6 @@ import to from "await-to-js";
 
 type Monitor = {
   subscription: Subscription<string>;
-  rpc: Rpc;
   bakers: string[];
 };
 
@@ -68,13 +67,13 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
     getBlockMetadata: toolkit.rpc.getBlockMetadata.bind(toolkit.rpc),
     getBlock: toolkit.rpc.getBlock.bind(toolkit.rpc),
   };
-  const monitor: Monitor = { subscription, rpc, bakers };
+  const monitor: Monitor = { subscription, bakers };
 
   subscription.on("data", async (blockHash) => {
     debug(`Subscription received block: ${blockHash}`);
 
     const events = await checkBlockByHash({
-      rpc: monitor.rpc,
+      rpc,
       bakers,
       blockHash,
     });
