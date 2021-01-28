@@ -16,14 +16,14 @@ describe("notify", () => {
   test("sends desktop notification", () => {
     notify(notifier, {
       type: "PEER",
-      kind: "some kind",
+      kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });
     expect(mockedNotifier.mock.calls.length).toBe(1);
     expect(mockedNotifier.mock.calls[0][0]).toEqual({
       message: "some error message",
-      title: "Kiln Event: some kind",
+      title: "Kiln Event: NODE_BEHIND",
       sound: false,
     });
   });
@@ -36,7 +36,7 @@ describe("notify", () => {
 
     const result = notify(notifier, {
       type: "PEER",
-      kind: "some kind",
+      kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });
@@ -51,7 +51,7 @@ describe("notify", () => {
     });
     const result = notify(notifier, {
       type: "PEER",
-      kind: "some kind",
+      kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });
