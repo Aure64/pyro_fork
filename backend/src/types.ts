@@ -13,8 +13,11 @@ export type BakerNodeEvent = {
   message: string;
   baker: string;
 };
+
+export type PeerNodeEventKind = "NODE_BEHIND" | "GET_BOOTSTRAPPED_STATUS_ERROR";
+
 export type PeerNodeEvent = {
-  kind: string;
+  kind: PeerNodeEventKind;
   type: "PEER";
   message: string;
   node: string;

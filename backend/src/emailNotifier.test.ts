@@ -21,14 +21,14 @@ describe("notify", () => {
 
     notify(notifier, {
       type: "PEER",
-      kind: "some kind",
+      kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });
     expect(mockedTransporter.sendMail.mock.calls.length).toBe(1);
     expect(mockedTransporter.sendMail.mock.calls[0][0]).toEqual({
       text: "some error message",
-      subject: "Kiln Event: some kind",
+      subject: "Kiln Event: NODE_BEHIND",
       to: "admin@example.com",
       from: "admin@example.com",
     });
@@ -42,7 +42,7 @@ describe("notify", () => {
 
     const result = notify(notifier, {
       type: "PEER",
-      kind: "some kind",
+      kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });
@@ -58,7 +58,7 @@ describe("notify", () => {
 
     const result = notify(notifier, {
       type: "PEER",
-      kind: "some kind",
+      kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });

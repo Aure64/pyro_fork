@@ -88,7 +88,7 @@ export const checkBlockByHash = async ({
     warn(bootstrappedError.message);
     events.push({
       type: "PEER",
-      kind: bootstrappedError.name,
+      kind: "GET_BOOTSTRAPPED_STATUS_ERROR",
       node,
       message: bootstrappedError.message,
     });
