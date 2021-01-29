@@ -1,7 +1,6 @@
 import { checkBlockByHash } from "./nodeMonitor";
 import { RpcClient } from "@taquito/rpc";
 import { enableFetchMocks } from "jest-fetch-mock";
-import fetchMock from "jest-fetch-mock";
 
 enableFetchMocks();
 
