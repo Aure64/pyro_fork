@@ -1,6 +1,6 @@
 import { NotifyResult, TezosNodeEvent } from "./types";
-import * as EmailNotifier from "./emailNotifier";
-import * as DesktopNotifier from "./desktopNotifier";
+import * as EmailChannel from "./emailNotificationChannel";
+import * as DesktopChannel from "./desktopNotificationChannel";
 import { debug, error } from "loglevel";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
@@ -13,16 +13,16 @@ type NotificationJob = {
 };
 
 export type Config = {
-  emailConfig?: EmailNotifier.Config;
-  desktopConfig?: DesktopNotifier.Config;
+  emailConfig?: EmailChannel.Config;
+  desktopConfig?: DesktopChannel.Config;
   maxRetries: number;
   retryDelay: number;
 };
 
 type Notifier = {
   queue: BetterQueue<NotificationJob>;
-  emailNotifier?: EmailNotifier.EmailNotifier;
-  desktopNotifier?: DesktopNotifier.DesktopNotifier;
+  emailChannel?: EmailChannel.EmailNotificationChannel;
+  desktopChannel?: DesktopChannel.DesktopNotificationChannel;
 };
 
 /**
@@ -30,10 +30,10 @@ type Notifier = {
  */
 export const create = (config: Config): Notifier => {
   const emailNotifier = config.emailConfig
-    ? EmailNotifier.create(config.emailConfig)
+    ? EmailChannel.create(config.emailConfig)
     : undefined;
   const desktopNotifier = config.desktopConfig
-    ? DesktopNotifier.create(config.desktopConfig)
+    ? DesktopChannel.create(config.desktopConfig)
     : undefined;
 
   const store = new SqlLiteStore<NotificationJob>();
@@ -66,8 +66,8 @@ export const create = (config: Config): Notifier => {
  * it will automatically be retried according to your retry settings in Config.
  */
 export const notify = (notifier: Notifier, event: TezosNodeEvent): void => {
-  if (notifier.emailNotifier) notifier.queue.push({ service: "EMAIL", event });
-  if (notifier.desktopNotifier)
+  if (notifier.emailChannel) notifier.queue.push({ service: "EMAIL", event });
+  if (notifier.desktopChannel)
     notifier.queue.push({ service: "DESKTOP", event });
 };
 
@@ -81,9 +81,9 @@ const handleJob = (
 ): Promise<NotifyResult> => {
   switch (job.service) {
     case "EMAIL":
-      if (notifier.emailNotifier) {
+      if (notifier.emailChannel) {
         debug("Event sent to email notifier");
-        return EmailNotifier.notify(notifier.emailNotifier, job.event);
+        return EmailChannel.notify(notifier.emailChannel, job.event);
       } else {
         error(
           "Received notification job for email, but no email notifier is configured"
@@ -94,9 +94,9 @@ const handleJob = (
         });
       }
     case "DESKTOP":
-      if (notifier.desktopNotifier) {
+      if (notifier.desktopChannel) {
         debug("Event sent to desktop notifier");
-        return DesktopNotifier.notify(notifier.desktopNotifier, job.event);
+        return DesktopChannel.notify(notifier.desktopChannel, job.event);
       } else {
         error(
           "Received notification job for desktop, but no desktop notifier is configured"
