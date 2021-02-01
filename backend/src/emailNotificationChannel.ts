@@ -13,12 +13,12 @@ export type Config = {
   email: string;
 };
 
-export type EmailNotifier = {
+export type EmailNotificationChannel = {
   config: Config;
   transporter: Transporter;
 };
 
-export const create = (config: Config): EmailNotifier => {
+export const create = (config: Config): EmailNotificationChannel => {
   const transporter = createTransport({
     host: config.host,
     port: config.port,
@@ -31,7 +31,10 @@ export const create = (config: Config): EmailNotifier => {
   return { config, transporter };
 };
 
-export const notify: Notify<EmailNotifier> = async (notifier, event) => {
+export const notify: Notify<EmailNotificationChannel> = async (
+  notifier,
+  event
+) => {
   const { transporter, config } = notifier;
   const [error] = await to(
     transporter.sendMail({

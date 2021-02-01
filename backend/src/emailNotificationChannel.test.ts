@@ -1,5 +1,5 @@
 import { mocked } from "ts-jest/utils";
-import { notify, Config } from "./emailNotifier";
+import { notify, Config } from "./emailNotificationChannel";
 import { Transporter } from "nodemailer";
 
 const config: Config = {

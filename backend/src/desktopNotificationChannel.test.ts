@@ -1,6 +1,6 @@
 import { mocked } from "ts-jest/utils";
 import { notify as desktopNotify, NodeNotifier } from "node-notifier";
-import { notify } from "./desktopNotifier";
+import { notify } from "./desktopNotificationChannel";
 
 jest.mock("node-notifier", () => ({
   notify: jest.fn(),

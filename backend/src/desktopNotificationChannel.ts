@@ -3,15 +3,18 @@ import { Notify } from "./types";
 
 export type Config = { enableSound: boolean };
 
-export type DesktopNotifier = {
+export type DesktopNotificationChannel = {
   config: Config;
 };
 
-export const create = (config: Config): DesktopNotifier => {
+export const create = (config: Config): DesktopNotificationChannel => {
   return { config };
 };
 
-export const notify: Notify<DesktopNotifier> = async (notifier, event) =>
+export const notify: Notify<DesktopNotificationChannel> = async (
+  notifier,
+  event
+) =>
   new Promise((resolve) => {
     desktopNotify(
       {
