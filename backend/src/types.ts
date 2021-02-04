@@ -16,7 +16,7 @@ export type BakerNodeEvent = {
 
 export type PeerNodeEventKind =
   | "NODE_BEHIND"
-  | "GET_BOOTSTRAPPED_STATUS_ERROR"
+  | "UPDATE_ERROR"
   | "NODE_CAUGHT_UP";
 
 export type PeerNodeEvent = {
@@ -38,3 +38,7 @@ export type Notify<T> = (
   notifier: T,
   event: TezosNodeEvent
 ) => Promise<NotifyResult>;
+
+export type Result<T> =
+  | { type: "SUCCESS"; data: T }
+  | { type: "ERROR"; message: string };
