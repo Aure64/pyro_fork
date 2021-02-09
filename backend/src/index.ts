@@ -46,6 +46,7 @@ args
     "(optional) Tezos RPC URL to query for baker and chain info",
     "https://mainnet-tezos.giganode.io/"
   )
+  .option("chain", "(optional) Chain to monitor and query against", "main")
   .option("nodes", "Comma-delimited list of node URLs to watch");
 
 const options = args.parse(process.argv);
@@ -53,6 +54,7 @@ const bakersString: string = options.bakers || "";
 const rpcNode: string = options.rpc;
 const nodesString: string = options.nodes || "";
 const logLevel = logLevelFromString(options.logging);
+const chain = options.chain;
 
 setLevel(logLevel);
 
@@ -81,7 +83,7 @@ const bakerMonitor =
   bakers.length > 0 ? BakerMonitor.start({ bakers, onEvent, rpcNode }) : null;
 const nodeMonitor =
   nodes.length > 0
-    ? NodeMonitor.start({ onEvent, nodes, referenceNode: rpcNode })
+    ? NodeMonitor.start({ onEvent, nodes, referenceNode: rpcNode, chain })
     : null;
 const server = Server.start();
 
