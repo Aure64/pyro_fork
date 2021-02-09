@@ -28,7 +28,7 @@ export const start = ({
   referenceNode,
   chain,
 }: StartArgs): Monitor => {
-  let referenceNodeInfo: NodeInfo;
+  let referenceNodeBlockHistory: BlockHeaderResponse[];
 
   const { rpc, subscription: referenceSubscription } = subscribeToNode(
     referenceNode,
@@ -39,23 +39,19 @@ export const start = ({
   referenceSubscription.on("data", async (blockHash) => {
     debug(`Reference node subscription received block: ${blockHash}`);
 
-    const nodeInfoResult = await updateNodeInfo({
-      node: referenceNode,
-      blockHash,
-      rpc,
-      chain,
-    });
-    if (nodeInfoResult.type === "ERROR") {
-      const errorEvent: PeerNodeEvent = {
+    const historyResult = await fetchBlockHeaders({ blockHash, rpc });
+    if (historyResult.type === "ERROR") {
+      warn(
+        `fetchBlockheaders failed for reference node ${referenceNode} because of ${historyResult.message}`
+      );
+      onEvent({
         type: "PEER",
         kind: "UPDATE_ERROR",
+        message: historyResult.message,
         node: referenceNode,
-        message: `Error updating info for reference node ${referenceNode}`,
-      };
-      onEvent(errorEvent);
+      });
     } else {
-      const nodeInfo = nodeInfoResult.data;
-      referenceNodeInfo = nodeInfo;
+      referenceNodeBlockHistory = historyResult.data;
     }
   });
   referenceSubscription.on("error", (error) => {
@@ -100,7 +96,7 @@ export const start = ({
           node,
           nodeInfo,
           previousNodeInfo,
-          referenceNodeInfo,
+          referenceNodeBlockHistory,
         });
         events.map(onEvent);
         // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
@@ -154,6 +150,7 @@ export type NodeInfo = {
   head: string;
   bootstrappedStatus: BootstrappedStatus;
   history: BlockHeaderResponse[];
+  peerCount: number;
 };
 
 type UpdateNodeInfoArgs = {
@@ -200,17 +197,36 @@ const updateNodeInfo = async ({
   }
   const history = historyResult.data;
 
+  const [connectionsError, connectionsResult] = await to(
+    getNetworkConnections(node)
+  );
+  if (connectionsError) {
+    warn(
+      `getNetworkConnections failed for node ${node} because of ${connectionsError.message}`
+    );
+    return { type: "ERROR", message: connectionsError.message };
+  } else if (!connectionsResult) {
+    const message = `Get connections status returned empty result for ${node}`;
+    warn(message);
+    return { type: "ERROR", message };
+  } else {
+    debug(`Node ${node} has ${connectionsResult.length} peers`);
+  }
+  const peerCount = connectionsResult.length;
+
   return {
     type: "SUCCESS",
-    data: { head: blockHash, bootstrappedStatus, history },
+    data: { head: blockHash, bootstrappedStatus, history, peerCount },
   };
 };
+
+const minimumPeers = 10;
 
 type CheckBlockInfoArgs = {
   node: string;
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
-  referenceNodeInfo: NodeInfo | undefined;
+  referenceNodeBlockHistory: BlockHeaderResponse[] | undefined;
 };
 
 /**
@@ -220,7 +236,7 @@ export const checkBlockInfo = ({
   node,
   nodeInfo,
   previousNodeInfo,
-  referenceNodeInfo,
+  referenceNodeBlockHistory,
 }: CheckBlockInfoArgs): TezosNodeEvent[] => {
   const events: TezosNodeEvent[] = [];
 
@@ -249,10 +265,13 @@ export const checkBlockInfo = ({
       message: "Node caught up",
     });
   }
-  if (referenceNodeInfo && nodeInfo.bootstrappedStatus.sync_state == "synced") {
+  if (
+    referenceNodeBlockHistory &&
+    nodeInfo.bootstrappedStatus.sync_state == "synced"
+  ) {
     const ancestorDistance = findSharedAncestor(
       nodeInfo.history,
-      referenceNodeInfo.history
+      referenceNodeBlockHistory
     );
     if (ancestorDistance === NO_ANCESTOR) {
       debug(`Node ${node} has no shared blocks with reference node`);
@@ -267,6 +286,16 @@ export const checkBlockInfo = ({
         `Node ${node} is ${ancestorDistance} blocks away from reference node`
       );
     }
+  }
+  if (nodeInfo.peerCount < minimumPeers) {
+    const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
+    debug(message);
+    events.push({
+      type: "PEER",
+      kind: "NODE_LOW_PEERS",
+      node,
+      message,
+    });
   }
 
   return events;
@@ -381,4 +410,27 @@ export const makeMemoizedGetBlockHeader = (
       return blockHeaderResponse;
     }
   };
+};
+
+export type NetworkConnection = {
+  incoming: boolean;
+  peer_id: string;
+  id_point: { addr: string; port: number };
+  remote_socket_port: number;
+  announced_version: {
+    chain_name: string;
+    distributed_db_version: number;
+    p2p_version: number;
+  };
+  private: boolean;
+  local_metadata: { disable_mempool: boolean; private_node: boolean };
+  remote_metadata: { disable_mempool: boolean; private_node: boolean };
+};
+
+const getNetworkConnections = async (
+  node: string
+): Promise<NetworkConnection[]> => {
+  const url = `${node}/network/connections`;
+  const response = await fetch(url);
+  return response.json();
 };
