@@ -9,14 +9,15 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history };
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history, peerCount };
     const previousNodeInfo = undefined;
-    const referenceNodeInfo = undefined;
+    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([
       {
@@ -35,14 +36,15 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history: [] };
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
     const previousNodeInfo = undefined;
-    const referenceNodeInfo = undefined;
+    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([]);
   });
@@ -54,14 +56,15 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history: [] };
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
     const previousNodeInfo = undefined;
-    const referenceNodeInfo = undefined;
+    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([]);
   });
@@ -73,7 +76,8 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history: [] };
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
     const oldHead = "some_older_block";
     const oldBootstrappedStatus: BootstrappedStatus = {
       bootstrapped: true,
@@ -83,13 +87,14 @@ describe("checkBlockInfo", () => {
       head: oldHead,
       bootstrappedStatus: oldBootstrappedStatus,
       history: [],
+      peerCount,
     };
-    const referenceNodeInfo = undefined;
+    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([
       {
@@ -108,18 +113,15 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history: [] };
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
     const previousNodeInfo = undefined;
-    const referenceNodeInfo = {
-      head: "different_head",
-      bootstrappedStatus,
-      history,
-    };
+    const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([
       {
@@ -138,18 +140,15 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history: [] };
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
     const previousNodeInfo = undefined;
-    const referenceNodeInfo = {
-      head: "different_head",
-      bootstrappedStatus,
-      history,
-    };
+    const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([]);
   });
@@ -163,19 +162,48 @@ describe("checkBlockInfo", () => {
     };
     const node = "http://somenode";
     const head = "some_block";
-    const nodeInfo = { head, bootstrappedStatus, history: partialHistory };
-    const previousNodeInfo = undefined;
-    const referenceNodeInfo = {
-      head: "different_head",
+    const peerCount = 20;
+    const nodeInfo = {
+      head,
       bootstrappedStatus,
-      history,
+      history: partialHistory,
+      peerCount,
     };
+    const previousNodeInfo = undefined;
+    const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
       node,
       nodeInfo,
       previousNodeInfo,
-      referenceNodeInfo,
+      referenceNodeBlockHistory,
     });
     expect(events).toEqual([]);
+  });
+
+  test("returns low peer event when node has less than 10 peers", async () => {
+    const bootstrappedStatus: BootstrappedStatus = {
+      bootstrapped: true,
+      sync_state: "synced",
+    };
+    const node = "http://somenode";
+    const head = "some_block";
+    const peerCount = 9;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const previousNodeInfo = undefined;
+    const referenceNodeBlockHistory = undefined;
+    const events = checkBlockInfo({
+      node,
+      nodeInfo,
+      previousNodeInfo,
+      referenceNodeBlockHistory,
+    });
+    expect(events).toEqual([
+      {
+        kind: "NODE_LOW_PEERS",
+        node: "http://somenode",
+        type: "PEER",
+        message: "Node http://somenode has too few peers: 9/10",
+      },
+    ]);
   });
 });
