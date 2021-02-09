@@ -21,23 +21,23 @@ export type Config = {
 
 type Notifier = {
   queue: BetterQueue<NotificationJob>;
-  emailChannel?: EmailChannel.EmailNotificationChannel;
-  desktopChannel?: DesktopChannel.DesktopNotificationChannel;
+  emailChannel: EmailChannel.EmailNotificationChannel | undefined;
+  desktopChannel: DesktopChannel.DesktopNotificationChannel | undefined;
 };
 
 /**
  * Create and configure the notifier for use with `notify(,)`.
  */
 export const create = (config: Config): Notifier => {
-  const emailNotifier = config.emailConfig
+  const emailChannel = config.emailConfig
     ? EmailChannel.create(config.emailConfig)
     : undefined;
-  const desktopNotifier = config.desktopConfig
+  const desktopChannel = config.desktopConfig
     ? DesktopChannel.create(config.desktopConfig)
     : undefined;
 
   const store = new SqlLiteStore<NotificationJob>();
-  const notifier = {
+  const notifier: Notifier = {
     queue: new BetterQueue(
       // callback: (error, result) => void
       async (event, callback) => {
@@ -54,8 +54,8 @@ export const create = (config: Config): Notifier => {
       },
       { maxRetries: config.maxRetries, retryDelay: config.retryDelay, store }
     ),
-    emailNotifier,
-    desktopNotifier,
+    emailChannel,
+    desktopChannel,
   };
 
   return notifier;

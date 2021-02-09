@@ -17,7 +17,8 @@ export type BakerNodeEvent = {
 export type PeerNodeEventKind =
   | "NODE_BEHIND"
   | "UPDATE_ERROR"
-  | "NODE_CAUGHT_UP";
+  | "NODE_CAUGHT_UP"
+  | "NODE_ON_A_BRANCH";
 
 export type PeerNodeEvent = {
   kind: PeerNodeEventKind;
