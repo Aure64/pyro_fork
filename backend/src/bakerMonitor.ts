@@ -9,12 +9,10 @@ import {
 import {
   BakingRightsQueryArguments,
   BakingRightsResponse,
-  BlockMetadata,
-  BlockResponse,
-  EndorsingRightsQueryArguments,
   EndorsingRightsResponse,
   OperationEntry,
   OpKind,
+  RpcClient,
 } from "@taquito/rpc";
 import to from "await-to-js";
 
@@ -29,44 +27,15 @@ type StartArgs = {
   onEvent: (event: TezosNodeEvent) => void;
 };
 
-type GetBakingRights = (
-  args: BakingRightsQueryArguments,
-  { block }: { block: string }
-) => Promise<BakingRightsResponse>;
-
-type GetEndorsingRights = (
-  args: EndorsingRightsQueryArguments,
-  { block }: { block: string }
-) => Promise<EndorsingRightsResponse>;
-
-type GetBlockMetadata = ({
-  block,
-}: {
-  block: string;
-}) => Promise<BlockMetadata>;
-
-type GetBlock = ({ block }: { block: string }) => Promise<BlockResponse>;
-
-export type Rpc = {
-  getBakingRights: GetBakingRights;
-  getEndorsingRights: GetEndorsingRights;
-  getBlockMetadata: GetBlockMetadata;
-  getBlock: GetBlock;
-};
-
 export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc);
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
-  const rpc: Rpc = {
-    getBakingRights: makeMemoizedGetBakingRights(
-      toolkit.rpc.getBakingRights.bind(toolkit.rpc)
-    ),
-    getEndorsingRights: toolkit.rpc.getEndorsingRights.bind(toolkit.rpc),
-    getBlockMetadata: toolkit.rpc.getBlockMetadata.bind(toolkit.rpc),
-    getBlock: toolkit.rpc.getBlock.bind(toolkit.rpc),
-  };
+  const rpc = toolkit.rpc;
+  rpc.getBakingRights = makeMemoizedGetBakingRights(
+    rpc.getBakingRights.bind(rpc)
+  );
   const monitor: Monitor = { subscription, bakers };
 
   subscription.on("data", async (blockHash) => {
@@ -99,7 +68,7 @@ export const halt = (monitor: Monitor): void => {
 };
 
 type CheckBlockByHashArgs = {
-  rpc: Rpc;
+  rpc: RpcClient;
   bakers: string[];
   blockHash: string;
 };
@@ -168,13 +137,18 @@ const checkBlockByHash = async ({
 };
 
 type GetBlockBakingEventsArgs = {
-  rpc: Rpc;
+  rpc: RpcClient;
   blockHash: string;
   cycle: number;
   baker: string;
   blockBaker: string;
   blockLevel: number;
 };
+
+type GetBakingRights = (
+  args: BakingRightsQueryArguments,
+  { block }: { block: string }
+) => Promise<BakingRightsResponse>;
 
 /**
  * Create a memoized getBakingRights function.  The request memoizes based on cycle and delegate
@@ -320,7 +294,7 @@ export const checkBlockBakingRights = ({
 };
 
 type GetBlockEndorsingEventsArgs = {
-  rpc: Rpc;
+  rpc: RpcClient;
   blockHash: string;
   cycle: number;
   baker: string;

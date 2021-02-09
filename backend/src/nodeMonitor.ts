@@ -31,6 +31,8 @@ export const start = ({
   const { rpc, subscription: referenceSubscription } = subscribeToNode(
     referenceNode
   );
+  //override getBlockHeader to memoize it
+  rpc.getBlockHeader = makeMemoizedGetBlockHeader(rpc.getBlockHeader.bind(rpc));
   referenceSubscription.on("data", async (blockHash) => {
     debug(`Reference node subscription received block: ${blockHash}`);
 
@@ -64,6 +66,10 @@ export const start = ({
   // watch all other nodes
   const subscriptions = nodes.map((node) => {
     const { rpc, subscription } = subscribeToNode(node);
+    //override getBlockHeader to memoize it
+    rpc.getBlockHeader = makeMemoizedGetBlockHeader(
+      rpc.getBlockHeader.bind(rpc)
+    );
     const nodeData: Record<string, NodeInfo> = {};
 
     subscription.on("data", async (blockHash) => {
@@ -310,14 +316,16 @@ type FetchBlockHeadersArgs = {
   rpc: RpcClient;
 };
 
+const branchHistoryLength = 5;
+
 const fetchBlockHeaders = async ({
   blockHash,
   rpc,
 }: FetchBlockHeadersArgs): Promise<Result<BlockHeaderResponse[]>> => {
   const history: BlockHeaderResponse[] = [];
   let nextHash = blockHash;
-  // very primitive approach: we simply iterate up our chain to find the 5 most recent blocks
-  while (history.length < 5) {
+  // very primitive approach: we simply iterate up our chain to find the most recent blocks
+  while (history.length < branchHistoryLength) {
     const [headerError, headerResult] = await to(
       rpc.getBlockHeader({ block: nextHash })
     );
@@ -334,4 +342,32 @@ const fetchBlockHeaders = async ({
   }
 
   return { type: "SUCCESS", data: history };
+};
+
+type GetBlockHeader = ({
+  block,
+}: {
+  block: string;
+}) => Promise<BlockHeaderResponse>;
+/**
+ * Create a memoized getBlockHeader function.  The request memoizes based on block.
+ */
+export const makeMemoizedGetBlockHeader = (
+  originalFunction: GetBlockHeader
+): GetBlockHeader => {
+  const cache: Record<string, BlockHeaderResponse> = {};
+
+  return async ({ block }: { block: string }) => {
+    if (cache[block]) {
+      debug(`Memoized getBlockHeader cache hit for ${block}`);
+      return cache[block];
+    } else {
+      debug(`Memoized getBlockHeader cache miss for ${block}`);
+      const blockHeaderResponse = await originalFunction({
+        block,
+      });
+      cache[block] = blockHeaderResponse;
+      return blockHeaderResponse;
+    }
+  };
 };
