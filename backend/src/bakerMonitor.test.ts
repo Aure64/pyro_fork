@@ -14,6 +14,7 @@ import {
   level as endorsementLevel,
 } from "./testFixtures/endorsing";
 setLevel("SILENT");
+import { RpcClient } from "@taquito/rpc";
 
 const { delegate, level } = priorityZero;
 
@@ -51,12 +52,9 @@ describe("checkBlockBakingRights", () => {
 
 describe("getBlockBakingEvents", () => {
   it("fetches baking rights from rpc", () => {
-    const rpc = {
+    const rpc = ({
       getBakingRights: jest.fn().mockResolvedValue(responseWithPriorityZero),
-      getBlockMetadata: jest.fn(),
-      getBlock: jest.fn(),
-      getEndorsingRights: jest.fn(),
-    };
+    } as unknown) as RpcClient;
 
     const result = getBlockBakingEvents({
       blockLevel: level,
@@ -76,12 +74,9 @@ describe("getBlockBakingEvents", () => {
   });
 
   it("returns error for failed metadata fetch", () => {
-    const rpc = {
+    const rpc = ({
       getBakingRights: jest.fn().mockRejectedValue(new Error("Network error")),
-      getBlockMetadata: jest.fn(),
-      getBlock: jest.fn(),
-      getEndorsingRights: jest.fn(),
-    };
+    } as unknown) as RpcClient;
 
     const result = getBlockBakingEvents({
       blockLevel: level,
