@@ -6,7 +6,7 @@ import {
   Subscription,
   TezosToolkit,
 } from "@taquito/taquito";
-import { RpcClient } from "@taquito/rpc";
+import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import to from "await-to-js";
 
@@ -18,14 +18,52 @@ type Monitor = {
 type StartArgs = {
   nodes: string[];
   onEvent: (event: TezosNodeEvent) => void;
+  referenceNode: string;
 };
 
-export const start = ({ nodes, onEvent }: StartArgs): Monitor => {
+export const start = ({
+  nodes,
+  onEvent,
+  referenceNode,
+}: StartArgs): Monitor => {
+  let referenceNodeInfo: NodeInfo;
+
+  const { rpc, subscription: referenceSubscription } = subscribeToNode(
+    referenceNode
+  );
+  referenceSubscription.on("data", async (blockHash) => {
+    debug(`Reference node subscription received block: ${blockHash}`);
+
+    const nodeInfoResult = await updateNodeInfo({
+      node: referenceNode,
+      blockHash,
+      rpc,
+    });
+    if (nodeInfoResult.type === "ERROR") {
+      const errorEvent: PeerNodeEvent = {
+        type: "PEER",
+        kind: "UPDATE_ERROR",
+        node: referenceNode,
+        message: `Error updating info for reference node ${referenceNode}`,
+      };
+      onEvent(errorEvent);
+    } else {
+      const nodeInfo = nodeInfoResult.data;
+      referenceNodeInfo = nodeInfo;
+    }
+  });
+  referenceSubscription.on("error", (error) => {
+    warn(`Reference node subscription error: ${error.message}`);
+    onEvent({
+      type: "RPC",
+      kind: "SUBSCRIPTION_ERROR",
+      message: error.message,
+    });
+  });
+
+  // watch all other nodes
   const subscriptions = nodes.map((node) => {
-    const toolkit = new TezosToolkit(node);
-    const context = new Context(toolkit.rpc);
-    const provider = new PollingSubscribeProvider(context);
-    const subscription = provider.subscribe("head");
+    const { rpc, subscription } = subscribeToNode(node);
     const nodeData: Record<string, NodeInfo> = {};
 
     subscription.on("data", async (blockHash) => {
@@ -35,10 +73,9 @@ export const start = ({ nodes, onEvent }: StartArgs): Monitor => {
       const nodeInfoResult = await updateNodeInfo({
         node,
         blockHash,
-        rpc: toolkit.rpc,
+        rpc,
       });
       if (nodeInfoResult.type === "ERROR") {
-        //TODO handle error
         const errorEvent: PeerNodeEvent = {
           type: "PEER",
           kind: "UPDATE_ERROR",
@@ -52,6 +89,7 @@ export const start = ({ nodes, onEvent }: StartArgs): Monitor => {
           node,
           nodeInfo,
           previousNodeInfo,
+          referenceNodeInfo,
         });
         events.map(onEvent);
         // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
@@ -71,11 +109,26 @@ export const start = ({ nodes, onEvent }: StartArgs): Monitor => {
     return subscription;
   });
 
-  const monitor: Monitor = { subscriptions, nodes };
+  const monitor: Monitor = {
+    subscriptions: [referenceSubscription, ...subscriptions],
+    nodes,
+  };
 
   debug(`Node monitor started`);
 
   return monitor;
+};
+
+const subscribeToNode = (
+  node: string
+): { subscription: Subscription<string>; rpc: RpcClient } => {
+  const toolkit = new TezosToolkit(node);
+  const context = new Context(toolkit.rpc);
+  const provider = new PollingSubscribeProvider(context);
+  const subscription = provider.subscribe("head");
+  const rpc = toolkit.rpc;
+
+  return { subscription, rpc };
 };
 
 export const halt = (monitor: Monitor): void => {
@@ -85,9 +138,10 @@ export const halt = (monitor: Monitor): void => {
   }
 };
 
-type NodeInfo = {
+export type NodeInfo = {
   head: string;
   bootstrappedStatus: BootstrappedStatus;
+  history: BlockHeaderResponse[];
 };
 
 type UpdateNodeInfoArgs = {
@@ -99,6 +153,7 @@ type UpdateNodeInfoArgs = {
 const updateNodeInfo = async ({
   node,
   blockHash,
+  rpc,
 }: UpdateNodeInfoArgs): Promise<Result<NodeInfo>> => {
   debug(`Node monitor received block ${blockHash} for node ${node}`);
 
@@ -107,7 +162,9 @@ const updateNodeInfo = async ({
   );
 
   if (bootstrappedError) {
-    warn(bootstrappedError.message);
+    warn(
+      `isBoostrapped failed for node ${node} because of ${bootstrappedError.message}`
+    );
     return { type: "ERROR", message: bootstrappedError.message };
   } else if (!bootstrappedStatus) {
     const message = `Get bootstrapped status returned empty result for ${node}`;
@@ -120,13 +177,26 @@ const updateNodeInfo = async ({
     );
   }
 
-  return { type: "SUCCESS", data: { head: blockHash, bootstrappedStatus } };
+  const historyResult = await fetchBlockHeaders({ blockHash, rpc });
+  if (historyResult.type === "ERROR") {
+    warn(
+      `fetchBlockheaders failed for ${node} because of ${historyResult.message}`
+    );
+    return historyResult;
+  }
+  const history = historyResult.data;
+
+  return {
+    type: "SUCCESS",
+    data: { head: blockHash, bootstrappedStatus, history },
+  };
 };
 
 type CheckBlockInfoArgs = {
   node: string;
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
+  referenceNodeInfo: NodeInfo | undefined;
 };
 
 /**
@@ -136,6 +206,7 @@ export const checkBlockInfo = ({
   node,
   nodeInfo,
   previousNodeInfo,
+  referenceNodeInfo,
 }: CheckBlockInfoArgs): TezosNodeEvent[] => {
   const events: TezosNodeEvent[] = [];
 
@@ -164,8 +235,44 @@ export const checkBlockInfo = ({
       message: "Node caught up",
     });
   }
+  if (referenceNodeInfo && nodeInfo.bootstrappedStatus.sync_state == "synced") {
+    const ancestorDistance = findSharedAncestor(
+      nodeInfo.history,
+      referenceNodeInfo.history
+    );
+    if (ancestorDistance === NO_ANCESTOR) {
+      debug(`Node ${node} has no shared blocks with reference node`);
+      events.push({
+        type: "PEER",
+        kind: "NODE_ON_A_BRANCH",
+        node,
+        message: `Node ${node} is on a branch`,
+      });
+    } else {
+      debug(
+        `Node ${node} is ${ancestorDistance} blocks away from reference node`
+      );
+    }
+  }
 
   return events;
+};
+
+const NO_ANCESTOR = -1;
+
+const findSharedAncestor = (
+  nodeHistory: BlockHeaderResponse[],
+  referenceNodeHistory: BlockHeaderResponse[]
+): number => {
+  for (let i = 0; i < nodeHistory.length; i++) {
+    const nodeHeader = nodeHistory[i];
+    const referenceIndex = referenceNodeHistory.findIndex(
+      (header) => header.hash === nodeHeader.hash
+    );
+    if (referenceIndex !== -1) return referenceIndex;
+  }
+
+  return NO_ANCESTOR;
 };
 
 export type BootstrappedStatus = {
@@ -196,4 +303,35 @@ const catchUpOccurred = (
       currentStatus.sync_state === "synced"
     );
   }
+};
+
+type FetchBlockHeadersArgs = {
+  blockHash: string;
+  rpc: RpcClient;
+};
+
+const fetchBlockHeaders = async ({
+  blockHash,
+  rpc,
+}: FetchBlockHeadersArgs): Promise<Result<BlockHeaderResponse[]>> => {
+  const history: BlockHeaderResponse[] = [];
+  let nextHash = blockHash;
+  // very primitive approach: we simply iterate up our chain to find the 5 most recent blocks
+  while (history.length < 5) {
+    const [headerError, headerResult] = await to(
+      rpc.getBlockHeader({ block: nextHash })
+    );
+    if (headerResult) {
+      nextHash = headerResult.predecessor;
+      history.push(headerResult);
+    } else {
+      debug(headerError);
+      return {
+        type: "ERROR",
+        message: `Error fetching header for block ${blockHash}`,
+      };
+    }
+  }
+
+  return { type: "SUCCESS", data: history };
 };

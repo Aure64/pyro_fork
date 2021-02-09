@@ -5,6 +5,13 @@ import * as Server from "./server";
 import * as Notifier from "./notifier";
 import * as args from "args";
 import { debug, info, setLevel, LogLevelDesc, warn } from "loglevel";
+import log from "loglevel";
+import * as prefix from "loglevel-plugin-prefix";
+
+// Register prefix plug with loglevel.  This adds timestamp and level to logs.
+const logger = log.noConflict();
+prefix.reg(logger);
+prefix.apply(logger);
 
 const logLevelFromString = (value: string): LogLevelDesc => {
   switch (value) {
@@ -73,7 +80,9 @@ const onEvent = (event: TezosNodeEvent) => {
 const bakerMonitor =
   bakers.length > 0 ? BakerMonitor.start({ bakers, onEvent, rpcNode }) : null;
 const nodeMonitor =
-  nodes.length > 0 ? NodeMonitor.start({ onEvent, nodes }) : null;
+  nodes.length > 0
+    ? NodeMonitor.start({ onEvent, nodes, referenceNode: rpcNode })
+    : null;
 const server = Server.start();
 
 process.on("SIGINT", () => {
