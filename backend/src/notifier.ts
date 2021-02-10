@@ -1,11 +1,12 @@
 import { NotifyResult, TezosNodeEvent } from "./types";
 import * as EmailChannel from "./emailNotificationChannel";
 import * as DesktopChannel from "./desktopNotificationChannel";
+import * as SlackChannel from "./slackNotificationChannel";
 import { debug, error } from "loglevel";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 
-type NotifierService = "EMAIL" | "DESKTOP";
+type NotifierService = "EMAIL" | "DESKTOP" | "SLACK";
 
 type NotificationJob = {
   service: NotifierService;
@@ -15,6 +16,7 @@ type NotificationJob = {
 export type Config = {
   emailConfig?: EmailChannel.Config;
   desktopConfig?: DesktopChannel.Config;
+  slackConfig?: SlackChannel.Config;
   maxRetries: number;
   retryDelay: number;
 };
@@ -23,6 +25,7 @@ type Notifier = {
   queue: BetterQueue<NotificationJob>;
   emailChannel: EmailChannel.EmailNotificationChannel | undefined;
   desktopChannel: DesktopChannel.DesktopNotificationChannel | undefined;
+  slackChannel: SlackChannel.SlackNotificationChannel | undefined;
 };
 
 /**
@@ -34,6 +37,9 @@ export const create = (config: Config): Notifier => {
     : undefined;
   const desktopChannel = config.desktopConfig
     ? DesktopChannel.create(config.desktopConfig)
+    : undefined;
+  const slackChannel = config.slackConfig
+    ? SlackChannel.create(config.slackConfig)
     : undefined;
 
   const store = new SqlLiteStore<NotificationJob>();
@@ -56,6 +62,7 @@ export const create = (config: Config): Notifier => {
     ),
     emailChannel,
     desktopChannel,
+    slackChannel,
   };
 
   return notifier;
@@ -69,6 +76,7 @@ export const notify = (notifier: Notifier, event: TezosNodeEvent): void => {
   if (notifier.emailChannel) notifier.queue.push({ service: "EMAIL", event });
   if (notifier.desktopChannel)
     notifier.queue.push({ service: "DESKTOP", event });
+  if (notifier.slackChannel) notifier.queue.push({ service: "SLACK", event });
 };
 
 /**
@@ -104,6 +112,19 @@ const handleJob = (
         return Promise.resolve({
           kind: "ERROR",
           error: new Error("No desktop notifier configured"),
+        });
+      }
+    case "SLACK":
+      if (notifier.slackChannel) {
+        debug("Event sent to slack notifier");
+        return SlackChannel.notify(notifier.slackChannel, job.event);
+      } else {
+        error(
+          "Received notification job for slack, but no slack notifier is configured"
+        );
+        return Promise.resolve({
+          kind: "ERROR",
+          error: new Error("No slack notifier configured"),
         });
       }
   }
