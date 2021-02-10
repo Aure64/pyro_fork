@@ -1,4 +1,4 @@
-import { BakerNodeEvent, TezosNodeEvent } from "./types";
+import { BakerNodeEvent, Result, TezosNodeEvent } from "./types";
 import { debug, warn, info } from "loglevel";
 import {
   Context,
@@ -9,6 +9,8 @@ import {
 import {
   BakingRightsQueryArguments,
   BakingRightsResponse,
+  BlockMetadata,
+  BlockResponse,
   EndorsingRightsResponse,
   OperationEntry,
   OpKind,
@@ -41,12 +43,43 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
   subscription.on("data", async (blockHash) => {
     debug(`Subscription received block: ${blockHash}`);
 
-    const events = await checkBlockByHash({
-      rpc,
+    const blockResult = await loadBlockData({
       bakers,
       blockHash,
+      rpc,
     });
-    events.map(onEvent);
+    if (blockResult.type === "ERROR") {
+      onEvent({
+        type: "RPC",
+        kind: "SUBSCRIPTION_ERROR",
+        message: `Error loading data for block ${blockHash}`,
+      });
+    } else {
+      const {
+        metadata,
+        block,
+        bakingRights,
+        endorsingRights,
+      } = blockResult.data;
+
+      for (const baker of bakers) {
+        const bakingEvent = checkBlockBakingRights({
+          baker,
+          bakingRights,
+          blockBaker: metadata.baker,
+          blockHash,
+          blockLevel: metadata.level.level,
+        });
+        if (bakingEvent) onEvent(bakingEvent);
+        const endorsingEvent = checkBlockEndorsingRights({
+          baker,
+          blockLevel: metadata.level.level,
+          endorsementOperations: block.operations[0],
+          endorsingRights,
+        });
+        if (endorsingEvent) onEvent(endorsingEvent);
+      }
+    }
   });
   subscription.on("error", (error) => {
     warn(`Baking subscription error: ${error.message}`);
@@ -67,82 +100,108 @@ export const halt = (monitor: Monitor): void => {
   monitor.subscription.close();
 };
 
-type CheckBlockByHashArgs = {
+type LoadBlockDataArgs = {
+  blockHash: string;
   rpc: RpcClient;
   bakers: string[];
-  blockHash: string;
+};
+
+type BlockData = {
+  metadata: BlockMetadata;
+  bakingRights: BakingRightsResponse;
+  endorsingRights: EndorsingRightsResponse;
+  block: BlockResponse;
 };
 
 /**
- * Fetch and analyze the provided block for any significant events for the provided bakers.
+ * Fetches block data needed to identify baking events for all bakers.
  */
-const checkBlockByHash = async ({
-  rpc,
+export const loadBlockData = async ({
   bakers,
   blockHash,
-}: CheckBlockByHashArgs): Promise<TezosNodeEvent[]> => {
-  const events: TezosNodeEvent[] = [];
+  rpc,
+}: LoadBlockDataArgs): Promise<Result<BlockData>> => {
   const [metadataError, metadata] = await to(
     rpc.getBlockMetadata({ block: blockHash })
   );
   if (metadataError) {
     warn(`Error fetching block metadata: ${metadataError.message}`);
-    events.push({
-      type: "RPC",
-      kind: "GET_METADATA_ERROR",
-      message: metadataError.message,
-    });
+    return { type: "ERROR", message: "Error loading block metadata" };
   } else if (!metadata) {
     warn("Error fetching block metadata: no metadata");
-    events.push({
-      type: "RPC",
-      kind: "GET_METADATA_ERROR",
-      message: "Error loading block metadata",
-    });
+    return { type: "ERROR", message: "Error loading block metadata" };
   }
 
-  if (metadata) {
-    const bakingEventPromises = bakers.map((baker) =>
-      getBlockBakingEvents({
-        rpc,
-        blockBaker: metadata.baker,
-        blockLevel: metadata.level.level,
+  // Taquito currently has a bug that causes it to return all priorities:
+  // https://github.com/ecadlabs/taquito/issues/580
+  // switch to max_priority: 0 after the bug is fixed
+  const [bakingRightsError, bakingRights] = await to(
+    rpc.getBakingRights(
+      {
+        max_priority: 1,
         cycle: metadata.level.cycle,
-        baker,
-        blockHash,
-      })
-    );
+        delegate: bakers,
+      },
+      { block: blockHash }
+    )
+  );
 
-    const endorsingEventPromises = bakers.map((baker) =>
-      getBlockEndorsingEvents({
-        rpc,
-        blockBaker: metadata.baker,
-        blockLevel: metadata.level.level,
-        cycle: metadata.level.cycle,
-        baker,
-        blockHash,
-      })
-    );
-    const allEvents = await Promise.all([
-      ...bakingEventPromises,
-      ...endorsingEventPromises,
-    ]);
-
-    for (const bakingEvent of allEvents) {
-      if (bakingEvent) events.push(bakingEvent);
-    }
+  if (bakingRightsError) {
+    warn(`Baking rights error: ${bakingRightsError.message}`);
+    return { type: "ERROR", message: "Error loading baking rights" };
+  } else if (!bakingRights) {
+    warn("Baking rights undefined");
+    return { type: "ERROR", message: "Error loading baking rights" };
   }
 
-  return events;
-};
+  const [endorsingRightsError, endorsingRights] = await to(
+    rpc.getEndorsingRights(
+      {
+        cycle: metadata.level.cycle,
+        delegate: bakers,
+      },
+      { block: `${metadata.level.level - 1}` }
+    )
+  );
 
-type GetBlockBakingEventsArgs = {
-  rpc: RpcClient;
-  blockHash: string;
-  cycle: number;
-  baker: string;
-  blockBaker: string;
-  blockLevel: number;
+  if (endorsingRightsError) {
+    warn(`Endorsing rights error: ${endorsingRightsError.message}`);
+    return {
+      type: "ERROR",
+      message: "Error fetching endorsing rights",
+    };
+  } else if (!endorsingRights) {
+    const message = "Undefined endorsing rights";
+    warn(message);
+    return {
+      type: "ERROR",
+      message: "Error fetching endorsing rights",
+    };
+  }
+
+  // taquito currently doesn't expose getBlockOperations
+  const [blockError, block] = await to(rpc.getBlock({ block: blockHash }));
+
+  if (blockError) {
+    const message = `Error loading block operations for ${blockHash}`;
+    warn(`${message} because of ${blockError.message}`);
+    return {
+      type: "ERROR",
+      message,
+    };
+  } else if (!block) {
+    const message = `Error loading block operations for ${blockHash}`;
+    warn(message);
+    return {
+      type: "ERROR",
+      message,
+    };
+  }
+
+  return {
+    type: "SUCCESS",
+    data: { metadata, bakingRights, endorsingRights, block },
+  };
 };
 
 type GetBakingRights = (
@@ -151,8 +210,7 @@ type GetBakingRights = (
 ) => Promise<BakingRightsResponse>;
 
 /**
- * Create a memoized getBakingRights function.  The request memoizes based on cycle and delegate
- * in order to support using it for multiple delegates simultaneously.
+ * Create a memoized getBakingRights function.  The request memoizes based on cycle.
  */
 export const makeMemoizedGetBakingRights = (
   originalFunction: GetBakingRights
@@ -163,9 +221,9 @@ export const makeMemoizedGetBakingRights = (
     args: BakingRightsQueryArguments,
     { block }: { block: string }
   ) => {
-    const key = `${args.cycle}:${args.delegate}`;
+    const key = `${args.cycle}`;
     if (cache[key]) {
-      debug(`Memoized getBakingRights cache hit for ${key}`);
+      debug(`Memoized getBakingRights cache hit for cycle ${key}`);
       return cache[key];
     } else {
       debug(`Memoized getBakingRights cache miss for ${key}`);
@@ -178,89 +236,12 @@ export const makeMemoizedGetBakingRights = (
   };
 };
 
-/**
- * Fetch the baking rights for the given block to determine if the provided baker had any
- * significant events occur for that block.
- */
-export const getBlockBakingEvents = async ({
-  blockHash,
-  rpc,
-  cycle,
-  baker,
-  blockBaker,
-  blockLevel,
-}: GetBlockBakingEventsArgs): Promise<BakerNodeEvent | null> => {
-  // Taquito currently has a bug that causes it to return all priorities:
-  // https://github.com/ecadlabs/taquito/issues/580
-  // switch to max_priority: 0 after the bug is fixed
-  const [bakingRightsError, bakingRightsResponse] = await to(
-    rpc.getBakingRights(
-      {
-        max_priority: 1,
-        cycle,
-        delegate: baker,
-      },
-      { block: blockHash }
-    )
-  );
-
-  if (bakingRightsError) {
-    warn(
-      `Baking rights error: ${bakingRightsError.message} for baker ${baker}`
-    );
-    return {
-      type: "BAKER",
-      kind: "GET_BAKING_RIGHTS_ERROR",
-      message: bakingRightsError.message,
-      baker,
-    };
-  } else if (!bakingRightsResponse) {
-    const message = `Error loading block baking rights for baker ${baker}`;
-    warn(message);
-    return {
-      type: "BAKER",
-      kind: "GET_BAKING_RIGHTS_ERROR",
-      message,
-      baker,
-    };
-  }
-
-  const bakeResult = checkBlockBakingRights({
-    baker,
-    blockBaker,
-    blockLevel,
-    bakingRightsResponse,
-  });
-  if (bakeResult === "MISSED") {
-    const message = `Missed bake for block ${blockHash} for baker ${baker}`;
-    debug(message);
-    return {
-      type: "BAKER",
-      kind: "MISSED_BAKE",
-      message,
-      baker,
-    };
-  } else if (bakeResult === "SUCCESS") {
-    const message = `Successful bake for block ${blockHash} for baker ${baker}`;
-    debug(message);
-    return {
-      type: "BAKER",
-      kind: "SUCCESSFUL_BAKE",
-      message,
-      baker,
-    };
-  }
-  debug(`No bake event for block ${blockHash} for baker ${baker}`);
-  return null;
-};
-
-type BakeResult = "SUCCESS" | "MISSED" | "NONE";
-
 type CheckBlockBakingRightsArgs = {
   baker: string;
   blockBaker: string;
+  blockHash: string;
   blockLevel: number;
-  bakingRightsResponse: BakingRightsResponse;
+  bakingRights: BakingRightsResponse;
 };
 
 // For now just check for missed bakes where baker was the top priority
@@ -272,140 +253,44 @@ export const checkBlockBakingRights = ({
   baker,
   blockBaker,
   blockLevel,
-  bakingRightsResponse,
-}: CheckBlockBakingRightsArgs): BakeResult => {
-  for (const bakingRights of bakingRightsResponse) {
-    if (
-      bakingRights.level === blockLevel &&
-      bakingRights.priority === priority
-    ) {
+  bakingRights,
+  blockHash,
+}: CheckBlockBakingRightsArgs): BakerNodeEvent | null => {
+  for (const bakingRight of bakingRights) {
+    if (bakingRight.level === blockLevel && bakingRight.priority === priority) {
       debug(`found baking slot for priority ${priority} for baker ${baker}`);
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (blockBaker !== baker) {
-        info(`Missed bake detected for baker ${baker}`);
-        return "MISSED";
+        const message = `Missed bake detected for baker ${baker}`;
+        info(message);
+        return {
+          type: "BAKER",
+          kind: "MISSED_BAKE",
+          message,
+          baker,
+        };
       } else {
-        info(`Successful bake detected for baker ${baker}`);
-        return "SUCCESS";
+        const message = `Successful bake for block ${blockHash} for baker ${baker}`;
+        debug(message);
+        return {
+          type: "BAKER",
+          kind: "SUCCESSFUL_BAKE",
+          message,
+          baker,
+        };
       }
     }
   }
-  return "NONE";
-};
 
-type GetBlockEndorsingEventsArgs = {
-  rpc: RpcClient;
-  blockHash: string;
-  cycle: number;
-  baker: string;
-  blockBaker: string;
-  blockLevel: number;
-};
-
-/**
- * Fetch the endorsing rights for the given block to determine if the provided baker had any
- * significant events occur for that block.
- */
-export const getBlockEndorsingEvents = async ({
-  blockHash,
-  rpc,
-  cycle,
-  baker,
-  blockLevel,
-}: GetBlockEndorsingEventsArgs): Promise<BakerNodeEvent | null> => {
-  const [endorsingRightsError, endorsingRightsResponse] = await to(
-    rpc.getEndorsingRights(
-      {
-        cycle,
-        delegate: baker,
-      },
-      { block: `${blockLevel - 1}` }
-    )
-  );
-
-  if (endorsingRightsError) {
-    warn(
-      `Baking rights error: ${endorsingRightsError.message} for baker ${baker}`
-    );
-    return {
-      type: "BAKER",
-      kind: "GET_BAKING_RIGHTS_ERROR",
-      message: endorsingRightsError.message,
-      baker,
-    };
-  } else if (!endorsingRightsResponse) {
-    const message = `Error loading block endorsing rights for baker ${baker}`;
-    warn(message);
-    return {
-      type: "BAKER",
-      kind: "GET_BAKING_RIGHTS_ERROR",
-      message,
-      baker,
-    };
-  }
-
-  // taquito currently doesn't expose getBlockOperations
-  const [blockError, blockResponse] = await to(
-    rpc.getBlock({ block: blockHash })
-  );
-
-  if (blockError) {
-    warn(`Block operations error: ${blockError.message} for baker ${baker}`);
-    return {
-      type: "BAKER",
-      kind: "GET_BLOCK_OPERATIONS_ERROR",
-      message: blockError.message,
-      baker,
-    };
-  } else if (!blockResponse) {
-    const message = `Error loading block operations for baker ${baker}`;
-    warn(message);
-    return {
-      type: "BAKER",
-      kind: "GET_BLOCK_OPERATIONS_ERROR",
-      message,
-      baker,
-    };
-  }
-
-  const endorsementOperations = blockResponse.operations[0];
-
-  const endorseResult = checkBlockEndorsingRights({
-    baker,
-    blockLevel,
-    endorsingRightsResponse,
-    endorsementOperations, // endorsements are always in the first group
-  });
-  if (endorseResult === "MISSED") {
-    const message = `Missed endorse for block ${blockHash} for baker ${baker}`;
-    debug(message);
-    return {
-      type: "BAKER",
-      kind: "MISSED_ENDORSE",
-      message,
-      baker,
-    };
-  } else if (endorseResult === "SUCCESS") {
-    const message = `Successful endorse for block ${blockHash} for baker ${baker}`;
-    debug(message);
-    return {
-      type: "BAKER",
-      kind: "SUCCESSFUL_ENDORSE",
-      message,
-      baker,
-    };
-  }
-  debug(`No endorse event for block ${blockHash} for baker ${baker}`);
+  debug(`No bake event for block ${blockHash} for baker ${baker}`);
   return null;
 };
-
-type EndorsingResult = "SUCCESS" | "MISSED" | "NONE";
 
 type CheckBlockEndorsingRightsArgs = {
   baker: string;
   endorsementOperations: OperationEntry[];
   blockLevel: number;
-  endorsingRightsResponse: EndorsingRightsResponse;
+  endorsingRights: EndorsingRightsResponse;
 };
 
 /**
@@ -415,10 +300,10 @@ export const checkBlockEndorsingRights = ({
   baker,
   endorsementOperations,
   blockLevel,
-  endorsingRightsResponse,
-}: CheckBlockEndorsingRightsArgs): EndorsingResult => {
+  endorsingRights,
+}: CheckBlockEndorsingRightsArgs): BakerNodeEvent | null => {
   const shouldEndorse =
-    endorsingRightsResponse.find(
+    endorsingRights.find(
       (right) => right.level === blockLevel - 1 && right.delegate === baker
     ) !== undefined;
 
@@ -428,15 +313,28 @@ export const checkBlockEndorsingRights = ({
       endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
       undefined;
     if (didEndorse) {
-      info(`Successful endorse detected for baker ${baker}`);
-      return "SUCCESS";
+      const message = `Successful endorse for baker ${baker}`;
+      debug(message);
+      return {
+        type: "BAKER",
+        kind: "SUCCESSFUL_ENDORSE",
+        message,
+        baker,
+      };
     } else {
-      info(`Missed endorse detected for baker ${baker}`);
-      return "MISSED";
+      const message = `Missed endorse for baker ${baker}`;
+      debug(message);
+      return {
+        type: "BAKER",
+        kind: "MISSED_ENDORSE",
+        message,
+        baker,
+      };
     }
   }
 
-  return "NONE";
+  debug(`No endorse event for baker ${baker}`);
+  return null;
 };
 
 const isEndorsementByDelegate = (
