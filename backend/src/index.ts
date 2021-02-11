@@ -92,6 +92,7 @@ process.on("SIGINT", () => {
   if (bakerMonitor) BakerMonitor.halt(bakerMonitor);
   if (nodeMonitor) NodeMonitor.halt(nodeMonitor);
   Server.halt(server);
+  process.exit(0);
 });
 
 info("Kiln started");
