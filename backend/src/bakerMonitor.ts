@@ -135,16 +135,32 @@ export const loadBlockData = async ({
   // Taquito currently has a bug that causes it to return all priorities:
   // https://github.com/ecadlabs/taquito/issues/580
   // switch to max_priority: 0 after the bug is fixed
-  const [bakingRightsError, bakingRights] = await to(
-    rpc.getBakingRights(
-      {
-        max_priority: 1,
-        cycle: metadata.level.cycle,
-        delegate: bakers,
-      },
-      { block: blockHash }
-    )
+  const bakingRightsPromise = rpc.getBakingRights(
+    {
+      max_priority: 1,
+      cycle: metadata.level.cycle,
+      delegate: bakers,
+    },
+    { block: blockHash }
   );
+
+  const endorsingRightsPromise = rpc.getEndorsingRights(
+    {
+      cycle: metadata.level.cycle,
+      delegate: bakers,
+    },
+    { block: `${metadata.level.level - 1}` }
+  );
+  const blockPromise = rpc.getBlock({ block: blockHash });
+
+  // run all promises in parallel
+  await Promise.all([
+    bakingRightsPromise,
+    endorsingRightsPromise,
+    blockPromise,
+  ]);
+
+  const [bakingRightsError, bakingRights] = await to(bakingRightsPromise);
 
   if (bakingRightsError) {
     warn(`Baking rights error: ${bakingRightsError.message}`);
@@ -155,13 +171,7 @@ export const loadBlockData = async ({
   }
 
   const [endorsingRightsError, endorsingRights] = await to(
-    rpc.getEndorsingRights(
-      {
-        cycle: metadata.level.cycle,
-        delegate: bakers,
-      },
-      { block: `${metadata.level.level - 1}` }
-    )
+    endorsingRightsPromise
   );
 
   if (endorsingRightsError) {
@@ -180,7 +190,7 @@ export const loadBlockData = async ({
   }
 
   // taquito currently doesn't expose getBlockOperations
-  const [blockError, block] = await to(rpc.getBlock({ block: blockHash }));
+  const [blockError, block] = await to(blockPromise);
 
   if (blockError) {
     const message = `Error loading block operations for ${blockHash}`;
