@@ -2,11 +2,12 @@ import { NotifyResult, TezosNodeEvent } from "./types";
 import * as EmailChannel from "./emailNotificationChannel";
 import * as DesktopChannel from "./desktopNotificationChannel";
 import * as SlackChannel from "./slackNotificationChannel";
+import * as TelegramChannel from "./telegramNotificationChannel";
 import { debug, error } from "loglevel";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 
-type NotifierService = "EMAIL" | "DESKTOP" | "SLACK";
+type NotifierService = "EMAIL" | "DESKTOP" | "SLACK" | "TELEGRAM";
 
 type NotificationJob = {
   service: NotifierService;
@@ -17,6 +18,7 @@ export type Config = {
   emailConfig?: EmailChannel.Config;
   desktopConfig?: DesktopChannel.Config;
   slackConfig?: SlackChannel.Config;
+  telegramConfig?: TelegramChannel.Config;
   maxRetries: number;
   retryDelay: number;
 };
@@ -26,6 +28,7 @@ type Notifier = {
   emailChannel: EmailChannel.EmailNotificationChannel | undefined;
   desktopChannel: DesktopChannel.DesktopNotificationChannel | undefined;
   slackChannel: SlackChannel.SlackNotificationChannel | undefined;
+  telegramChannel: TelegramChannel.TelegramNotificationChannel | undefined;
 };
 
 /**
@@ -40,6 +43,9 @@ export const create = (config: Config): Notifier => {
     : undefined;
   const slackChannel = config.slackConfig
     ? SlackChannel.create(config.slackConfig)
+    : undefined;
+  const telegramChannel = config.telegramConfig
+    ? TelegramChannel.create(config.telegramConfig)
     : undefined;
 
   const store = new SqlLiteStore<NotificationJob>();
@@ -63,6 +69,7 @@ export const create = (config: Config): Notifier => {
     emailChannel,
     desktopChannel,
     slackChannel,
+    telegramChannel,
   };
 
   return notifier;
@@ -77,6 +84,8 @@ export const notify = (notifier: Notifier, event: TezosNodeEvent): void => {
   if (notifier.desktopChannel)
     notifier.queue.push({ service: "DESKTOP", event });
   if (notifier.slackChannel) notifier.queue.push({ service: "SLACK", event });
+  if (notifier.telegramChannel)
+    notifier.queue.push({ service: "TELEGRAM", event });
 };
 
 /**
@@ -125,6 +134,19 @@ const handleJob = (
         return Promise.resolve({
           kind: "ERROR",
           error: new Error("No slack notifier configured"),
+        });
+      }
+    case "TELEGRAM":
+      if (notifier.telegramChannel) {
+        debug("Event sent to telegram notifier");
+        return TelegramChannel.notify(notifier.telegramChannel, job.event);
+      } else {
+        error(
+          "Received notification job for telegram, but no telegram notifier is configured"
+        );
+        return Promise.resolve({
+          kind: "ERROR",
+          error: new Error("No telegram notifier configured"),
         });
       }
   }
