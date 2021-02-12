@@ -1,26 +1,30 @@
-import { IncomingWebhook } from "@slack/webhook";
-import { notify } from "./slackNotificationChannel";
+import * as TelegramBot from "node-telegram-bot-api";
+import {
+  notify,
+  TelegramNotificationChannel,
+} from "./telegramNotificationChannel";
 
-const send = jest.fn();
+const sendMessage = jest.fn();
 
-const notifier = {
-  webhook: ({ send } as unknown) as IncomingWebhook,
+const notifier: TelegramNotificationChannel = {
+  bot: ({ sendMessage } as unknown) as TelegramBot,
+  chatId: 12,
 };
 
 describe("notify", () => {
-  test("sends slack notification", () => {
+  test("sends telegram notification", () => {
     notify(notifier, {
       type: "PEER",
       kind: "NODE_BEHIND",
       message: "some error message",
       node: "http://somenode",
     });
-    expect(send.mock.calls.length).toBe(1);
-    expect(send.mock.calls[0][0]).toEqual("some error message");
+    expect(sendMessage.mock.calls.length).toBe(1);
+    expect(sendMessage.mock.calls[0]).toEqual([12, "some error message"]);
   });
 
   test("resolves to success string when successful", () => {
-    send.mockResolvedValue(true);
+    sendMessage.mockResolvedValue(true);
 
     const result = notify(notifier, {
       type: "PEER",
@@ -33,7 +37,7 @@ describe("notify", () => {
 
   test("resolves to error object when unsuccessful", () => {
     const error = new Error("error showing notification");
-    send.mockRejectedValue(error);
+    sendMessage.mockRejectedValue(error);
     const result = notify(notifier, {
       type: "PEER",
       kind: "NODE_BEHIND",

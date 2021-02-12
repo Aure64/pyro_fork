@@ -78,7 +78,7 @@ describe("loadBlockData", () => {
       getEndorsingRights,
     } as unknown) as RpcClient;
 
-    const result = await loadBlockData({
+    await loadBlockData({
       bakers: [delegate],
       blockHash: "some_hash",
       rpc,
