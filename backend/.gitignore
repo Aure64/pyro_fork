@@ -3,3 +3,7 @@
 
 # production
 /dist
+
+# local temp files
+/tmp/*
+!/tmp/.gitkeep

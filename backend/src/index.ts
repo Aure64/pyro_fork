@@ -67,10 +67,13 @@ if (bakers.length === 0 && nodes.length === 0) {
   process.exit(1);
 }
 
+const storageDirectory = "./tmp";
+
 const notifierConfig: Notifier.Config = {
   desktopConfig: { enableSound: false },
   maxRetries: 10,
   retryDelay: 60000,
+  storageDirectory,
 };
 
 const notifier = Notifier.create(notifierConfig);
