@@ -9,9 +9,16 @@ import * as SqlLiteStore from "better-queue-sqlite";
 
 type NotifierService = "EMAIL" | "DESKTOP" | "SLACK" | "TELEGRAM";
 
+export type NotifierEvent = {
+  type: "NOTIFIER";
+  service: NotifierService;
+  kind: "ERROR";
+  message: string;
+};
+
 type NotificationJob = {
   service: NotifierService;
-  event: TezosNodeEvent;
+  event: TezosNodeEvent | NotifierEvent;
 };
 
 export type Config = {
@@ -58,6 +65,12 @@ export const create = (config: Config): Notifier => {
         switch (result.kind) {
           case "ERROR":
             callback(result, null);
+            notify(notifier, {
+              type: "NOTIFIER",
+              kind: "ERROR",
+              service: event.service,
+              message: `Error sending ${event.service} notification`,
+            });
             break;
 
           default:
@@ -79,7 +92,10 @@ export const create = (config: Config): Notifier => {
  * Push Tezos event onto notification job queue.  If notification fails for a certain type (eg email)
  * it will automatically be retried according to your retry settings in Config.
  */
-export const notify = (notifier: Notifier, event: TezosNodeEvent): void => {
+export const notify = (
+  notifier: Notifier,
+  event: TezosNodeEvent | NotifierEvent
+): void => {
   if (notifier.emailChannel) notifier.queue.push({ service: "EMAIL", event });
   if (notifier.desktopChannel)
     notifier.queue.push({ service: "DESKTOP", event });
@@ -100,7 +116,7 @@ const handleJob = (
     case "EMAIL":
       if (notifier.emailChannel) {
         debug("Event sent to email notifier");
-        return EmailChannel.notify(notifier.emailChannel, job.event);
+        return EmailChannel.notify(notifier.emailChannel, job.event.message);
       } else {
         error(
           "Received notification job for email, but no email notifier is configured"
@@ -113,7 +129,10 @@ const handleJob = (
     case "DESKTOP":
       if (notifier.desktopChannel) {
         debug("Event sent to desktop notifier");
-        return DesktopChannel.notify(notifier.desktopChannel, job.event);
+        return DesktopChannel.notify(
+          notifier.desktopChannel,
+          job.event.message
+        );
       } else {
         error(
           "Received notification job for desktop, but no desktop notifier is configured"
@@ -126,7 +145,7 @@ const handleJob = (
     case "SLACK":
       if (notifier.slackChannel) {
         debug("Event sent to slack notifier");
-        return SlackChannel.notify(notifier.slackChannel, job.event);
+        return SlackChannel.notify(notifier.slackChannel, job.event.message);
       } else {
         error(
           "Received notification job for slack, but no slack notifier is configured"
@@ -139,7 +158,10 @@ const handleJob = (
     case "TELEGRAM":
       if (notifier.telegramChannel) {
         debug("Event sent to telegram notifier");
-        return TelegramChannel.notify(notifier.telegramChannel, job.event);
+        return TelegramChannel.notify(
+          notifier.telegramChannel,
+          job.event.message
+        );
       } else {
         error(
           "Received notification job for telegram, but no telegram notifier is configured"

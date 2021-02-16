@@ -9,12 +9,7 @@ const notifier = {
 
 describe("notify", () => {
   test("sends slack notification", () => {
-    notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    notify(notifier, "some error message");
     expect(send.mock.calls.length).toBe(1);
     expect(send.mock.calls[0][0]).toEqual("some error message");
   });
@@ -22,24 +17,14 @@ describe("notify", () => {
   test("resolves to success string when successful", () => {
     send.mockResolvedValue(true);
 
-    const result = notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    const result = notify(notifier, "some error message");
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
   test("resolves to error object when unsuccessful", () => {
     const error = new Error("error showing notification");
     send.mockRejectedValue(error);
-    const result = notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    const result = notify(notifier, "some error message");
     return expect(result).resolves.toEqual({ kind: "ERROR", error });
   });
 });

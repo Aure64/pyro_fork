@@ -33,10 +33,7 @@ export type NotifyResult =
   | { kind: "SUCCESS" }
   | { kind: "ERROR"; error: Error };
 
-export type Notify<T> = (
-  notifier: T,
-  event: TezosNodeEvent
-) => Promise<NotifyResult>;
+export type Notify<T> = (notifier: T, message: string) => Promise<NotifyResult>;
 
 export type Result<T> =
   | { type: "SUCCESS"; data: T }

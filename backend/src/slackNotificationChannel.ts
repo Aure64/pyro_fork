@@ -14,10 +14,10 @@ export const create = (config: Config): SlackNotificationChannel => {
 
 export const notify: Notify<SlackNotificationChannel> = async (
   notifier,
-  event
+  message
 ) => {
   try {
-    await notifier.webhook.send(event.message);
+    await notifier.webhook.send(message);
     return { kind: "SUCCESS" };
   } catch (error) {
     return { kind: "ERROR", error };
