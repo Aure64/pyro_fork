@@ -6,6 +6,7 @@ import * as TelegramChannel from "./telegramNotificationChannel";
 import { debug, error } from "loglevel";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
+import { normalize } from "path";
 
 type NotifierService = "EMAIL" | "DESKTOP" | "SLACK" | "TELEGRAM";
 
@@ -28,6 +29,7 @@ export type Config = {
   telegramConfig?: TelegramChannel.Config;
   maxRetries: number;
   retryDelay: number;
+  storageDirectory: string;
 };
 
 type Notifier = {
@@ -55,7 +57,9 @@ export const create = (config: Config): Notifier => {
     ? TelegramChannel.create(config.telegramConfig)
     : undefined;
 
-  const store = new SqlLiteStore<NotificationJob>();
+  const store = new SqlLiteStore<NotificationJob>({
+    path: normalize(`${config.storageDirectory}/notifier.db`),
+  });
   const notifier: Notifier = {
     queue: new BetterQueue(
       // callback: (error, result) => void
