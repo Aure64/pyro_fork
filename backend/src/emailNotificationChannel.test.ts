@@ -19,16 +19,11 @@ describe("notify", () => {
     const notifier = { config, transporter };
     const mockedTransporter = mocked(transporter);
 
-    notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    notify(notifier, "some error message");
     expect(mockedTransporter.sendMail.mock.calls.length).toBe(1);
     expect(mockedTransporter.sendMail.mock.calls[0][0]).toEqual({
       text: "some error message",
-      subject: "Kiln Event: NODE_BEHIND",
+      subject: "Kiln Event",
       to: "admin@example.com",
       from: "admin@example.com",
     });
@@ -40,12 +35,7 @@ describe("notify", () => {
     } as unknown) as Transporter;
     const notifier = { config, transporter };
 
-    const result = notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    const result = notify(notifier, "some error message");
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
@@ -56,12 +46,7 @@ describe("notify", () => {
     } as unknown) as Transporter;
     const notifier = { config, transporter };
 
-    const result = notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    const result = notify(notifier, "some error message");
     return expect(result).resolves.toEqual({ kind: "ERROR", error });
   });
 });

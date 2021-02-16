@@ -33,15 +33,15 @@ export const create = (config: Config): EmailNotificationChannel => {
 
 export const notify: Notify<EmailNotificationChannel> = async (
   notifier,
-  event
+  message
 ) => {
   const { transporter, config } = notifier;
   const [error] = await to(
     transporter.sendMail({
       from: config.email,
       to: config.email,
-      subject: `Kiln Event: ${event.kind}`,
-      text: event.message,
+      subject: "Kiln Event",
+      text: message,
     })
   );
   if (error) {

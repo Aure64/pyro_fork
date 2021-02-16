@@ -13,12 +13,7 @@ const notifier: TelegramNotificationChannel = {
 
 describe("notify", () => {
   test("sends telegram notification", () => {
-    notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    notify(notifier, "some error message");
     expect(sendMessage.mock.calls.length).toBe(1);
     expect(sendMessage.mock.calls[0]).toEqual([12, "some error message"]);
   });
@@ -26,24 +21,14 @@ describe("notify", () => {
   test("resolves to success string when successful", () => {
     sendMessage.mockResolvedValue(true);
 
-    const result = notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    const result = notify(notifier, "some error message");
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
   test("resolves to error object when unsuccessful", () => {
     const error = new Error("error showing notification");
     sendMessage.mockRejectedValue(error);
-    const result = notify(notifier, {
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      message: "some error message",
-      node: "http://somenode",
-    });
+    const result = notify(notifier, "some error message");
     return expect(result).resolves.toEqual({ kind: "ERROR", error });
   });
 });
