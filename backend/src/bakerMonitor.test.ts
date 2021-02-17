@@ -9,6 +9,7 @@ import { responseWithPriorityZero, priorityZero } from "./testFixtures/baking";
 import {
   endorsementsWithMiss,
   endorsementsWithSuccess,
+  endorsementsWithDoubleEndorse,
   endorsingRightsResponse,
   baker as endorsementBaker,
   level as endorsementLevel,
@@ -153,6 +154,7 @@ describe("checkBlockEndorsingRights", () => {
       endorsementOperations: endorsementsWithSuccess,
       blockLevel: endorsementLevel + 1,
       endorsingRights: endorsingRightsResponse,
+      blockHash: "some_hash",
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -163,12 +165,30 @@ describe("checkBlockEndorsingRights", () => {
     });
   });
 
+  it("returns double when present in rights and multiple endorsements were made", () => {
+    const result = checkBlockEndorsingRights({
+      baker: endorsementBaker,
+      endorsementOperations: endorsementsWithDoubleEndorse,
+      blockLevel: endorsementLevel + 1,
+      endorsingRights: endorsingRightsResponse,
+      blockHash: "some_hash",
+    });
+    expect(result).toEqual({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      kind: "DOUBLE_ENDORSE",
+      message:
+        "Double endorsement for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at block some_hash",
+      type: "BAKER",
+    });
+  });
+
   it("returns missed when present in rights but no endorsement was made", () => {
     const result = checkBlockEndorsingRights({
       baker: endorsementBaker,
       endorsementOperations: endorsementsWithMiss,
       blockLevel: endorsementLevel + 1,
       endorsingRights: endorsingRightsResponse,
+      blockHash: "some_hash",
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -184,6 +204,7 @@ describe("checkBlockEndorsingRights", () => {
       endorsementOperations: endorsementsWithMiss,
       blockLevel: endorsementLevel + 1,
       endorsingRights: endorsingRightsResponse,
+      blockHash: "some_hash",
     });
     expect(result).toBe(null);
   });
@@ -194,6 +215,7 @@ describe("checkBlockEndorsingRights", () => {
       endorsementOperations: endorsementsWithMiss,
       blockLevel: 12,
       endorsingRights: endorsingRightsResponse,
+      blockHash: "some_hash",
     });
     expect(result).toBe(null);
   });

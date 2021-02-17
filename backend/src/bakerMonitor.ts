@@ -76,6 +76,7 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
           blockLevel: metadata.level.level,
           endorsementOperations: block.operations[0],
           endorsingRights,
+          blockHash,
         });
         if (endorsingEvent) onEvent(endorsingEvent);
       }
@@ -301,6 +302,7 @@ type CheckBlockEndorsingRightsArgs = {
   endorsementOperations: OperationEntry[];
   blockLevel: number;
   endorsingRights: EndorsingRightsResponse;
+  blockHash: string;
 };
 
 /**
@@ -311,6 +313,7 @@ export const checkBlockEndorsingRights = ({
   endorsementOperations,
   blockLevel,
   endorsingRights,
+  blockHash,
 }: CheckBlockEndorsingRightsArgs): BakerNodeEvent | null => {
   const shouldEndorse =
     endorsingRights.find(
@@ -319,10 +322,21 @@ export const checkBlockEndorsingRights = ({
 
   if (shouldEndorse) {
     debug(`found endorsing slot for for baker ${baker}`);
-    const didEndorse =
-      endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
-      undefined;
-    if (didEndorse) {
+    const endorsements = endorsementOperations.filter((op) =>
+      isEndorsementByDelegate(op, baker)
+    );
+    const didEndorse = endorsements.length > 0;
+    const doubleEndorsed = endorsements.length > 1;
+    if (doubleEndorsed) {
+      const message = `Double endorsement for baker ${baker} at block ${blockHash}`;
+      debug(message);
+      return {
+        type: "BAKER",
+        kind: "DOUBLE_ENDORSE",
+        message,
+        baker,
+      };
+    } else if (didEndorse) {
       const message = `Successful endorse for baker ${baker}`;
       debug(message);
       return {
