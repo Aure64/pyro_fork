@@ -246,6 +246,12 @@ export const endorsementsWithSuccess = [
   successfulEndorsement,
 ];
 
+export const endorsementsWithDoubleEndorse = [
+  ...endorsementsWithMiss,
+  successfulEndorsement,
+  successfulEndorsement,
+];
+
 export const endorsingRightsResponse: EndorsingRightsResponse = [
   {
     level: 1318230,
