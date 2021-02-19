@@ -1,4 +1,9 @@
-import { EndorsingRightsResponse, OperationEntry, OpKind } from "@taquito/rpc";
+import {
+  EndorsingRightsResponse,
+  OperationContentsDoubleEndorsement,
+  OperationEntry,
+  OpKind,
+} from "@taquito/rpc";
 
 export const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
 export const level = 1318230;
@@ -246,12 +251,6 @@ export const endorsementsWithSuccess = [
   successfulEndorsement,
 ];
 
-export const endorsementsWithDoubleEndorse = [
-  ...endorsementsWithMiss,
-  successfulEndorsement,
-  successfulEndorsement,
-];
-
 export const endorsingRightsResponse: EndorsingRightsResponse = [
   {
     level: 1318230,
@@ -384,5 +383,35 @@ export const endorsingRightsResponse: EndorsingRightsResponse = [
     delegate: "tz1Ldzz6k1BHdhuKvAtMRX7h5kJSMHESMHLC",
     slots: [11],
     estimated_time: new Date("2021-01-26T15:27:34Z"),
+  },
+];
+
+const operationContentsWithDoubleEndorsement: OperationContentsDoubleEndorsement = {
+  kind: OpKind.DOUBLE_ENDORSEMENT_EVIDENCE,
+  op1: {
+    branch: "",
+    operations: {
+      kind: OpKind.ENDORSEMENT,
+      level,
+    },
+    signature: successfulEndorsement.signature,
+  },
+  op2: {
+    branch: "",
+    operations: {
+      kind: OpKind.ENDORSEMENT,
+      level,
+    },
+    signature: "",
+  },
+};
+
+export const operationsWithDoubleEndorsementAccusation: OperationEntry[] = [
+  {
+    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    chain_id: "NetXdQprcVkpaWU",
+    hash: "opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
+    branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+    contents: [operationContentsWithDoubleEndorsement],
   },
 ];

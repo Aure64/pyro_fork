@@ -63,6 +63,8 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
       } = blockResult.data;
 
       for (const baker of bakers) {
+        const endorsementOperations = block.operations[0];
+        const anonymousOperations = block.operations[2];
         const bakingEvent = checkBlockBakingRights({
           baker,
           bakingRights,
@@ -74,11 +76,18 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
         const endorsingEvent = checkBlockEndorsingRights({
           baker,
           blockLevel: metadata.level.level,
-          endorsementOperations: block.operations[0],
+          endorsementOperations,
           endorsingRights,
-          blockHash,
         });
         if (endorsingEvent) onEvent(endorsingEvent);
+        const accusationEvents = await checkBlockAccusations({
+          baker,
+          operations: anonymousOperations,
+          rpc,
+        });
+        for (const accusationEvent of accusationEvents) {
+          onEvent(accusationEvent);
+        }
       }
     }
   });
@@ -302,7 +311,6 @@ type CheckBlockEndorsingRightsArgs = {
   endorsementOperations: OperationEntry[];
   blockLevel: number;
   endorsingRights: EndorsingRightsResponse;
-  blockHash: string;
 };
 
 /**
@@ -313,7 +321,6 @@ export const checkBlockEndorsingRights = ({
   endorsementOperations,
   blockLevel,
   endorsingRights,
-  blockHash,
 }: CheckBlockEndorsingRightsArgs): BakerNodeEvent | null => {
   const shouldEndorse =
     endorsingRights.find(
@@ -322,21 +329,10 @@ export const checkBlockEndorsingRights = ({
 
   if (shouldEndorse) {
     debug(`found endorsing slot for for baker ${baker}`);
-    const endorsements = endorsementOperations.filter((op) =>
-      isEndorsementByDelegate(op, baker)
-    );
-    const didEndorse = endorsements.length > 0;
-    const doubleEndorsed = endorsements.length > 1;
-    if (doubleEndorsed) {
-      const message = `Double endorsement for baker ${baker} at block ${blockHash}`;
-      debug(message);
-      return {
-        type: "BAKER",
-        kind: "DOUBLE_ENDORSE",
-        message,
-        baker,
-      };
-    } else if (didEndorse) {
+    const didEndorse =
+      endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
+      undefined;
+    if (didEndorse) {
       const message = `Successful endorse for baker ${baker}`;
       debug(message);
       return {
@@ -373,4 +369,75 @@ const isEndorsementByDelegate = (
   }
 
   return false;
+};
+
+type CheckBlockAccusationsArgs = {
+  baker: string;
+  operations: OperationEntry[];
+  rpc: RpcClient;
+};
+
+export const checkBlockAccusations = async ({
+  baker,
+  operations,
+  rpc,
+}: CheckBlockAccusationsArgs): Promise<TezosNodeEvent[]> => {
+  const events: BakerNodeEvent[] = [];
+
+  for (const operation of operations) {
+    for (const contentsItem of operation.contents) {
+      if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
+        const accusedLevel = contentsItem.op1.operations.level;
+        const accusedSignature = contentsItem.op1.signature;
+        const [blockError, blockResult] = await to(
+          rpc.getBlock({ block: `${accusedLevel}` })
+        );
+        if (blockResult) {
+          const endorsementOperations = blockResult.operations[0];
+          const operation = endorsementOperations.find(
+            (operation) => operation.signature === accusedSignature
+          );
+          const endorser = operation && findEndorserForOperation(operation);
+          if (endorser) {
+            if (endorser === baker) {
+              const message = `Double endorsement for baker ${baker} at block ${blockResult.hash}`;
+              info(message);
+              events.push({
+                type: "BAKER",
+                kind: "DOUBLE_ENDORSE",
+                message,
+                baker,
+              });
+            }
+          } else {
+            warn(
+              `Unable to find endorser for double endorsed block ${blockResult.hash}`
+            );
+          }
+        } else if (blockError) {
+          warn(
+            `Error fetching block info to determine double endorsement violator because of ${blockError.message}`
+          );
+        } else {
+          warn(
+            "Error fetching block info to determine double endorsement violator"
+          );
+        }
+      }
+    }
+  }
+
+  return events;
+};
+
+/**
+ * Searches through the contents of an operation to find the delegate who performed the endorsement.
+ */
+const findEndorserForOperation = (operation: OperationEntry) => {
+  for (const contentsItem of operation.contents) {
+    if (contentsItem.kind === OpKind.ENDORSEMENT && "metadata" in contentsItem)
+      return contentsItem.metadata.delegate;
+  }
+
+  return null;
 };
