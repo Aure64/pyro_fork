@@ -1,6 +1,7 @@
 export type BakerNodeEventKind =
   | "MISSED_BAKE"
   | "SUCCESSFUL_BAKE"
+  | "DOUBLE_BAKE"
   | "MISSED_ENDORSE"
   | "SUCCESSFUL_ENDORSE"
   | "DOUBLE_ENDORSE";
