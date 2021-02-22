@@ -1,5 +1,6 @@
 import {
-  checkBlockAccusations,
+  checkBlockAccusationsForDoubleBake,
+  checkBlockAccusationsForDoubleEndorsement,
   checkBlockBakingRights,
   checkBlockEndorsingRights,
   loadBlockData,
@@ -14,6 +15,7 @@ import {
   baker as endorsementBaker,
   level as endorsementLevel,
   operationsWithDoubleEndorsementAccusation,
+  operationsWithDoubleBakeAccusation,
 } from "./testFixtures/endorsing";
 setLevel("SILENT");
 import { RpcClient } from "@taquito/rpc";
@@ -201,7 +203,7 @@ describe("checkBlockEndorsingRights", () => {
   });
 });
 
-describe("checkBlockAccusations", () => {
+describe("checkBlockAccusationsForDoubleEndorsement", () => {
   it("returns double endorsement when baker is accused", async () => {
     const getBlock = jest.fn().mockResolvedValue({
       hash: "some_hash",
@@ -211,20 +213,18 @@ describe("checkBlockAccusations", () => {
       getBlock,
     } as unknown) as RpcClient;
 
-    const result = await checkBlockAccusations({
+    const result = await checkBlockAccusationsForDoubleEndorsement({
       baker: endorsementBaker,
       rpc,
       operations: operationsWithDoubleEndorsementAccusation,
     });
-    expect(result).toEqual([
-      {
-        baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-        kind: "DOUBLE_ENDORSE",
-        message:
-          "Double endorsement for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at block some_hash",
-        type: "BAKER",
-      },
-    ]);
+    expect(result).toEqual({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      kind: "DOUBLE_ENDORSE",
+      message:
+        "Double endorsement for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at block some_hash",
+      type: "BAKER",
+    });
   });
   it("Does not fetch block when there are no accusations", async () => {
     const getBlock = jest.fn();
@@ -232,12 +232,50 @@ describe("checkBlockAccusations", () => {
       getBlock,
     } as unknown) as RpcClient;
 
-    const result = await checkBlockAccusations({
+    const result = await checkBlockAccusationsForDoubleEndorsement({
       baker: endorsementBaker,
       rpc,
       operations: [],
     });
-    expect(result).toEqual([]);
+    expect(result).toEqual(null);
+    expect(getBlock.mock.calls.length).toEqual(0);
+  });
+});
+
+describe("checkBlockAccusationsForDoubleBake", () => {
+  it("returns double bake when baker is accused", async () => {
+    const getBakingRights = jest
+      .fn()
+      .mockResolvedValue(responseWithPriorityZero);
+    const rpc = ({
+      getBakingRights,
+    } as unknown) as RpcClient;
+
+    const result = await checkBlockAccusationsForDoubleBake({
+      baker: delegate,
+      rpc,
+      operations: operationsWithDoubleBakeAccusation,
+    });
+    expect(result).toEqual({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      kind: "DOUBLE_BAKE",
+      message:
+        "Double bake for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1299013 with hash opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
+      type: "BAKER",
+    });
+  });
+  it("Does not fetch baking rights when there are no accusations", async () => {
+    const getBlock = jest.fn();
+    const rpc = ({
+      getBlock,
+    } as unknown) as RpcClient;
+
+    const result = await checkBlockAccusationsForDoubleBake({
+      baker: delegate,
+      rpc,
+      operations: [],
+    });
+    expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);
   });
 });

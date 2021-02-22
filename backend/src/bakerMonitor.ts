@@ -80,13 +80,23 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
           endorsingRights,
         });
         if (endorsingEvent) onEvent(endorsingEvent);
-        const accusationEvents = await checkBlockAccusations({
+        const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
           baker,
           operations: anonymousOperations,
           rpc,
         });
-        for (const accusationEvent of accusationEvents) {
-          onEvent(accusationEvent);
+        if (doubleBakeEvent) {
+          onEvent(doubleBakeEvent);
+        }
+        const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement(
+          {
+            baker,
+            operations: anonymousOperations,
+            rpc,
+          }
+        );
+        if (doubleEndorseEvent) {
+          onEvent(doubleEndorseEvent);
         }
       }
     }
@@ -371,19 +381,17 @@ const isEndorsementByDelegate = (
   return false;
 };
 
-type CheckBlockAccusationsArgs = {
+type CheckBlockAccusationsForDoubleEndorsementArgs = {
   baker: string;
   operations: OperationEntry[];
   rpc: RpcClient;
 };
 
-export const checkBlockAccusations = async ({
+export const checkBlockAccusationsForDoubleEndorsement = async ({
   baker,
   operations,
   rpc,
-}: CheckBlockAccusationsArgs): Promise<TezosNodeEvent[]> => {
-  const events: BakerNodeEvent[] = [];
-
+}: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<TezosNodeEvent | null> => {
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
@@ -402,12 +410,12 @@ export const checkBlockAccusations = async ({
             if (endorser === baker) {
               const message = `Double endorsement for baker ${baker} at block ${blockResult.hash}`;
               info(message);
-              events.push({
+              return {
                 type: "BAKER",
                 kind: "DOUBLE_ENDORSE",
                 message,
                 baker,
-              });
+              };
             }
           } else {
             warn(
@@ -427,7 +435,7 @@ export const checkBlockAccusations = async ({
     }
   }
 
-  return events;
+  return null;
 };
 
 /**
@@ -437,6 +445,61 @@ const findEndorserForOperation = (operation: OperationEntry) => {
   for (const contentsItem of operation.contents) {
     if (contentsItem.kind === OpKind.ENDORSEMENT && "metadata" in contentsItem)
       return contentsItem.metadata.delegate;
+  }
+
+  return null;
+};
+
+type CheckBlockAccusationsForDoubleBakeArgs = {
+  baker: string;
+  operations: OperationEntry[];
+  rpc: RpcClient;
+};
+
+export const checkBlockAccusationsForDoubleBake = async ({
+  baker,
+  operations,
+  rpc,
+}: CheckBlockAccusationsForDoubleBakeArgs): Promise<TezosNodeEvent | null> => {
+  for (const operation of operations) {
+    for (const contentsItem of operation.contents) {
+      if (contentsItem.kind === OpKind.DOUBLE_BAKING_EVIDENCE) {
+        const accusedHash = operation.hash;
+        const accusedLevel = contentsItem.bh1.level;
+        const accusedPriority = contentsItem.bh1.priority;
+        const [bakingRightsError, bakingRights] = await to(
+          rpc.getBakingRights(
+            { delegate: baker, level: accusedLevel },
+            { block: `${accusedLevel}` }
+          )
+        );
+        if (bakingRights) {
+          const hadBakingRights =
+            bakingRights.find(
+              (right) =>
+                right.priority === accusedPriority && right.delegate === baker
+            ) !== undefined;
+          if (hadBakingRights) {
+            const message = `Double bake for baker ${baker} at level ${accusedLevel} with hash ${accusedHash}`;
+            info(message);
+            return {
+              type: "BAKER",
+              kind: "DOUBLE_BAKE",
+              message,
+              baker,
+            };
+          }
+        } else if (bakingRightsError) {
+          warn(
+            `Error fetching baking rights to determine double bake violator because of ${bakingRightsError.message}`
+          );
+        } else {
+          warn(
+            "Error fetching baking rights to determine double bake violator"
+          );
+        }
+      }
+    }
   }
 
   return null;

@@ -1,5 +1,6 @@
 import {
   EndorsingRightsResponse,
+  OperationContentsDoubleBaking,
   OperationContentsDoubleEndorsement,
   OperationEntry,
   OpKind,
@@ -413,5 +414,45 @@ export const operationsWithDoubleEndorsementAccusation: OperationEntry[] = [
     hash: "opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
     branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
     contents: [operationContentsWithDoubleEndorsement],
+  },
+];
+
+const operationContentsWithDoubleBake: OperationContentsDoubleBaking = {
+  kind: OpKind.DOUBLE_BAKING_EVIDENCE,
+  bh1: {
+    level: 1299013,
+    proto: 12,
+    predecessor: "",
+    timestamp: "",
+    validation_pass: 1,
+    operations_hash: "",
+    fitness: [],
+    context: "",
+    priority: 0,
+    proof_of_work_nonce: "",
+    signature: "",
+  },
+  bh2: {
+    level: 1299013,
+    proto: 12,
+    predecessor: "",
+    timestamp: "",
+    validation_pass: 1,
+    operations_hash: "",
+    fitness: [],
+    context: "",
+    priority: 0,
+    proof_of_work_nonce: "",
+    signature: "",
+  },
+};
+
+export const operationsWithDoubleBakeAccusation: OperationEntry[] = [
+  {
+    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    chain_id: "NetXdQprcVkpaWU",
+    hash: "opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
+    branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+    contents: [operationContentsWithDoubleBake],
   },
 ];
