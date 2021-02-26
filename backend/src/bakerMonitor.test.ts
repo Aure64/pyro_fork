@@ -28,7 +28,7 @@ describe("checkBlockBakingRights", () => {
       baker: delegate,
       blockBaker: delegate,
       blockLevel: level,
-      blockHash: "some_block",
+      blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
     expect(result).toEqual({
@@ -45,7 +45,7 @@ describe("checkBlockBakingRights", () => {
       baker: delegate,
       blockBaker: "other_baker",
       blockLevel: level,
-      blockHash: "some_block",
+      blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
     expect(result).toEqual({
@@ -62,7 +62,7 @@ describe("checkBlockBakingRights", () => {
       baker: delegate,
       blockBaker: "other_baker",
       blockLevel: level + 1,
-      blockHash: "some_block",
+      blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
     expect(result).toBe(null);
@@ -84,7 +84,7 @@ describe("loadBlockData", () => {
 
     await loadBlockData({
       bakers: [delegate],
-      blockHash: "some_hash",
+      blockId: "some_hash",
       rpc,
     });
 
@@ -108,7 +108,7 @@ describe("loadBlockData", () => {
 
     const result = await loadBlockData({
       bakers: [delegate],
-      blockHash: "some_hash",
+      blockId: "some_hash",
       rpc,
     });
 

@@ -17,19 +17,32 @@ import {
   RpcClient,
 } from "@taquito/rpc";
 import to from "await-to-js";
+import * as nconf from "nconf";
+import * as BetterQueue from "better-queue";
+import * as SqlLiteStore from "better-queue-sqlite";
+import { normalize } from "path";
+
+const lastBlockField = "bakerMonitor:lastCheckedLevel";
 
 type Monitor = {
   subscription: Subscription<string>;
   bakers: string[];
+  queue: BetterQueue<string>;
 };
 
 type StartArgs = {
   bakers: string[];
   rpcNode: string;
   onEvent: (event: TezosNodeEvent) => void;
+  storageDirectory: string;
 };
 
-export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
+export const start = ({
+  bakers,
+  rpcNode,
+  onEvent,
+  storageDirectory,
+}: StartArgs): Monitor => {
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc);
   const provider = new PollingSubscribeProvider(context);
@@ -38,68 +51,55 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
   rpc.getBakingRights = makeMemoizedGetBakingRights(
     rpc.getBakingRights.bind(rpc)
   );
-  const monitor: Monitor = { subscription, bakers };
+
+  nconf.file("./tmp/config.json");
+  nconf.load();
+
+  const store = new SqlLiteStore<string>({
+    path: normalize(`${storageDirectory}/bakerMonitor.db`),
+  });
+  const queue = new BetterQueue<string>(
+    async (blockId, callback) => {
+      const result = await checkBlock({ bakers, rpc, blockId });
+
+      if (result.type === "ERROR") {
+        callback(result, null);
+        onEvent({
+          type: "RPC",
+          kind: "ERROR",
+          message: result.message,
+        });
+        callback(result, null);
+      } else {
+        const { events, blockLevel } = result.data;
+        events.map(onEvent);
+
+        const lastBlockLevel = nconf.get(lastBlockField) as number | undefined;
+        debug(`Previous block level from config: ${lastBlockLevel}`);
+        if (lastBlockLevel && blockLevel - lastBlockLevel > 1) {
+          for (let i = lastBlockLevel + 1; i < blockLevel; i++) {
+            debug(
+              `Queue'ing block level ${i} to check for previous baking events`
+            );
+            queue.push(i.toString());
+          }
+        }
+        if (!lastBlockLevel || blockLevel > lastBlockLevel) {
+          debug(`Saving previous block level: ${blockLevel}`);
+          // only update last block level if it's bigger.  it could be smaller if this was a catch up event
+          nconf.set(lastBlockField, blockLevel);
+          nconf.save(null);
+        }
+
+        callback(null, result);
+      }
+    },
+    { maxRetries: 10, afterProcessDelay: 3000, store, retryDelay: 3000 }
+  );
 
   subscription.on("data", async (blockHash) => {
     debug(`Subscription received block: ${blockHash}`);
-
-    const blockResult = await loadBlockData({
-      bakers,
-      blockHash,
-      rpc,
-    });
-    if (blockResult.type === "ERROR") {
-      onEvent({
-        type: "RPC",
-        kind: "SUBSCRIPTION_ERROR",
-        message: `Error loading data for block ${blockHash}`,
-      });
-    } else {
-      const {
-        metadata,
-        block,
-        bakingRights,
-        endorsingRights,
-      } = blockResult.data;
-
-      for (const baker of bakers) {
-        const endorsementOperations = block.operations[0];
-        const anonymousOperations = block.operations[2];
-        const bakingEvent = checkBlockBakingRights({
-          baker,
-          bakingRights,
-          blockBaker: metadata.baker,
-          blockHash,
-          blockLevel: metadata.level.level,
-        });
-        if (bakingEvent) onEvent(bakingEvent);
-        const endorsingEvent = checkBlockEndorsingRights({
-          baker,
-          blockLevel: metadata.level.level,
-          endorsementOperations,
-          endorsingRights,
-        });
-        if (endorsingEvent) onEvent(endorsingEvent);
-        const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
-          baker,
-          operations: anonymousOperations,
-          rpc,
-        });
-        if (doubleBakeEvent) {
-          onEvent(doubleBakeEvent);
-        }
-        const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement(
-          {
-            baker,
-            operations: anonymousOperations,
-            rpc,
-          }
-        );
-        if (doubleEndorseEvent) {
-          onEvent(doubleEndorseEvent);
-        }
-      }
-    }
+    queue.push(blockHash);
   });
   subscription.on("error", (error) => {
     warn(`Baking subscription error: ${error.message}`);
@@ -112,6 +112,7 @@ export const start = ({ bakers, rpcNode, onEvent }: StartArgs): Monitor => {
 
   debug(`Baker monitor started`);
 
+  const monitor: Monitor = { queue, subscription, bakers };
   return monitor;
 };
 
@@ -120,8 +121,84 @@ export const halt = (monitor: Monitor): void => {
   monitor.subscription.close();
 };
 
+type CheckBlockArgs = {
+  bakers: string[];
+  blockId: string;
+  rpc: RpcClient;
+};
+
+type CheckBlockResult = {
+  events: TezosNodeEvent[];
+  blockLevel: number;
+};
+
+/**
+ * Fetch block data and analyze it for any baking/endorsing related events.
+ */
+const checkBlock = async ({
+  bakers,
+  blockId,
+  rpc,
+}: CheckBlockArgs): Promise<Result<CheckBlockResult>> => {
+  const blockResult = await loadBlockData({
+    bakers,
+    blockId,
+    rpc,
+  });
+  if (blockResult.type === "ERROR") {
+    return {
+      type: "ERROR",
+      message: `Error loading data for block ${blockId}`,
+    };
+  } else {
+    const events: TezosNodeEvent[] = [];
+
+    const { metadata, block, bakingRights, endorsingRights } = blockResult.data;
+
+    for (const baker of bakers) {
+      const endorsementOperations = block.operations[0];
+      const anonymousOperations = block.operations[2];
+      const bakingEvent = checkBlockBakingRights({
+        baker,
+        bakingRights,
+        blockBaker: metadata.baker,
+        blockId,
+        blockLevel: metadata.level.level,
+      });
+      if (bakingEvent) events.push(bakingEvent);
+      const endorsingEvent = checkBlockEndorsingRights({
+        baker,
+        blockLevel: metadata.level.level,
+        endorsementOperations,
+        endorsingRights,
+      });
+      if (endorsingEvent) events.push(endorsingEvent);
+      const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
+        baker,
+        operations: anonymousOperations,
+        rpc,
+      });
+      if (doubleBakeEvent) {
+        events.push(doubleBakeEvent);
+      }
+      const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement(
+        {
+          baker,
+          operations: anonymousOperations,
+          rpc,
+        }
+      );
+      if (doubleEndorseEvent) {
+        events.push(doubleEndorseEvent);
+      }
+    }
+    const blockLevel = metadata.level.level;
+    return { type: "SUCCESS", data: { events, blockLevel } };
+  }
+};
+
 type LoadBlockDataArgs = {
-  blockHash: string;
+  blockId: string;
   rpc: RpcClient;
   bakers: string[];
 };
@@ -138,11 +215,12 @@ type BlockData = {
  */
 export const loadBlockData = async ({
   bakers,
-  blockHash,
+  blockId,
   rpc,
 }: LoadBlockDataArgs): Promise<Result<BlockData>> => {
+  debug(`Fetching block metadata for ${blockId}`);
   const [metadataError, metadata] = await to(
-    rpc.getBlockMetadata({ block: blockHash })
+    rpc.getBlockMetadata({ block: blockId })
   );
   if (metadataError) {
     warn(`Error fetching block metadata: ${metadataError.message}`);
@@ -161,7 +239,7 @@ export const loadBlockData = async ({
       cycle: metadata.level.cycle,
       delegate: bakers,
     },
-    { block: blockHash }
+    { block: blockId }
   );
 
   const endorsingRightsPromise = rpc.getEndorsingRights(
@@ -171,7 +249,7 @@ export const loadBlockData = async ({
     },
     { block: `${metadata.level.level - 1}` }
   );
-  const blockPromise = rpc.getBlock({ block: blockHash });
+  const blockPromise = rpc.getBlock({ block: blockId });
 
   // run all promises in parallel
   await Promise.all([
@@ -213,14 +291,14 @@ export const loadBlockData = async ({
   const [blockError, block] = await to(blockPromise);
 
   if (blockError) {
-    const message = `Error loading block operations for ${blockHash}`;
+    const message = `Error loading block operations for ${blockId}`;
     warn(`${message} because of ${blockError.message}`);
     return {
       type: "ERROR",
       message,
     };
   } else if (!block) {
-    const message = `Error loading block operations for ${blockHash}`;
+    const message = `Error loading block operations for ${blockId}`;
     warn(message);
     return {
       type: "ERROR",
@@ -269,7 +347,7 @@ export const makeMemoizedGetBakingRights = (
 type CheckBlockBakingRightsArgs = {
   baker: string;
   blockBaker: string;
-  blockHash: string;
+  blockId: string;
   blockLevel: number;
   bakingRights: BakingRightsResponse;
 };
@@ -284,7 +362,7 @@ export const checkBlockBakingRights = ({
   blockBaker,
   blockLevel,
   bakingRights,
-  blockHash,
+  blockId,
 }: CheckBlockBakingRightsArgs): BakerNodeEvent | null => {
   for (const bakingRight of bakingRights) {
     if (bakingRight.level === blockLevel && bakingRight.priority === priority) {
@@ -300,7 +378,7 @@ export const checkBlockBakingRights = ({
           baker,
         };
       } else {
-        const message = `Successful bake for block ${blockHash} for baker ${baker}`;
+        const message = `Successful bake for block ${blockId} for baker ${baker}`;
         debug(message);
         return {
           type: "BAKER",
@@ -312,7 +390,7 @@ export const checkBlockBakingRights = ({
     }
   }
 
-  debug(`No bake event for block ${blockHash} for baker ${baker}`);
+  debug(`No bake event for block ${blockId} for baker ${baker}`);
   return null;
 };
 
