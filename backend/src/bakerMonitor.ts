@@ -253,12 +253,9 @@ export const loadBlockData = async ({
     return { type: "ERROR", message: "Error loading block metadata" };
   }
 
-  // Taquito currently has a bug that causes it to return all priorities:
-  // https://github.com/ecadlabs/taquito/issues/580
-  // switch to max_priority: 0 after the bug is fixed
   const bakingRightsPromise = rpc.getBakingRights(
     {
-      max_priority: 1,
+      max_priority: 0,
       cycle: metadata.level.cycle,
       delegate: bakers,
     },
