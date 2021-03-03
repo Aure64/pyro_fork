@@ -3,6 +3,8 @@ import {
   checkBlockAccusationsForDoubleEndorsement,
   checkBlockBakingRights,
   checkBlockEndorsingRights,
+  checkFutureBlockBakingRights,
+  checkFutureBlockEndorsingRights,
   loadBlockData,
   makeMemoizedGetBakingRights,
 } from "./bakerMonitor";
@@ -75,11 +77,13 @@ describe("loadBlockData", () => {
     const getBlockMetadata = jest.fn().mockResolvedValue({ level: {} });
     const getEndorsingRights = jest.fn().mockResolvedValue({});
     const getBlock = jest.fn().mockResolvedValue({});
+    const getConstants = jest.fn().mockResolvedValue({});
     const rpc = ({
       getBakingRights,
       getBlock,
       getBlockMetadata,
       getEndorsingRights,
+      getConstants,
     } as unknown) as RpcClient;
 
     await loadBlockData({
@@ -92,6 +96,7 @@ describe("loadBlockData", () => {
     expect(getBlock.mock.calls.length).toEqual(1);
     expect(getBlockMetadata.mock.calls.length).toEqual(1);
     expect(getEndorsingRights.mock.calls.length).toEqual(1);
+    expect(getConstants.mock.calls.length).toEqual(1);
   });
 
   it("returns error for failed metadata fetch", async () => {
@@ -99,11 +104,13 @@ describe("loadBlockData", () => {
     const getBlockMetadata = jest.fn().mockRejectedValue({});
     const getEndorsingRights = jest.fn().mockResolvedValue({});
     const getBlock = jest.fn().mockResolvedValue({});
+    const getConstants = jest.fn().mockResolvedValue({});
     const rpc = ({
       getBakingRights,
       getBlock,
       getBlockMetadata,
       getEndorsingRights,
+      getConstants,
     } as unknown) as RpcClient;
 
     const result = await loadBlockData({
@@ -277,5 +284,65 @@ describe("checkBlockAccusationsForDoubleBake", () => {
     });
     expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);
+  });
+});
+
+describe("checkFutureBlockBakingRights", () => {
+  it("returns event when baker has baking rights for future blocks", () => {
+    const result = checkFutureBlockBakingRights({
+      baker: delegate,
+      blockBaker: delegate,
+      blockLevel: level - 10,
+      bakingRights: responseWithPriorityZero,
+      timeBetweenBlocks: 60,
+    });
+    expect(result).toMatchObject({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      kind: "FUTURE_BAKING_OPPORTUNITY",
+      message: expect.stringContaining(
+        "Future bake opportunity for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1299013 in 10 blocks on "
+      ),
+      type: "BAKER",
+    });
+  });
+
+  it("returns null when baker has no future baking opportunities", () => {
+    const result = checkFutureBlockBakingRights({
+      baker: delegate,
+      blockBaker: "other_baker",
+      blockLevel: level + 1,
+      bakingRights: responseWithPriorityZero,
+      timeBetweenBlocks: 60,
+    });
+    expect(result).toBe(null);
+  });
+});
+
+describe("checkFutureBlockEndorsingRights", () => {
+  it("returns event when endorser has endorsing rights for future blocks", () => {
+    const result = checkFutureBlockEndorsingRights({
+      baker: delegate,
+      blockLevel: 1318220,
+      endorsingRights: endorsingRightsResponse,
+      timeBetweenBlocks: 60,
+    });
+    expect(result).toMatchObject({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      kind: "FUTURE_ENDORSING_OPPORTUNITY",
+      message: expect.stringContaining(
+        "Future endorse opportunity for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1318230 in 10 blocks on "
+      ),
+      type: "BAKER",
+    });
+  });
+
+  it("returns null when endorser has no future endorsing opportunities", () => {
+    const result = checkFutureBlockEndorsingRights({
+      baker: delegate,
+      blockLevel: 1318240,
+      endorsingRights: endorsingRightsResponse,
+      timeBetweenBlocks: 60,
+    });
+    expect(result).toBe(null);
   });
 });

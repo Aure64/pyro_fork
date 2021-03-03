@@ -2,9 +2,11 @@ export type BakerNodeEventKind =
   | "MISSED_BAKE"
   | "SUCCESSFUL_BAKE"
   | "DOUBLE_BAKE"
+  | "FUTURE_BAKING_OPPORTUNITY"
   | "MISSED_ENDORSE"
   | "SUCCESSFUL_ENDORSE"
-  | "DOUBLE_ENDORSE";
+  | "DOUBLE_ENDORSE"
+  | "FUTURE_ENDORSING_OPPORTUNITY";
 
 export type BakerNodeEvent = {
   kind: BakerNodeEventKind;

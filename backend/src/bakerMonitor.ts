@@ -1,5 +1,5 @@
 import { BakerNodeEvent, Result, TezosNodeEvent } from "./types";
-import { debug, warn, info } from "loglevel";
+import { debug, warn, info, trace } from "loglevel";
 import {
   Context,
   PollingSubscribeProvider,
@@ -11,6 +11,7 @@ import {
   BakingRightsResponse,
   BlockMetadata,
   BlockResponse,
+  ConstantsResponse,
   EndorsingRightsResponse,
   OperationEntry,
   OpKind,
@@ -153,7 +154,13 @@ const checkBlock = async ({
   } else {
     const events: TezosNodeEvent[] = [];
 
-    const { metadata, block, bakingRights, endorsingRights } = blockResult.data;
+    const {
+      metadata,
+      block,
+      bakingRights,
+      endorsingRights,
+      constants,
+    } = blockResult.data;
 
     for (const baker of bakers) {
       const endorsementOperations = block.operations[0];
@@ -173,6 +180,14 @@ const checkBlock = async ({
         endorsingRights,
       });
       if (endorsingEvent) events.push(endorsingEvent);
+      const futureBakingEvent = checkFutureBlockBakingRights({
+        baker,
+        bakingRights,
+        blockBaker: metadata.baker,
+        blockLevel: metadata.level.level,
+        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
+      });
+      if (futureBakingEvent) events.push(futureBakingEvent);
       const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
         baker,
         operations: anonymousOperations,
@@ -191,6 +206,13 @@ const checkBlock = async ({
       if (doubleEndorseEvent) {
         events.push(doubleEndorseEvent);
       }
+      const futureEndorsingEvent = checkFutureBlockEndorsingRights({
+        baker,
+        endorsingRights,
+        blockLevel: metadata.level.level,
+        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
+      });
+      if (futureEndorsingEvent) events.push(futureEndorsingEvent);
     }
     const blockLevel = metadata.level.level;
     return { type: "SUCCESS", data: { events, blockLevel } };
@@ -208,6 +230,7 @@ type BlockData = {
   bakingRights: BakingRightsResponse;
   endorsingRights: EndorsingRightsResponse;
   block: BlockResponse;
+  constants: ConstantsResponse;
 };
 
 /**
@@ -251,12 +274,24 @@ export const loadBlockData = async ({
   );
   const blockPromise = rpc.getBlock({ block: blockId });
 
+  const constantsPromise = rpc.getConstants({ block: blockId });
+
   // run all promises in parallel
   await Promise.all([
     bakingRightsPromise,
     endorsingRightsPromise,
     blockPromise,
+    constantsPromise,
   ]);
+
+  const [constantsError, constants] = await to(constantsPromise);
+  if (constantsError) {
+    warn(`Error fetching block constants: ${constantsError.message}`);
+    return { type: "ERROR", message: "Error loading block constants" };
+  } else if (!constants) {
+    warn("Error fetching block constants: no constants");
+    return { type: "ERROR", message: "Error loading block constants" };
+  }
 
   const [bakingRightsError, bakingRights] = await to(bakingRightsPromise);
 
@@ -308,7 +343,7 @@ export const loadBlockData = async ({
 
   return {
     type: "SUCCESS",
-    data: { metadata, bakingRights, endorsingRights, block },
+    data: { metadata, bakingRights, endorsingRights, block, constants },
   };
 };
 
@@ -580,5 +615,92 @@ export const checkBlockAccusationsForDoubleBake = async ({
     }
   }
 
+  return null;
+};
+
+type CheckFutureBlockBakingRightsArgs = {
+  baker: string;
+  blockBaker: string;
+  blockLevel: number;
+  bakingRights: BakingRightsResponse;
+  timeBetweenBlocks: number;
+};
+/**
+ * Check the baking rights for a future baking opportunity.  Returns the earliest opportunity found or null if
+ * there are none.
+ */
+export const checkFutureBlockBakingRights = ({
+  baker,
+  blockLevel,
+  bakingRights,
+  timeBetweenBlocks,
+}: CheckFutureBlockBakingRightsArgs): BakerNodeEvent | null => {
+  for (const bakingRight of bakingRights) {
+    if (bakingRight.level > blockLevel && bakingRight.priority === 0) {
+      const delegate = bakingRight.delegate;
+      trace(`found future baking slot for priority 0 for baker ${delegate}`);
+      // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
+      if (delegate === baker) {
+        const numBlocksUntilBake = bakingRight.level - blockLevel;
+        const secondsUntilBake = numBlocksUntilBake * timeBetweenBlocks;
+        const now = Date.now();
+        const predictedBakingDate = new Date(now + secondsUntilBake * 1000);
+        const message = `Future bake opportunity for baker ${baker} at level ${bakingRight.level} in ${numBlocksUntilBake} blocks on ${predictedBakingDate}`;
+        info(message);
+        return {
+          type: "BAKER",
+          kind: "FUTURE_BAKING_OPPORTUNITY",
+          message,
+          baker,
+        };
+      } else {
+        trace(
+          `Other delegate ${delegate} has priority 0, not monitored baker ${baker}`
+        );
+      }
+    }
+  }
+
+  debug(`No future baking opportunties for baker ${baker}`);
+  return null;
+};
+
+type CheckFutureBlockEndorsingRightsArgs = {
+  baker: string;
+  blockLevel: number;
+  endorsingRights: EndorsingRightsResponse;
+  timeBetweenBlocks: number;
+};
+/**
+ * Check the endorsing rights for a future endorsing opportunity.  Returns the earliest opportunity found or
+ * null if there are none.
+ */
+export const checkFutureBlockEndorsingRights = ({
+  baker,
+  blockLevel,
+  endorsingRights,
+  timeBetweenBlocks,
+}: CheckFutureBlockEndorsingRightsArgs): BakerNodeEvent | null => {
+  for (const endorsingRight of endorsingRights) {
+    if (
+      endorsingRight.level > blockLevel &&
+      endorsingRight.delegate === baker
+    ) {
+      const numBlocksUntilBake = endorsingRight.level - blockLevel;
+      const secondsUntilBake = numBlocksUntilBake * timeBetweenBlocks;
+      const now = Date.now();
+      const predictedBakingDate = new Date(now + secondsUntilBake * 1000);
+      const message = `Future endorse opportunity for baker ${baker} at level ${endorsingRight.level} in ${numBlocksUntilBake} blocks on ${predictedBakingDate}`;
+      info(message);
+      return {
+        type: "BAKER",
+        kind: "FUTURE_ENDORSING_OPPORTUNITY",
+        message,
+        baker,
+      };
+    }
+  }
+
+  debug(`No future endorsing opportunties for baker ${baker}`);
   return null;
 };
