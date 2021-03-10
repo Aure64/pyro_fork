@@ -2,6 +2,8 @@ import { Result } from "./types";
 import * as TelegramBot from "node-telegram-bot-api";
 import { Notify } from "./types";
 
+export const channelName = "telegram";
+
 export type Config = {
   token: string;
   chatId: number;
@@ -25,7 +27,7 @@ export const notify: Notify<TelegramNotificationChannel> = async (
     await notifier.bot.sendMessage(notifier.chatId, message);
     return { kind: "SUCCESS" };
   } catch (error) {
-    return { kind: "ERROR", error };
+    return { kind: "ERROR", error, channelName };
   }
 };
 

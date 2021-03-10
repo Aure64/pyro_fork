@@ -2,6 +2,8 @@ import { createTransport, Transporter } from "nodemailer";
 import { Notify } from "./types";
 import to from "await-to-js";
 
+export const channelName = "email";
+
 type Protocol = "Plain" | "SSL" | "STARTTLS";
 
 export type Config = {
@@ -45,7 +47,7 @@ export const notify: Notify<EmailNotificationChannel> = async (
     })
   );
   if (error) {
-    return { kind: "ERROR", error };
+    return { kind: "ERROR", error, channelName };
   } else {
     return { kind: "SUCCESS" };
   }

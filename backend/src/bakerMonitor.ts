@@ -641,14 +641,17 @@ export const checkFutureBlockBakingRights = ({
         const numBlocksUntilBake = bakingRight.level - blockLevel;
         const secondsUntilBake = numBlocksUntilBake * timeBetweenBlocks;
         const now = Date.now();
-        const predictedBakingDate = new Date(now + secondsUntilBake * 1000);
-        const message = `Future bake opportunity for baker ${baker} at level ${bakingRight.level} in ${numBlocksUntilBake} blocks on ${predictedBakingDate}`;
+        const date = new Date(now + secondsUntilBake * 1000);
+        const level = bakingRight.level;
+        const message = `Future bake opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`;
         info(message);
         return {
           type: "BAKER",
           kind: "FUTURE_BAKING_OPPORTUNITY",
           message,
           baker,
+          level,
+          date,
         };
       } else {
         trace(
@@ -686,14 +689,17 @@ export const checkFutureBlockEndorsingRights = ({
       const numBlocksUntilBake = endorsingRight.level - blockLevel;
       const secondsUntilBake = numBlocksUntilBake * timeBetweenBlocks;
       const now = Date.now();
-      const predictedBakingDate = new Date(now + secondsUntilBake * 1000);
-      const message = `Future endorse opportunity for baker ${baker} at level ${endorsingRight.level} in ${numBlocksUntilBake} blocks on ${predictedBakingDate}`;
+      const date = new Date(now + secondsUntilBake * 1000);
+      const level = endorsingRight.level;
+      const message = `Future endorse opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`;
       info(message);
       return {
         type: "BAKER",
         kind: "FUTURE_ENDORSING_OPPORTUNITY",
         message,
         baker,
+        level,
+        date,
       };
     }
   }

@@ -1,6 +1,8 @@
 import { notify as desktopNotify } from "node-notifier";
 import { Notify } from "./types";
 
+export const channelName = "desktop";
+
 export type Config = { enableSound: boolean };
 
 export type DesktopNotificationChannel = {
@@ -24,7 +26,7 @@ export const notify: Notify<DesktopNotificationChannel> = async (
       },
       (error) => {
         if (error) {
-          resolve({ kind: "ERROR", error });
+          resolve({ kind: "ERROR", error, channelName });
         } else {
           resolve({ kind: "SUCCESS" });
         }

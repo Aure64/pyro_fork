@@ -64,9 +64,11 @@ const main = async () => {
 
   const notifierConfig: Notifier.Config = {
     desktopConfig: { enableSound: false },
-    maxRetries: 10,
-    retryDelay: 60000,
-    storageDirectory,
+    queue: {
+      maxRetries: 10,
+      retryDelay: 60000,
+      storageDirectory,
+    },
   };
 
   const notifier = Notifier.create(notifierConfig);
@@ -77,7 +79,7 @@ const main = async () => {
 
   const bakerMonitor =
     bakers.length > 0
-      ? await BakerMonitor.start({ bakers, onEvent, rpcNode, storageDirectory })
+      ? BakerMonitor.start({ bakers, onEvent, rpcNode, storageDirectory })
       : null;
   const nodeMonitor =
     nodes.length > 0

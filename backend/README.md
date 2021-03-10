@@ -92,6 +92,12 @@ try {
 }
 ```
 
+## Notifications
+
+Notifications can be sent via Desktop, Email, Slack, and Telegram channels.
+
+Notification Channels are simple functions that take a string message and return a result promise. Middleware are used to wrap channels and add additional functionality, such as job queues and filtering.
+
 ## Folder Structure
 
 ```bash

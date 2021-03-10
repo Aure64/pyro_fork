@@ -1,6 +1,8 @@
 import { IncomingWebhook } from "@slack/webhook";
 import { Notify } from "./types";
 
+export const channelName = "slack";
+
 export type Config = { url: string };
 
 export type SlackNotificationChannel = {
@@ -20,6 +22,6 @@ export const notify: Notify<SlackNotificationChannel> = async (
     await notifier.webhook.send(message);
     return { kind: "SUCCESS" };
   } catch (error) {
-    return { kind: "ERROR", error };
+    return { kind: "ERROR", error, channelName };
   }
 };

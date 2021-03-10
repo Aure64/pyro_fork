@@ -29,6 +29,10 @@ describe("notify", () => {
     const error = new Error("error showing notification");
     sendMessage.mockRejectedValue(error);
     const result = notify(notifier, "some error message");
-    return expect(result).resolves.toEqual({ kind: "ERROR", error });
+    return expect(result).resolves.toEqual({
+      kind: "ERROR",
+      error,
+      channelName: "telegram",
+    });
   });
 });
