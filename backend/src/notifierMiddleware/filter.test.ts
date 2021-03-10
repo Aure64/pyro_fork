@@ -1,4 +1,5 @@
-import { shouldNotify } from "./filter";
+import { shouldNotify, updateHistory } from "./filter";
+import { TezosNodeEvent } from "../types";
 
 describe("shouldNotify", () => {
   it("rejects notification events for the same channel", () => {
@@ -82,5 +83,67 @@ describe("shouldNotify", () => {
       }
     );
     expect(result).toEqual(true);
+  });
+});
+
+describe("updateHistory", () => {
+  it("updates nextBakeLevel to higher level", () => {
+    const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
+    const bakeEvent: TezosNodeEvent = {
+      type: "BAKER",
+      kind: "FUTURE_BAKING_OPPORTUNITY",
+      message: "some error",
+      level: 1100,
+      baker: "some baker",
+      date: new Date(),
+    };
+    const result = updateHistory(history, bakeEvent);
+
+    expect(result).toEqual({ nextBakeLevel: 1100, nextEndorseLevel: 1000 });
+  });
+
+  it("updates nextEndorseLevel to higher level", () => {
+    const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
+    const bakeEvent: TezosNodeEvent = {
+      type: "BAKER",
+      kind: "FUTURE_ENDORSING_OPPORTUNITY",
+      message: "some error",
+      level: 1100,
+      baker: "some baker",
+      date: new Date(),
+    };
+    const result = updateHistory(history, bakeEvent);
+
+    expect(result).toEqual({ nextBakeLevel: 1000, nextEndorseLevel: 1100 });
+  });
+
+  it("doesn't update nextBakeLevel to lower level", () => {
+    const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
+    const bakeEvent: TezosNodeEvent = {
+      type: "BAKER",
+      kind: "FUTURE_BAKING_OPPORTUNITY",
+      message: "some error",
+      level: 900,
+      baker: "some baker",
+      date: new Date(),
+    };
+    const result = updateHistory(history, bakeEvent);
+
+    expect(result).toEqual({ nextBakeLevel: 1000, nextEndorseLevel: 1000 });
+  });
+
+  it("doesn't update nextEndorseLevel to lower level", () => {
+    const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
+    const bakeEvent: TezosNodeEvent = {
+      type: "BAKER",
+      kind: "FUTURE_ENDORSING_OPPORTUNITY",
+      message: "some error",
+      level: 900,
+      baker: "some baker",
+      date: new Date(),
+    };
+    const result = updateHistory(history, bakeEvent);
+
+    expect(result).toEqual({ nextBakeLevel: 1000, nextEndorseLevel: 1000 });
   });
 });

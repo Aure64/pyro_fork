@@ -16,8 +16,8 @@ export type Config = {
   queue: {
     maxRetries: number;
     retryDelay: number;
-    storageDirectory: string;
   };
+  storageDirectory: string;
 };
 
 type Notifier = {
@@ -27,7 +27,7 @@ type Notifier = {
 /**
  * Create and configure the notifier for use with `notify(,)`.
  */
-export const create = (config: Config): Notifier => {
+export const create = async (config: Config): Promise<Notifier> => {
   const channels: NotifyEventFunction[] = [];
   const notifier: Notifier = {
     channels,
@@ -43,11 +43,15 @@ export const create = (config: Config): Notifier => {
     const applyQueue = createQueue(
       {
         ...config.queue,
+        storageDirectory: config.storageDirectory,
         channelName: EmailChannel.channelName,
       },
       boundNotify
     );
-    const applyFilter = createFilter(EmailChannel.channelName);
+    const applyFilter = await createFilter({
+      channelName: EmailChannel.channelName,
+      storageDirectory: config.storageDirectory,
+    });
 
     const emailChannel = applyQueue(applyFilter(applyToString(emailNotify)));
     channels.push(emailChannel);
@@ -61,11 +65,15 @@ export const create = (config: Config): Notifier => {
     const applyQueue = createQueue(
       {
         ...config.queue,
+        storageDirectory: config.storageDirectory,
         channelName: DesktopChannel.channelName,
       },
       boundNotify
     );
-    const applyFilter = createFilter(DesktopChannel.channelName);
+    const applyFilter = await createFilter({
+      channelName: DesktopChannel.channelName,
+      storageDirectory: config.storageDirectory,
+    });
     const desktopChannel = applyQueue(
       applyFilter(applyToString(desktopNotify))
     );
@@ -79,11 +87,15 @@ export const create = (config: Config): Notifier => {
     const applyQueue = createQueue(
       {
         ...config.queue,
+        storageDirectory: config.storageDirectory,
         channelName: SlackChannel.channelName,
       },
       boundNotify
     );
-    const applyFilter = createFilter(SlackChannel.channelName);
+    const applyFilter = await createFilter({
+      channelName: SlackChannel.channelName,
+      storageDirectory: config.storageDirectory,
+    });
     const slackChannel = applyQueue(applyFilter(applyToString(slackNotify)));
     channels.push(slackChannel);
   }
@@ -95,11 +107,15 @@ export const create = (config: Config): Notifier => {
     const applyQueue = createQueue(
       {
         ...config.queue,
+        storageDirectory: config.storageDirectory,
         channelName: TelegramChannel.channelName,
       },
       boundNotify
     );
-    const applyFilter = createFilter(TelegramChannel.channelName);
+    const applyFilter = await createFilter({
+      channelName: TelegramChannel.channelName,
+      storageDirectory: config.storageDirectory,
+    });
     const telegramChannel = applyQueue(
       applyFilter(applyToString(telegramNotify))
     );

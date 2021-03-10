@@ -67,11 +67,11 @@ const main = async () => {
     queue: {
       maxRetries: 10,
       retryDelay: 60000,
-      storageDirectory,
     },
+    storageDirectory,
   };
 
-  const notifier = Notifier.create(notifierConfig);
+  const notifier = await Notifier.create(notifierConfig);
 
   const onEvent = (event: TezosNodeEvent) => {
     Notifier.notify(notifier, event);
