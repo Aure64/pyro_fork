@@ -18,12 +18,10 @@ import {
   RpcClient,
 } from "@taquito/rpc";
 import to from "await-to-js";
-import * as nconf from "nconf";
+import * as Config from "./config";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 import { normalize } from "path";
-
-const lastBlockField = "bakerMonitor:lastCheckedLevel";
 
 type Monitor = {
   subscription: Subscription<string>;
@@ -53,9 +51,6 @@ export const start = ({
     rpc.getBakingRights.bind(rpc)
   );
 
-  nconf.file("./tmp/config.json");
-  nconf.load();
-
   const store = new SqlLiteStore<string>({
     path: normalize(`${storageDirectory}/bakerMonitor.db`),
   });
@@ -75,7 +70,7 @@ export const start = ({
         const { events, blockLevel } = result.data;
         events.map(onEvent);
 
-        const lastBlockLevel = nconf.get(lastBlockField) as number | undefined;
+        const lastBlockLevel = Config.getLastBlockLevel();
         debug(`Previous block level from config: ${lastBlockLevel}`);
         if (lastBlockLevel && blockLevel - lastBlockLevel > 1) {
           for (let i = lastBlockLevel + 1; i < blockLevel; i++) {
@@ -88,8 +83,7 @@ export const start = ({
         if (!lastBlockLevel || blockLevel > lastBlockLevel) {
           debug(`Saving previous block level: ${blockLevel}`);
           // only update last block level if it's bigger.  it could be smaller if this was a catch up event
-          nconf.set(lastBlockField, blockLevel);
-          nconf.save(null);
+          Config.setLastBlockLevel(blockLevel);
         }
 
         callback(null, result);

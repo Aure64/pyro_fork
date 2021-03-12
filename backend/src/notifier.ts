@@ -50,7 +50,6 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: EmailChannel.channelName,
-      storageDirectory: config.storageDirectory,
     });
 
     const emailChannel = applyQueue(applyFilter(applyToString(emailNotify)));
@@ -72,7 +71,6 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: DesktopChannel.channelName,
-      storageDirectory: config.storageDirectory,
     });
     const desktopChannel = applyQueue(
       applyFilter(applyToString(desktopNotify))
@@ -94,7 +92,6 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: SlackChannel.channelName,
-      storageDirectory: config.storageDirectory,
     });
     const slackChannel = applyQueue(applyFilter(applyToString(slackNotify)));
     channels.push(slackChannel);
@@ -114,7 +111,6 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: TelegramChannel.channelName,
-      storageDirectory: config.storageDirectory,
     });
     const telegramChannel = applyQueue(
       applyFilter(applyToString(telegramNotify))

@@ -6,9 +6,7 @@ import {
   TezosNodeEvent,
 } from "../types";
 import { debug } from "loglevel";
-import * as nconf from "nconf";
-import to from "await-to-js";
-import { promisify } from "util";
+import * as Config from "../config";
 
 type NotifierHistory = {
   nextEndorseLevel: number;
@@ -22,7 +20,6 @@ type NotifyFilter = {
 
 type Config = {
   channelName: string;
-  storageDirectory: string;
 };
 
 /**
@@ -30,10 +27,13 @@ type Config = {
  */
 export const create = async ({
   channelName,
-  storageDirectory,
 }: Config): Promise<NotificationChannelMiddleware> => {
-  const historyPath = `${storageDirectory}/${channelName}FilterConfig.json`;
-  const history = await loadHistory(historyPath);
+  const BAKE_KEY = `filter:${channelName}:nextBakeLevel`;
+  const ENDORSE_KEY = `filter:${channelName}:nextEndorseLevel`;
+  const history = {
+    nextBakeLevel: Config.getNumber(BAKE_KEY) || 0,
+    nextEndorseLevel: Config.getNumber(ENDORSE_KEY) || 0,
+  };
 
   const filter: NotifyFilter = { history, channelName };
   return (notifyFunction: NotifyEventFunction): NotifyEventFunction => {
@@ -45,12 +45,14 @@ export const create = async ({
         // only update history if the event was successfully delivered
         if (result.kind === "SUCCESS") {
           filter.history = updateHistory(filter.history, event);
-          saveHistory(filter.history);
+          Config.setNumber(BAKE_KEY, filter.history.nextBakeLevel);
+          Config.setNumber(ENDORSE_KEY, filter.history.nextEndorseLevel);
         }
         return result;
       } else {
         filter.history = updateHistory(filter.history, event);
-        saveHistory(filter.history);
+        Config.setNumber(BAKE_KEY, filter.history.nextBakeLevel);
+        Config.setNumber(ENDORSE_KEY, filter.history.nextEndorseLevel);
         // return success for ignored events
         return { kind: "SUCCESS" };
       }
@@ -112,31 +114,4 @@ export const updateHistory = (
     nextBakeLevel,
     nextEndorseLevel,
   };
-};
-
-const nextEndorseLevelName = "nextEndorseLevel";
-const nextBakeLevelName = "nextBakeLevel";
-
-/**
- * Load notifier history from the file system or defaults.
- */
-const loadHistory = async (path: string): Promise<NotifierHistory> => {
-  nconf.file(path);
-  const loadAsync = promisify(nconf.load);
-  await to(loadAsync());
-
-  const nextEndorseLevel = nconf.get(nextEndorseLevelName) || 0;
-  const nextBakeLevel = nconf.get(nextBakeLevelName) || 0;
-  const history: NotifierHistory = { nextEndorseLevel, nextBakeLevel };
-  return history;
-};
-
-/**
- * Write the notifier history to the file system.
- */
-const saveHistory = (history: NotifierHistory) => {
-  nconf.set(nextEndorseLevelName, history.nextEndorseLevel);
-  nconf.set(nextBakeLevelName, history.nextBakeLevel);
-
-  nconf.save(null);
 };
