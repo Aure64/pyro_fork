@@ -46,7 +46,8 @@ export const load = async (path: string): Promise<void> => {
       [NODE]: [],
       [LOGGING]: "info",
     });
-  await promisify(nconf.load.bind(nconf));
+  const loadAsync = promisify(nconf.load.bind(nconf));
+  await loadAsync().then(console.log);
 };
 
 export const save = (): void => {

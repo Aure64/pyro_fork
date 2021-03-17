@@ -1,0 +1,4 @@
+backend/dist
+backend/node_modules
+backend/**/*.test.ts
+backend/tmp/**

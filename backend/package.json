@@ -16,24 +16,16 @@
     "tsc:lint": "tsc --noEmit -p ."
   },
   "devDependencies": {
-    "@types/args": "3.0.0",
-    "@types/better-queue": "3.8.2",
-    "@types/jest": "26.0.20",
-    "@types/nconf": "0.10.0",
-    "@types/node": "14.14.34",
-    "@types/node-notifier": "8.0.0",
-    "@types/node-telegram-bot-api": "0.51.1",
-    "@types/nodemailer": "6.4.1",
-    "@typescript-eslint/eslint-plugin": "4.16.1",
-    "@typescript-eslint/parser": "4.16.1",
-    "eslint": "7.21.0",
+    "@types/jest": "26.0.21",
+    "@typescript-eslint/eslint-plugin": "4.18.0",
+    "@typescript-eslint/parser": "4.18.0",
+    "eslint": "7.22.0",
     "eslint-config-prettier": "8.1.0",
     "jest": "26.6.3",
     "jest-fetch-mock": "3.0.3",
     "prettier": "2.2.1",
-    "ts-jest": "26.5.3",
-    "ts-node-dev": "1.1.6",
-    "typescript": "4.2.3"
+    "ts-jest": "26.5.4",
+    "ts-node-dev": "1.1.6"
   },
   "engines": {
     "node": ">= 14.15.3"
@@ -43,17 +35,25 @@
   },
   "dependencies": {
     "@slack/webhook": "6.0.0",
-    "@taquito/taquito": "8.0.4-beta-RC.0",
+    "@taquito/taquito": "8.0.6-beta.0",
+    "@types/args": "3.0.0",
+    "@types/better-queue": "3.8.2",
+    "@types/nconf": "0.10.0",
+    "@types/node": "14.14.35",
+    "@types/node-notifier": "8.0.0",
+    "@types/node-telegram-bot-api": "0.51.1",
+    "@types/nodemailer": "6.4.1",
     "args": "5.0.1",
-    "await-to-js": "2.1.1",
+    "await-to-js": "3.0.0",
     "better-queue": "3.8.10",
     "better-queue-sqlite": "1.0.6",
-    "cross-fetch": "3.0.6",
+    "cross-fetch": "3.1.0",
     "loglevel": "1.7.1",
     "loglevel-plugin-prefix": "0.8.4",
     "nconf": "0.11.2",
-    "node-notifier": "9.0.0",
+    "node-notifier": "9.0.1",
     "node-telegram-bot-api": "0.51.0",
-    "nodemailer": "6.5.0"
+    "nodemailer": "6.5.0",
+    "typescript": "4.2.3"
   }
 }
