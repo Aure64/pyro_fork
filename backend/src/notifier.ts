@@ -7,6 +7,7 @@ import { apply as applyToString } from "./notifierMiddleware/toString";
 import { apply as bindNotifier } from "./notifierMiddleware/bindNotifier";
 import { create as createFilter } from "./notifierMiddleware/filter";
 import { create as createQueue } from "./notifierMiddleware/queue";
+import { trace } from "loglevel";
 
 export type Config = {
   emailConfig?: EmailChannel.Config;
@@ -129,6 +130,7 @@ export const notify = (
   notifier: Notifier,
   event: TezosNodeEvent | NotifierEvent
 ): void => {
+  trace(`Notifier received event ${JSON.stringify(event)}`);
   for (const channel of notifier.channels) {
     channel(event);
   }

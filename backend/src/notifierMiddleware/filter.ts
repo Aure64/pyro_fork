@@ -16,6 +16,7 @@ type NotifierHistory = {
 type NotifyFilter = {
   history: NotifierHistory;
   channelName: string;
+  excludedEvents: string[];
 };
 
 type Config = {
@@ -34,8 +35,9 @@ export const create = async ({
     nextBakeLevel: Config.getNumber(BAKE_KEY) || 0,
     nextEndorseLevel: Config.getNumber(ENDORSE_KEY) || 0,
   };
+  const excludedEvents = Config.getExcludedEvents();
 
-  const filter: NotifyFilter = { history, channelName };
+  const filter: NotifyFilter = { history, channelName, excludedEvents };
   return (notifyFunction: NotifyEventFunction): NotifyEventFunction => {
     return async (
       event: TezosNodeEvent | NotifierEvent
@@ -89,6 +91,13 @@ export const shouldNotify = (
     debug(
       `Notification event excluded because it originated from the same channel (${filter.channelName})`
     );
+    return false;
+  }
+  if (
+    (event.type === "BAKER" || event.type === "PEER") &&
+    filter.excludedEvents.includes(event.kind)
+  ) {
+    debug(`Event excluded because type ${event.kind} is filtered`);
     return false;
   }
 

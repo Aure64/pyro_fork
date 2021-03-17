@@ -7,6 +7,7 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         history: { nextEndorseLevel: 1000, nextBakeLevel: 1000 },
+        excludedEvents: [],
       },
       { type: "NOTIFIER", message: "some error", channelName: "desktop" }
     );
@@ -18,6 +19,7 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         history: { nextEndorseLevel: 1000, nextBakeLevel: 1000 },
+        excludedEvents: [],
       },
       {
         type: "BAKER",
@@ -36,6 +38,26 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         history: { nextEndorseLevel: 1000, nextBakeLevel: 1000 },
+        excludedEvents: [],
+      },
+      {
+        type: "BAKER",
+        kind: "FUTURE_BAKING_OPPORTUNITY",
+        message: "some error",
+        level: 900,
+        baker: "some baker",
+        date: new Date(),
+      }
+    );
+    expect(result).toEqual(false);
+  });
+
+  it("rejects endorsing events for lower levels", () => {
+    const result = shouldNotify(
+      {
+        channelName: "desktop",
+        history: { nextEndorseLevel: 1000, nextBakeLevel: 1000 },
+        excludedEvents: [],
       },
       {
         type: "BAKER",
@@ -54,6 +76,7 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         history: { nextEndorseLevel: 1000, nextBakeLevel: 1000 },
+        excludedEvents: [],
       },
       {
         type: "BAKER",
@@ -72,6 +95,7 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         history: { nextEndorseLevel: 1000, nextBakeLevel: 1000 },
+        excludedEvents: [],
       },
       {
         type: "BAKER",
@@ -83,6 +107,25 @@ describe("shouldNotify", () => {
       }
     );
     expect(result).toEqual(true);
+  });
+
+  it("rejects baking events for excluded event types", () => {
+    const result = shouldNotify(
+      {
+        channelName: "desktop",
+        history: { nextEndorseLevel: 0, nextBakeLevel: 0 },
+        excludedEvents: ["FUTURE_BAKING_OPPORTUNITY"],
+      },
+      {
+        type: "BAKER",
+        kind: "FUTURE_BAKING_OPPORTUNITY",
+        message: "some error",
+        level: 900,
+        baker: "some baker",
+        date: new Date(),
+      }
+    );
+    expect(result).toEqual(false);
   });
 });
 
