@@ -7,12 +7,15 @@ import { debug, info, setLevel } from "loglevel";
 import log from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import * as Config from "./config";
+import { format } from "date-fns";
 
 const main = async () => {
   // Register prefix plug with loglevel.  This adds timestamp and level to logs.
+  const timestampFormatter = (date: Date) =>
+    format(date, "MM/dd/yyyy, H:mm:ss");
   const logger = log.noConflict();
   prefix.reg(logger);
-  prefix.apply(logger);
+  prefix.apply(logger, { timestampFormatter });
 
   await Config.load("./tmp/config.json");
   const nodes = Config.getNodes();
