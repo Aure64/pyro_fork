@@ -57,9 +57,14 @@ export const load = async (path: string): Promise<void> => {
   await loadAsync().then(console.log);
 };
 
-export const save = (): void => {
+export const save = async (): Promise<void> => {
   trace("Saving config to disk.");
-  nconf.save(null);
+  // save doesn't confirm to standard node callbacks, so we can't use promisify on it
+  return new Promise((resolve) => {
+    nconf.save(null, () => {
+      resolve();
+    });
+  });
 };
 
 export const getBakers = (): string[] => {

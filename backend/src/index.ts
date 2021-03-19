@@ -58,9 +58,9 @@ const main = async () => {
       : null;
   const server = Server.start();
 
-  process.on("SIGINT", () => {
+  process.on("SIGINT", async () => {
     debug("Shutting down");
-    Config.save();
+    await Config.save();
     if (bakerMonitor) BakerMonitor.halt(bakerMonitor);
     if (nodeMonitor) NodeMonitor.halt(nodeMonitor);
     Server.halt(server);
