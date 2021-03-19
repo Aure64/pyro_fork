@@ -59,7 +59,6 @@ export const start = ({
       const result = await checkBlock({ bakers, rpc, blockId });
 
       if (result.type === "ERROR") {
-        callback(result, null);
         onEvent({
           type: "RPC",
           kind: "ERROR",
