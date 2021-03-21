@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@slack/webhook": "6.0.0",
-    "@taquito/taquito": "8.0.6-beta.0",
+    "@taquito/taquito": "8.0.6-beta-RC.0",
     "@types/args": "3.0.0",
     "@types/better-queue": "3.8.2",
     "@types/nconf": "0.10.0",
