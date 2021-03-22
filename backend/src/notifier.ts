@@ -8,8 +8,9 @@ import { apply as bindNotifier } from "./notifierMiddleware/bindNotifier";
 import { create as createFilter } from "./notifierMiddleware/filter";
 import { create as createQueue } from "./notifierMiddleware/queue";
 import { trace } from "loglevel";
+import { Config } from "./config";
 
-export type Config = {
+export type NotifierConfig = {
   emailConfig?: EmailChannel.Config;
   desktopConfig?: DesktopChannel.Config;
   slackConfig?: SlackChannel.Config;
@@ -19,6 +20,7 @@ export type Config = {
     retryDelay: number;
   };
   storageDirectory: string;
+  config: Config;
 };
 
 type Notifier = {
@@ -28,7 +30,7 @@ type Notifier = {
 /**
  * Create and configure the notifier for use with `notify(,)`.
  */
-export const create = async (config: Config): Promise<Notifier> => {
+export const create = async (config: NotifierConfig): Promise<Notifier> => {
   const channels: NotifyEventFunction[] = [];
   const notifier: Notifier = {
     channels,
@@ -51,6 +53,7 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: EmailChannel.channelName,
+      config: config.config,
     });
 
     const emailChannel = applyQueue(applyFilter(applyToString(emailNotify)));
@@ -72,6 +75,7 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: DesktopChannel.channelName,
+      config: config.config,
     });
     const desktopChannel = applyQueue(
       applyFilter(applyToString(desktopNotify))
@@ -93,6 +97,7 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: SlackChannel.channelName,
+      config: config.config,
     });
     const slackChannel = applyQueue(applyFilter(applyToString(slackNotify)));
     channels.push(slackChannel);
@@ -112,6 +117,7 @@ export const create = async (config: Config): Promise<Notifier> => {
     );
     const applyFilter = await createFilter({
       channelName: TelegramChannel.channelName,
+      config: config.config,
     });
     const telegramChannel = applyQueue(
       applyFilter(applyToString(telegramNotify))

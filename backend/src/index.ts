@@ -17,12 +17,12 @@ const main = async () => {
   prefix.reg(logger);
   prefix.apply(logger, { timestampFormatter });
 
-  await Config.load("./tmp/config.json");
-  const nodes = Config.getNodes();
-  const bakers = Config.getBakers();
-  const rpcNode: string = Config.getRpc();
-  const logLevel = Config.getLogLevel();
-  const chain = Config.getChain();
+  const config = await Config.load("./tmp/config.json");
+  const nodes = config.getNodes();
+  const bakers = config.getBakers();
+  const rpcNode = config.getRpc();
+  const logLevel = config.getLogLevel();
+  const chain = config.getChain();
 
   setLevel(logLevel);
 
@@ -33,13 +33,14 @@ const main = async () => {
 
   const storageDirectory = "./tmp";
 
-  const notifierConfig: Notifier.Config = {
+  const notifierConfig: Notifier.NotifierConfig = {
     desktopConfig: { enableSound: false },
     queue: {
       maxRetries: 10,
       retryDelay: 60000,
     },
     storageDirectory,
+    config,
   };
 
   const notifier = await Notifier.create(notifierConfig);
@@ -50,7 +51,13 @@ const main = async () => {
 
   const bakerMonitor =
     bakers.length > 0
-      ? BakerMonitor.start({ bakers, onEvent, rpcNode, storageDirectory })
+      ? BakerMonitor.start({
+          bakers,
+          config,
+          onEvent,
+          rpcNode,
+          storageDirectory,
+        })
       : null;
   const nodeMonitor =
     nodes.length > 0

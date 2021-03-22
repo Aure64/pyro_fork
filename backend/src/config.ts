@@ -10,7 +10,21 @@ const CHAIN = "chain";
 const LAST_BLOCK_LEVEL = "lastBlockLevel";
 const EXCLUDED_EVENTS = "filter:omit";
 
-export const load = async (path: string): Promise<void> => {
+export type Config = {
+  save: () => Promise<void>;
+  getBakers: GetBakers;
+  getRpc: GetRpc;
+  getNodes: GetNodes;
+  getLogLevel: GetLogLevel;
+  getChain: GetChain;
+  getLastBlockLevel: GetLastBlockLevel;
+  setLastBlockLevel: SetLastBlockLevel;
+  getNumber: GetNumber;
+  setNumber: SetNumber;
+  getExcludedEvents: GetExcludedEvents;
+};
+
+export const load = async (path: string): Promise<Config> => {
   nconf
     .argv({
       [BAKER]: {
@@ -55,6 +69,20 @@ export const load = async (path: string): Promise<void> => {
     });
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
+  const config: Config = {
+    save,
+    getBakers,
+    getRpc,
+    getNodes,
+    getLogLevel,
+    getChain,
+    getLastBlockLevel,
+    setLastBlockLevel,
+    getNumber,
+    setNumber,
+    getExcludedEvents,
+  };
+  return config;
 };
 
 export const save = async (): Promise<void> => {
@@ -67,19 +95,26 @@ export const save = async (): Promise<void> => {
   });
 };
 
-export const getBakers = (): string[] => {
+type GetBakers = () => string[];
+
+const getBakers: GetBakers = () => {
   return nconf.get(BAKER);
 };
 
-export const getRpc = (): string => {
+type GetRpc = () => string;
+
+const getRpc: GetRpc = () => {
   return nconf.get(RPC);
 };
 
-export const getNodes = (): string[] => {
+type GetNodes = () => string[];
+const getNodes: GetNodes = () => {
   return nconf.get(NODE);
 };
 
-export const getLogLevel = (): LogLevelDesc => {
+type GetLogLevel = () => LogLevelDesc;
+
+const getLogLevel: GetLogLevel = () => {
   const value = nconf.get(LOGGING);
   return logLevelFromString(value);
 };
@@ -94,36 +129,47 @@ const logLevelFromString = (value: string): LogLevelDesc => {
   }
 };
 
-export const getChain = (): string => {
+type GetChain = () => string;
+
+const getChain: GetChain = () => {
   return nconf.get(CHAIN);
 };
 
-export const getLastBlockLevel = (): number | undefined => {
+type GetLastBlockLevel = () => number | undefined;
+
+const getLastBlockLevel: GetLastBlockLevel = () => {
   return nconf.get(LAST_BLOCK_LEVEL);
 };
 
-export const setLastBlockLevel = (value: number): void => {
+type SetLastBlockLevel = (value: number) => void;
+
+const setLastBlockLevel: SetLastBlockLevel = (value) => {
   nconf.set(LAST_BLOCK_LEVEL, value);
   save();
 };
+
+type GetNumber = (key: string) => number | undefined;
 
 /**
  * Gets an arbitrary number from the config at `key`.  Do not use this for values that need to be
  * configured via the CLI, as they won't be reported in the CLI help.
  */
-export const getNumber = (key: string): number | undefined => {
+const getNumber: GetNumber = (key) => {
   return nconf.get(key);
 };
 
+type SetNumber = (key: string, value: number) => void;
 /**
  * Sets an arbitrary number to the config at `key`.  Do not use this for values that need to be
  * configured via the CLI, as they won't be reported in the CLI help.
  */
-export const setNumber = (key: string, value: number): void => {
+const setNumber: SetNumber = (key, value) => {
   nconf.set(key, value);
   save();
 };
 
-export const getExcludedEvents = (): string[] => {
+type GetExcludedEvents = () => string[];
+
+const getExcludedEvents: GetExcludedEvents = () => {
   return nconf.get(EXCLUDED_EVENTS) || [];
 };

@@ -6,7 +6,7 @@ import {
   TezosNodeEvent,
 } from "../types";
 import { debug } from "loglevel";
-import * as Config from "../config";
+import { Config } from "../config";
 
 type NotifierHistory = {
   nextEndorseLevel: number;
@@ -19,8 +19,9 @@ type NotifyFilter = {
   excludedEvents: string[];
 };
 
-type Config = {
+type FilterConfig = {
   channelName: string;
+  config: Config;
 };
 
 /**
@@ -28,14 +29,15 @@ type Config = {
  */
 export const create = async ({
   channelName,
-}: Config): Promise<NotificationChannelMiddleware> => {
+  config,
+}: FilterConfig): Promise<NotificationChannelMiddleware> => {
   const BAKE_KEY = `filter:${channelName}:nextBakeLevel`;
   const ENDORSE_KEY = `filter:${channelName}:nextEndorseLevel`;
   const history = {
-    nextBakeLevel: Config.getNumber(BAKE_KEY) || 0,
-    nextEndorseLevel: Config.getNumber(ENDORSE_KEY) || 0,
+    nextBakeLevel: config.getNumber(BAKE_KEY) || 0,
+    nextEndorseLevel: config.getNumber(ENDORSE_KEY) || 0,
   };
-  const excludedEvents = Config.getExcludedEvents();
+  const excludedEvents = config.getExcludedEvents();
 
   const filter: NotifyFilter = { history, channelName, excludedEvents };
   return (notifyFunction: NotifyEventFunction): NotifyEventFunction => {
@@ -47,14 +49,14 @@ export const create = async ({
         // only update history if the event was successfully delivered
         if (result.kind === "SUCCESS") {
           filter.history = updateHistory(filter.history, event);
-          Config.setNumber(BAKE_KEY, filter.history.nextBakeLevel);
-          Config.setNumber(ENDORSE_KEY, filter.history.nextEndorseLevel);
+          config.setNumber(BAKE_KEY, filter.history.nextBakeLevel);
+          config.setNumber(ENDORSE_KEY, filter.history.nextEndorseLevel);
         }
         return result;
       } else {
         filter.history = updateHistory(filter.history, event);
-        Config.setNumber(BAKE_KEY, filter.history.nextBakeLevel);
-        Config.setNumber(ENDORSE_KEY, filter.history.nextEndorseLevel);
+        config.setNumber(BAKE_KEY, filter.history.nextBakeLevel);
+        config.setNumber(ENDORSE_KEY, filter.history.nextEndorseLevel);
         // return success for ignored events
         return { kind: "SUCCESS" };
       }

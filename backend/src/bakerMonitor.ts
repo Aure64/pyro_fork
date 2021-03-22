@@ -18,7 +18,7 @@ import {
   RpcClient,
 } from "@taquito/rpc";
 import to from "await-to-js";
-import * as Config from "./config";
+import { Config } from "./config";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 import { normalize } from "path";
@@ -34,6 +34,7 @@ type StartArgs = {
   rpcNode: string;
   onEvent: (event: TezosNodeEvent) => void;
   storageDirectory: string;
+  config: Config;
 };
 
 export const start = ({
@@ -41,6 +42,7 @@ export const start = ({
   rpcNode,
   onEvent,
   storageDirectory,
+  config,
 }: StartArgs): Monitor => {
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc);
@@ -69,7 +71,7 @@ export const start = ({
         const { events, blockLevel } = result.data;
         events.map(onEvent);
 
-        const lastBlockLevel = Config.getLastBlockLevel();
+        const lastBlockLevel = config.getLastBlockLevel();
         debug(`Previous block level from config: ${lastBlockLevel}`);
         if (lastBlockLevel && blockLevel - lastBlockLevel > 1) {
           for (let i = lastBlockLevel + 1; i < blockLevel; i++) {
@@ -82,7 +84,7 @@ export const start = ({
         if (!lastBlockLevel || blockLevel > lastBlockLevel) {
           debug(`Saving previous block level: ${blockLevel}`);
           // only update last block level if it's bigger.  it could be smaller if this was a catch up event
-          Config.setLastBlockLevel(blockLevel);
+          config.setLastBlockLevel(blockLevel);
         }
 
         callback(null, result);
