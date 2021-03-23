@@ -17,7 +17,7 @@ const main = async () => {
   prefix.reg(logger);
   prefix.apply(logger, { timestampFormatter });
 
-  const config = await Config.load("./tmp/config.json");
+  const config = await Config.load("./tmp");
   const logLevel = config.getLogLevel();
 
   setLevel(logLevel);
@@ -73,9 +73,9 @@ const main = async () => {
       : null;
   const server = Server.start();
 
-  process.on("SIGINT", async () => {
+  process.on("SIGINT", () => {
     debug("Shutting down");
-    await Config.save();
+    config.save();
     if (bakerMonitor) BakerMonitor.halt(bakerMonitor);
     if (nodeMonitor) NodeMonitor.halt(nodeMonitor);
     Server.halt(server);

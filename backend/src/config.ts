@@ -1,17 +1,23 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
-import { LogLevelDesc, trace, warn } from "loglevel";
+import { LogLevelDesc, debug, warn } from "loglevel";
 import { SlackConfig } from "./slackNotificationChannel";
 import { TelegramConfig } from "./telegramNotificationChannel";
 import { EmailConfig } from "./emailNotificationChannel";
 import { DesktopConfig } from "./desktopNotificationChannel";
+import * as FS from "fs";
+import * as Path from "path";
+
+const SYSTEM_PREFIX = "system"; // prefix before system settings
+const userConfigName = "config.json";
+const systemConfigName = "system.json";
 
 const BAKER = "baker";
 const LOGGING = "logging";
 const NODE = "node";
 const RPC = "rpc";
 const CHAIN = "chain";
-const LAST_BLOCK_LEVEL = "lastBlockLevel";
+const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:lastBlockLevel`;
 const EXCLUDED_EVENTS = "filter:omit";
 const SLACK_URL = "notifier:slack:url";
 const TELEGRAM_TOKEN = "notifier:telegram:token";
@@ -26,7 +32,7 @@ const DESKTOP_ENABLED = "notifier:desktop:enabled";
 const DESKTOP_SOUND = "notifier:desktop:sound";
 
 export type Config = {
-  save: () => Promise<void>;
+  save: () => void;
   getBakers: GetBakers;
   getRpc: GetRpc;
   getNodes: GetNodes;
@@ -42,6 +48,9 @@ export type Config = {
   getEmailConfig: GetEmailConfig;
   getDesktopConfig: GetDesktopConfig;
 };
+
+const userConfigPath = (path: string) => Path.join(path, userConfigName);
+const systemConfigPath = (path: string) => Path.join(path, systemConfigName);
 
 export const load = async (path: string): Promise<Config> => {
   nconf
@@ -135,7 +144,8 @@ export const load = async (path: string): Promise<Config> => {
         default: false,
       },
     })
-    .file(path)
+    .file("user", userConfigPath(path))
+    .file("system", systemConfigPath(path))
     .defaults({
       [BAKER]: [],
       [NODE]: [],
@@ -149,7 +159,7 @@ export const load = async (path: string): Promise<Config> => {
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
   const config: Config = {
-    save,
+    save: () => save(path),
     getBakers,
     getRpc,
     getNodes,
@@ -168,14 +178,12 @@ export const load = async (path: string): Promise<Config> => {
   return config;
 };
 
-export const save = async (): Promise<void> => {
-  trace("Saving config to disk.");
-  // save doesn't confirm to standard node callbacks, so we can't use promisify on it
-  return new Promise((resolve) => {
-    nconf.save(null, () => {
-      resolve();
-    });
-  });
+const save = (path: string): void => {
+  // read in system config.  Kiln currently doesn't update user settings
+  const { [SYSTEM_PREFIX]: systemSettings } = nconf.get();
+  debug("Saving config to disk.");
+  // save system config
+  FS.writeFileSync(systemConfigPath(path), JSON.stringify(systemSettings));
 };
 
 type GetBakers = () => string[];
@@ -228,27 +236,25 @@ type SetLastBlockLevel = (value: number) => void;
 
 const setLastBlockLevel: SetLastBlockLevel = (value) => {
   nconf.set(LAST_BLOCK_LEVEL, value);
-  save();
 };
 
 type GetNumber = (key: string) => number | undefined;
 
 /**
- * Gets an arbitrary number from the config at `key`.  Do not use this for values that need to be
+ * Gets an arbitrary number from the system config at `key`.  Do not use this for values that need to be
  * configured via the CLI, as they won't be reported in the CLI help.
  */
 const getNumber: GetNumber = (key) => {
-  return nconf.get(key);
+  return nconf.get(`${SYSTEM_PREFIX}:${key}`);
 };
 
 type SetNumber = (key: string, value: number) => void;
 /**
- * Sets an arbitrary number to the config at `key`.  Do not use this for values that need to be
+ * Sets an arbitrary number to the system config at `key`.  Do not use this for values that need to be
  * configured via the CLI, as they won't be reported in the CLI help.
  */
 const setNumber: SetNumber = (key, value) => {
-  nconf.set(key, value);
-  save();
+  nconf.set(`${SYSTEM_PREFIX}:${key}`, value);
 };
 
 type GetExcludedEvents = () => string[];
