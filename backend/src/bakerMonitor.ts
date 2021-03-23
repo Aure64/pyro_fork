@@ -45,7 +45,9 @@ export const start = ({
   config,
 }: StartArgs): Monitor => {
   const toolkit = new TezosToolkit(rpcNode);
-  const context = new Context(toolkit.rpc);
+  const context = new Context(toolkit.rpc, undefined, undefined, {
+    shouldObservableSubscriptionRetry: true,
+  });
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
   const rpc = toolkit.rpc;

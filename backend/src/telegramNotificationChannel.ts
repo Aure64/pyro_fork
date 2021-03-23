@@ -4,7 +4,7 @@ import { Notify } from "./types";
 
 export const channelName = "telegram";
 
-export type Config = {
+export type TelegramConfig = {
   token: string;
   chatId: number;
 };
@@ -14,7 +14,7 @@ export type TelegramNotificationChannel = {
   chatId: number;
 };
 
-export const create = (config: Config): TelegramNotificationChannel => {
+export const create = (config: TelegramConfig): TelegramNotificationChannel => {
   const bot = new TelegramBot(config.token);
   return { bot, chatId: config.chatId };
 };

@@ -3,13 +3,13 @@ import { Notify } from "./types";
 
 export const channelName = "slack";
 
-export type Config = { url: string };
+export type SlackConfig = { url: string };
 
 export type SlackNotificationChannel = {
   webhook: IncomingWebhook;
 };
 
-export const create = (config: Config): SlackNotificationChannel => {
+export const create = (config: SlackConfig): SlackNotificationChannel => {
   const webhook = new IncomingWebhook(config.url);
   return { webhook };
 };

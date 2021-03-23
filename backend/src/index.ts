@@ -18,23 +18,22 @@ const main = async () => {
   prefix.apply(logger, { timestampFormatter });
 
   const config = await Config.load("./tmp/config.json");
-  const nodes = config.getNodes();
-  const bakers = config.getBakers();
-  const rpcNode = config.getRpc();
   const logLevel = config.getLogLevel();
-  const chain = config.getChain();
 
   setLevel(logLevel);
 
-  if (bakers.length === 0 && nodes.length === 0) {
-    console.error("You must specify nodes or bakers to watch");
-    process.exit(1);
-  }
-
   const storageDirectory = "./tmp";
 
+  const desktopConfig = config.getDesktopConfig();
+  const emailConfig = config.getEmailConfig();
+  const telegramConfig = config.getTelegramConfig();
+  const slackConfig = config.getSlackConfig();
+
   const notifierConfig: Notifier.NotifierConfig = {
-    desktopConfig: { enableSound: false },
+    desktopConfig,
+    emailConfig,
+    telegramConfig,
+    slackConfig,
     queue: {
       maxRetries: 10,
       retryDelay: 60000,
@@ -48,6 +47,15 @@ const main = async () => {
   const onEvent = (event: TezosNodeEvent) => {
     Notifier.notify(notifier, event);
   };
+
+  const nodes = config.getNodes();
+  const bakers = config.getBakers();
+  const rpcNode = config.getRpc();
+  const chain = config.getChain();
+  if (bakers.length === 0 && nodes.length === 0) {
+    console.error("You must specify nodes or bakers to watch");
+    process.exit(1);
+  }
 
   const bakerMonitor =
     bakers.length > 0

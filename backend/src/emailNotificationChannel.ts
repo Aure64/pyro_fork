@@ -6,7 +6,7 @@ export const channelName = "email";
 
 type Protocol = "Plain" | "SSL" | "STARTTLS";
 
-export type Config = {
+export type EmailConfig = {
   host: string;
   port: number;
   protocol: Protocol;
@@ -16,11 +16,11 @@ export type Config = {
 };
 
 export type EmailNotificationChannel = {
-  config: Config;
+  config: EmailConfig;
   transporter: Transporter;
 };
 
-export const create = (config: Config): EmailNotificationChannel => {
+export const create = (config: EmailConfig): EmailNotificationChannel => {
   const transporter = createTransport({
     host: config.host,
     port: config.port,

@@ -9,7 +9,7 @@ jest.mock("node-notifier", () => ({
 const mockedNotifier = mocked(desktopNotify, true);
 
 const notifier = {
-  config: { enableSound: false },
+  config: { enabled: true, enableSound: false },
 };
 
 describe("notify", () => {

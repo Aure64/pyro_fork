@@ -1,8 +1,8 @@
 import { mocked } from "ts-jest/utils";
-import { notify, Config } from "./emailNotificationChannel";
+import { notify, EmailConfig } from "./emailNotificationChannel";
 import { Transporter } from "nodemailer";
 
-const config: Config = {
+const config: EmailConfig = {
   host: "localhost",
   port: 367,
   username: "admin",

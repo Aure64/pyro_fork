@@ -1,6 +1,10 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
 import { LogLevelDesc, trace, warn } from "loglevel";
+import { SlackConfig } from "./slackNotificationChannel";
+import { TelegramConfig } from "./telegramNotificationChannel";
+import { EmailConfig } from "./emailNotificationChannel";
+import { DesktopConfig } from "./desktopNotificationChannel";
 
 const BAKER = "baker";
 const LOGGING = "logging";
@@ -9,6 +13,17 @@ const RPC = "rpc";
 const CHAIN = "chain";
 const LAST_BLOCK_LEVEL = "lastBlockLevel";
 const EXCLUDED_EVENTS = "filter:omit";
+const SLACK_URL = "notifier:slack:url";
+const TELEGRAM_TOKEN = "notifier:telegram:token";
+const TELEGRAM_CHAT_ID = "notifier:telegram:chat";
+const EMAIL_HOST = "notifier:email:host";
+const EMAIL_PORT = "notifier:email:port";
+const EMAIL_PROTOCOL = "notifier:email:protocol";
+const EMAIL_USERNAME = "notifier:email:username";
+const EMAIL_PASSWORD = "notifier:email:password";
+const EMAIL_EMAIL = "notifier:email:email";
+const DESKTOP_ENABLED = "notifier:desktop:enabled";
+const DESKTOP_SOUND = "notifier:desktop:sound";
 
 export type Config = {
   save: () => Promise<void>;
@@ -22,6 +37,10 @@ export type Config = {
   getNumber: GetNumber;
   setNumber: SetNumber;
   getExcludedEvents: GetExcludedEvents;
+  getSlackConfig: GetSlackConfig;
+  getTelegramConfig: GetTelegramConfig;
+  getEmailConfig: GetEmailConfig;
+  getDesktopConfig: GetDesktopConfig;
 };
 
 export const load = async (path: string): Promise<Config> => {
@@ -57,6 +76,64 @@ export const load = async (path: string): Promise<Config> => {
         parseValues: true,
         type: "array",
       },
+      [SLACK_URL]: {
+        describe: "Webhook URL for Slack notifications",
+        parseValues: true,
+        type: "string",
+      },
+      [TELEGRAM_TOKEN]: {
+        describe: "API token for Telegram notification channel",
+        parseValues: true,
+        type: "string",
+      },
+      [TELEGRAM_CHAT_ID]: {
+        describe: "Bot chat ID for Telegram notification channel",
+        parseValues: true,
+        type: "number",
+      },
+      [EMAIL_HOST]: {
+        describe: "Host for email notification channel",
+        parseValues: true,
+        type: "string",
+      },
+      [EMAIL_PORT]: {
+        describe: "Port for email notification channel",
+        parseValues: true,
+        type: "number",
+      },
+      [EMAIL_PROTOCOL]: {
+        describe:
+          "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
+        parseValues: true,
+        type: "string",
+      },
+      [EMAIL_USERNAME]: {
+        describe: "Username for email notification channel",
+        parseValues: true,
+        type: "string",
+      },
+      [EMAIL_PASSWORD]: {
+        describe: "Password for email notification channel",
+        parseValues: true,
+        type: "string",
+      },
+      [EMAIL_EMAIL]: {
+        describe: "Address for email notifier channel",
+        parseValues: true,
+        type: "string",
+      },
+      [DESKTOP_ENABLED]: {
+        describe: "Whether desktop notifier is enabled",
+        parseValues: true,
+        type: "boolean",
+        default: true,
+      },
+      [DESKTOP_SOUND]: {
+        describe: "Whether desktop notifier should use sound",
+        parseValues: true,
+        type: "boolean",
+        default: false,
+      },
     })
     .file(path)
     .defaults({
@@ -66,6 +143,8 @@ export const load = async (path: string): Promise<Config> => {
       [RPC]: "https://mainnet-tezos.giganode.io/",
       [LOGGING]: "info",
       [EXCLUDED_EVENTS]: [],
+      [DESKTOP_ENABLED]: true,
+      [DESKTOP_SOUND]: false,
     });
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
@@ -81,6 +160,10 @@ export const load = async (path: string): Promise<Config> => {
     getNumber,
     setNumber,
     getExcludedEvents,
+    getSlackConfig,
+    getTelegramConfig,
+    getEmailConfig,
+    getDesktopConfig,
   };
   return config;
 };
@@ -172,4 +255,43 @@ type GetExcludedEvents = () => string[];
 
 const getExcludedEvents: GetExcludedEvents = () => {
   return nconf.get(EXCLUDED_EVENTS) || [];
+};
+
+type GetSlackConfig = () => SlackConfig | undefined;
+
+const getSlackConfig: GetSlackConfig = () => {
+  const url = nconf.get(SLACK_URL);
+  if (url) return { url };
+  return undefined;
+};
+
+type GetTelegramConfig = () => TelegramConfig | undefined;
+
+const getTelegramConfig: GetTelegramConfig = () => {
+  const token = nconf.get(TELEGRAM_TOKEN);
+  const chatId = nconf.get(TELEGRAM_CHAT_ID);
+  if (token && chatId !== undefined) return { token, chatId };
+  return undefined;
+};
+
+type GetEmailConfig = () => EmailConfig | undefined;
+
+const getEmailConfig: GetEmailConfig = () => {
+  const host = nconf.get(EMAIL_HOST);
+  const port = nconf.get(EMAIL_PORT);
+  const protocol = nconf.get(EMAIL_PROTOCOL);
+  const username = nconf.get(EMAIL_USERNAME);
+  const password = nconf.get(EMAIL_PASSWORD);
+  const email = nconf.get(EMAIL_EMAIL);
+  if (host && port && protocol && email)
+    return { host, port, protocol, username, password, email };
+  return undefined;
+};
+
+type GetDesktopConfig = () => DesktopConfig;
+
+const getDesktopConfig: GetDesktopConfig = () => {
+  const enableSound = nconf.get(DESKTOP_SOUND);
+  const enabled = nconf.get(DESKTOP_ENABLED);
+  return { enabled, enableSound };
 };

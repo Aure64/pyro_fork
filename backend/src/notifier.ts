@@ -11,10 +11,10 @@ import { trace } from "loglevel";
 import { Config } from "./config";
 
 export type NotifierConfig = {
-  emailConfig?: EmailChannel.Config;
-  desktopConfig?: DesktopChannel.Config;
-  slackConfig?: SlackChannel.Config;
-  telegramConfig?: TelegramChannel.Config;
+  emailConfig?: EmailChannel.EmailConfig;
+  desktopConfig?: DesktopChannel.DesktopConfig;
+  slackConfig?: SlackChannel.SlackConfig;
+  telegramConfig?: TelegramChannel.TelegramConfig;
   queue: {
     maxRetries: number;
     retryDelay: number;
@@ -60,7 +60,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     channels.push(emailChannel);
   }
 
-  if (config.desktopConfig) {
+  if (config.desktopConfig?.enabled) {
     const desktopNotify = bindNotifier(
       DesktopChannel.create(config.desktopConfig),
       DesktopChannel.notify

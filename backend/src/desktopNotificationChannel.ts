@@ -3,13 +3,13 @@ import { Notify } from "./types";
 
 export const channelName = "desktop";
 
-export type Config = { enableSound: boolean };
+export type DesktopConfig = { enableSound: boolean; enabled: boolean };
 
 export type DesktopNotificationChannel = {
-  config: Config;
+  config: DesktopConfig;
 };
 
-export const create = (config: Config): DesktopNotificationChannel => {
+export const create = (config: DesktopConfig): DesktopNotificationChannel => {
   return { config };
 };
 

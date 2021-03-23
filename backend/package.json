@@ -7,6 +7,7 @@
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
     "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only --exit-child src/index.ts",
+    "inspect": "ts-node-dev --inspect --tree-kill --no-notify --respawn --transpile-only --exit-child src/index.ts",
     "eslint:fix": "eslint . --ext .ts --fix",
     "eslint:lint": "eslint . --ext .ts",
     "lint": "yarn eslint:lint && yarn tsc:lint && yarn prettier:lint",
