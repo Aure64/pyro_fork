@@ -12,6 +12,7 @@ import {
   BlockMetadata,
   BlockResponse,
   ConstantsResponse,
+  EndorsingRightsQueryArguments,
   EndorsingRightsResponse,
   OperationEntry,
   OpKind,
@@ -53,6 +54,9 @@ export const start = ({
   const rpc = toolkit.rpc;
   rpc.getBakingRights = makeMemoizedGetBakingRights(
     rpc.getBakingRights.bind(rpc)
+  );
+  rpc.getEndorsingRights = makeMemoizedGetEndorsingRights(
+    rpc.getEndorsingRights.bind(rpc)
   );
 
   const store = new SqlLiteStore<string>({
@@ -369,6 +373,38 @@ export const makeMemoizedGetBakingRights = (
       });
       cache[key] = bakingRightsResponse;
       return bakingRightsResponse;
+    }
+  };
+};
+
+type GetEndorsingRights = (
+  args: EndorsingRightsQueryArguments,
+  { block }: { block: string }
+) => Promise<EndorsingRightsResponse>;
+
+/**
+ * Create a memoized getEndorsingRights function.  The request memoizes based on cycle.
+ */
+export const makeMemoizedGetEndorsingRights = (
+  originalFunction: GetEndorsingRights
+): GetEndorsingRights => {
+  const cache: Record<string, EndorsingRightsResponse> = {};
+
+  return async (
+    args: EndorsingRightsQueryArguments,
+    { block }: { block: string }
+  ) => {
+    const key = `${args.cycle}`;
+    if (cache[key]) {
+      debug(`Memoized getEndorsingRights cache hit for cycle ${key}`);
+      return cache[key];
+    } else {
+      debug(`Memoized getEndorsingRights cache miss for ${key}`);
+      const endorsingRightsResponse = await originalFunction(args, {
+        block,
+      });
+      cache[key] = endorsingRightsResponse;
+      return endorsingRightsResponse;
     }
   };
 };
