@@ -5,6 +5,7 @@ import { SlackConfig } from "./slackNotificationChannel";
 import { TelegramConfig } from "./telegramNotificationChannel";
 import { EmailConfig } from "./emailNotificationChannel";
 import { DesktopConfig } from "./desktopNotificationChannel";
+import { EndpointConfig } from "./endpointNotificationChannel";
 import * as FS from "fs";
 import * as Path from "path";
 
@@ -30,6 +31,7 @@ const EMAIL_PASSWORD = "notifier:email:password";
 const EMAIL_EMAIL = "notifier:email:email";
 const DESKTOP_ENABLED = "notifier:desktop:enabled";
 const DESKTOP_SOUND = "notifier:desktop:sound";
+const ENDPOINT_URL = "notifier:endpoint:url";
 
 export type Config = {
   save: () => void;
@@ -47,6 +49,7 @@ export type Config = {
   getTelegramConfig: GetTelegramConfig;
   getEmailConfig: GetEmailConfig;
   getDesktopConfig: GetDesktopConfig;
+  getEndpointConfig: GetEndpointConfig;
 };
 
 const userConfigPath = (path: string) => Path.join(path, userConfigName);
@@ -143,6 +146,11 @@ export const load = async (path: string): Promise<Config> => {
         type: "boolean",
         default: false,
       },
+      [ENDPOINT_URL]: {
+        describe: "URL for posting raw JSON notifications",
+        parseValues: true,
+        type: "string",
+      },
     })
     .file("user", userConfigPath(path))
     .file("system", systemConfigPath(path))
@@ -174,6 +182,7 @@ export const load = async (path: string): Promise<Config> => {
     getTelegramConfig,
     getEmailConfig,
     getDesktopConfig,
+    getEndpointConfig,
   };
   return config;
 };
@@ -183,7 +192,9 @@ const save = (path: string): void => {
   const { [SYSTEM_PREFIX]: systemSettings } = nconf.get();
   debug("Saving config to disk.");
   // save system config
-  FS.writeFileSync(systemConfigPath(path), JSON.stringify(systemSettings));
+  if (systemSettings) {
+    FS.writeFileSync(systemConfigPath(path), JSON.stringify(systemSettings));
+  }
 };
 
 type GetBakers = () => string[];
@@ -300,4 +311,12 @@ const getDesktopConfig: GetDesktopConfig = () => {
   const enableSound = nconf.get(DESKTOP_SOUND);
   const enabled = nconf.get(DESKTOP_ENABLED);
   return { enabled, enableSound };
+};
+
+type GetEndpointConfig = () => EndpointConfig | undefined;
+
+const getEndpointConfig: GetEndpointConfig = () => {
+  const url = nconf.get(ENDPOINT_URL);
+  if (url) return { url };
+  return undefined;
 };

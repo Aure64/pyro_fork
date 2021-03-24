@@ -28,12 +28,14 @@ const main = async () => {
   const emailConfig = config.getEmailConfig();
   const telegramConfig = config.getTelegramConfig();
   const slackConfig = config.getSlackConfig();
+  const endpointConfig = config.getEndpointConfig();
 
   const notifierConfig: Notifier.NotifierConfig = {
     desktopConfig,
     emailConfig,
     telegramConfig,
     slackConfig,
+    endpointConfig,
     queue: {
       maxRetries: 10,
       retryDelay: 60000,

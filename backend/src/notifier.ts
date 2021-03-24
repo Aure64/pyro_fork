@@ -3,6 +3,7 @@ import * as EmailChannel from "./emailNotificationChannel";
 import * as DesktopChannel from "./desktopNotificationChannel";
 import * as SlackChannel from "./slackNotificationChannel";
 import * as TelegramChannel from "./telegramNotificationChannel";
+import * as EndpointChannel from "./endpointNotificationChannel";
 import { apply as applyToString } from "./notifierMiddleware/toString";
 import { apply as bindNotifier } from "./notifierMiddleware/bindNotifier";
 import { create as createFilter } from "./notifierMiddleware/filter";
@@ -15,6 +16,7 @@ export type NotifierConfig = {
   desktopConfig?: DesktopChannel.DesktopConfig;
   slackConfig?: SlackChannel.SlackConfig;
   telegramConfig?: TelegramChannel.TelegramConfig;
+  endpointConfig?: EndpointChannel.EndpointConfig;
   queue: {
     maxRetries: number;
     retryDelay: number;
@@ -123,6 +125,27 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
       applyFilter(applyToString(telegramNotify))
     );
     channels.push(telegramChannel);
+  }
+  if (config.endpointConfig) {
+    // we don't use bindNotifier and toString like other channels as this channel uses
+    // the raw JSON event, not a toString'ed representation
+    const endpointNotifier = EndpointChannel.create(config.endpointConfig);
+    const endpointNotify: NotifyEventFunction = (event) =>
+      EndpointChannel.notify(endpointNotifier, event);
+    const applyQueue = createQueue(
+      {
+        ...config.queue,
+        storageDirectory: config.storageDirectory,
+        channelName: EndpointChannel.channelName,
+      },
+      boundNotify
+    );
+    const applyFilter = await createFilter({
+      channelName: EndpointChannel.channelName,
+      config: config.config,
+    });
+    const endpointChannel = applyQueue(applyFilter(endpointNotify));
+    channels.push(endpointChannel);
   }
 
   return notifier;
