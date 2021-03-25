@@ -1,20 +1,18 @@
-FROM node:14.15.3-alpine@sha256:b2da3316acdc2bec442190a1fe10dc094e7ba4121d029cb32075ff59bb27390a
-
-RUN apk --no-cache add python make g++
-RUN apk add dumb-init
-
-# Create app directory
-ENV HOME /usr/src/app
-ENV NODE_ENV production
-WORKDIR $HOME
-
+FROM node:14-alpine as builder
+WORKDIR /usr/src/app
 COPY backend/package.json backend/yarn.lock ./
+#install runtime dependencies and populate yarn cache
+RUN yarn install --frozen-lockfile --production=true
 
-RUN yarn install --production --frozen-lockfile
-
+FROM builder as app-builder
+RUN yarn install --frozen-lockfile
 COPY --chown=node:node backend/ ./
-
 RUN yarn build
 
+FROM node:14-alpine
+ENV NODE_ENV production
+WORKDIR /app
+COPY --from=builder /usr/src/app/node_modules node_modules
+COPY --from=app-builder /usr/src/app/dist dist
 USER node
-ENTRYPOINT ["dumb-init", "node", "dist/index.js"]
+ENTRYPOINT ["node", "dist/index.js"]
