@@ -17,18 +17,17 @@ const main = async () => {
   prefix.reg(logger);
   prefix.apply(logger, { timestampFormatter });
 
-  const config = await Config.load("./tmp");
+  const config = await Config.load();
   const logLevel = config.getLogLevel();
 
   setLevel(logLevel);
-
-  const storageDirectory = "./tmp";
 
   const desktopConfig = config.getDesktopConfig();
   const emailConfig = config.getEmailConfig();
   const telegramConfig = config.getTelegramConfig();
   const slackConfig = config.getSlackConfig();
   const endpointConfig = config.getEndpointConfig();
+  const storageDirectory = config.getStorageDirectory();
 
   const notifierConfig: Notifier.NotifierConfig = {
     desktopConfig,

@@ -8,10 +8,9 @@ import { DesktopConfig } from "./desktopNotificationChannel";
 import { EndpointConfig } from "./endpointNotificationChannel";
 import * as FS from "fs";
 import * as Path from "path";
+import envPaths from "env-paths";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
-const userConfigName = "config.json";
-const systemConfigName = "system.json";
 
 const BAKER = "baker";
 const LOGGING = "logging";
@@ -32,6 +31,7 @@ const EMAIL_EMAIL = "notifier:email:email";
 const DESKTOP_ENABLED = "notifier:desktop:enabled";
 const DESKTOP_SOUND = "notifier:desktop:sound";
 const ENDPOINT_URL = "notifier:endpoint:url";
+const CONFIG_FILE = "config";
 
 export type Config = {
   save: () => void;
@@ -50,124 +50,148 @@ export type Config = {
   getEmailConfig: GetEmailConfig;
   getDesktopConfig: GetDesktopConfig;
   getEndpointConfig: GetEndpointConfig;
+  getStorageDirectory: GetStorageDirectory;
 };
 
-const userConfigPath = (path: string) => Path.join(path, userConfigName);
-const systemConfigPath = (path: string) => Path.join(path, systemConfigName);
+const userConfigPath = (path: string) => Path.join(path, "config.json");
+const systemConfigPath = (path: string) => Path.join(path, "system.json");
 
-export const load = async (path: string): Promise<Config> => {
-  nconf
-    .argv({
-      [BAKER]: {
-        describe: "Node to watch for baking events.",
-        parseValues: true,
-        type: "array",
-      },
-      [NODE]: {
-        describe: "Node URLs to watch for node events.",
-        parseValues: true,
-        type: "array",
-      },
-      [RPC]: {
-        describe: "Tezos RPC URL to query for baker and chain info",
-        parseValues: true,
-        type: "string",
-      },
-      [LOGGING]: {
-        describe: "Level of logging. [trace, debug, info, warn, error]",
-        parseValues: true,
-        type: "string",
-      },
-      [CHAIN]: {
-        describe: "Chain to monitor and query against",
-        parseValues: true,
-        type: "string",
-      },
-      [EXCLUDED_EVENTS]: {
-        describe: "Events to omit from notifications",
-        parseValues: true,
-        type: "array",
-      },
-      [SLACK_URL]: {
-        describe: "Webhook URL for Slack notifications",
-        parseValues: true,
-        type: "string",
-      },
-      [TELEGRAM_TOKEN]: {
-        describe: "API token for Telegram notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [TELEGRAM_CHAT_ID]: {
-        describe: "Bot chat ID for Telegram notification channel",
-        parseValues: true,
-        type: "number",
-      },
-      [EMAIL_HOST]: {
-        describe: "Host for email notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_PORT]: {
-        describe: "Port for email notification channel",
-        parseValues: true,
-        type: "number",
-      },
-      [EMAIL_PROTOCOL]: {
-        describe:
-          "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_USERNAME]: {
-        describe: "Username for email notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_PASSWORD]: {
-        describe: "Password for email notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_EMAIL]: {
-        describe: "Address for email notifier channel",
-        parseValues: true,
-        type: "string",
-      },
-      [DESKTOP_ENABLED]: {
-        describe: "Whether desktop notifier is enabled",
-        parseValues: true,
-        type: "boolean",
-        default: true,
-      },
-      [DESKTOP_SOUND]: {
-        describe: "Whether desktop notifier should use sound",
-        parseValues: true,
-        type: "boolean",
-        default: false,
-      },
-      [ENDPOINT_URL]: {
-        describe: "URL for posting raw JSON notifications",
-        parseValues: true,
-        type: "string",
-      },
-    })
-    .file("user", userConfigPath(path))
-    .file("system", systemConfigPath(path))
-    .defaults({
-      [BAKER]: [],
-      [NODE]: [],
-      [CHAIN]: "main",
-      [RPC]: "https://mainnet-tezos.giganode.io/",
-      [LOGGING]: "info",
-      [EXCLUDED_EVENTS]: [],
-      [DESKTOP_ENABLED]: true,
-      [DESKTOP_SOUND]: false,
-    });
+export const load = async (): Promise<Config> => {
+  const { data: dataDirectory, config: configDirectory } = envPaths(
+    "kiln-next"
+  );
+  if (!FS.existsSync(dataDirectory)) {
+    console.log(`Creating data directory: ${dataDirectory}`);
+    FS.mkdirSync(dataDirectory, { recursive: true });
+  } else {
+    console.log(`Data directory: ${dataDirectory}`);
+  }
+  if (!FS.existsSync(configDirectory)) {
+    console.log(`Creating config directory: ${configDirectory}`);
+    FS.mkdirSync(configDirectory, { recursive: true });
+  } else {
+    console.log(`Config directory: ${configDirectory}`);
+  }
+  nconf.argv({
+    [BAKER]: {
+      describe: "Node to watch for baking events.",
+      parseValues: true,
+      type: "array",
+    },
+    [NODE]: {
+      describe: "Node URLs to watch for node events.",
+      parseValues: true,
+      type: "array",
+    },
+    [RPC]: {
+      describe: "Tezos RPC URL to query for baker and chain info",
+      parseValues: true,
+      type: "string",
+    },
+    [LOGGING]: {
+      describe: "Level of logging. [trace, debug, info, warn, error]",
+      parseValues: true,
+      type: "string",
+    },
+    [CHAIN]: {
+      describe: "Chain to monitor and query against",
+      parseValues: true,
+      type: "string",
+    },
+    [EXCLUDED_EVENTS]: {
+      describe: "Events to omit from notifications",
+      parseValues: true,
+      type: "array",
+    },
+    [SLACK_URL]: {
+      describe: "Webhook URL for Slack notifications",
+      parseValues: true,
+      type: "string",
+    },
+    [TELEGRAM_TOKEN]: {
+      describe: "API token for Telegram notification channel",
+      parseValues: true,
+      type: "string",
+    },
+    [TELEGRAM_CHAT_ID]: {
+      describe: "Bot chat ID for Telegram notification channel",
+      parseValues: true,
+      type: "number",
+    },
+    [EMAIL_HOST]: {
+      describe: "Host for email notification channel",
+      parseValues: true,
+      type: "string",
+    },
+    [EMAIL_PORT]: {
+      describe: "Port for email notification channel",
+      parseValues: true,
+      type: "number",
+    },
+    [EMAIL_PROTOCOL]: {
+      describe:
+        "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
+      parseValues: true,
+      type: "string",
+    },
+    [EMAIL_USERNAME]: {
+      describe: "Username for email notification channel",
+      parseValues: true,
+      type: "string",
+    },
+    [EMAIL_PASSWORD]: {
+      describe: "Password for email notification channel",
+      parseValues: true,
+      type: "string",
+    },
+    [EMAIL_EMAIL]: {
+      describe: "Address for email notifier channel",
+      parseValues: true,
+      type: "string",
+    },
+    [DESKTOP_ENABLED]: {
+      describe: "Whether desktop notifier is enabled",
+      parseValues: true,
+      type: "boolean",
+      default: true,
+    },
+    [DESKTOP_SOUND]: {
+      describe: "Whether desktop notifier should use sound",
+      parseValues: true,
+      type: "boolean",
+      default: false,
+    },
+    [ENDPOINT_URL]: {
+      describe: "URL for posting raw JSON notifications",
+      parseValues: true,
+      type: "string",
+    },
+    [CONFIG_FILE]: {
+      describe:
+        "Path to config file.  If present, it will override the default user config file.",
+      parseValues: true,
+      type: "string",
+    },
+  });
+  // user config file from argv overrides default location
+  const configPath = nconf.get(CONFIG_FILE) || userConfigPath(configDirectory);
+  nconf.file("user", configPath);
+  nconf.file("system", systemConfigPath(configDirectory));
+  nconf.defaults({
+    [BAKER]: [],
+    [NODE]: [],
+    [CHAIN]: "main",
+    [RPC]: "https://mainnet-tezos.giganode.io/",
+    [LOGGING]: "info",
+    [EXCLUDED_EVENTS]: [],
+    [DESKTOP_ENABLED]: true,
+    [DESKTOP_SOUND]: false,
+  });
+
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
   const config: Config = {
-    save: () => save(path),
+    save: () => save(configDirectory),
     getBakers,
     getRpc,
     getNodes,
@@ -183,6 +207,7 @@ export const load = async (path: string): Promise<Config> => {
     getEmailConfig,
     getDesktopConfig,
     getEndpointConfig,
+    getStorageDirectory: () => dataDirectory,
   };
   return config;
 };
@@ -320,3 +345,5 @@ const getEndpointConfig: GetEndpointConfig = () => {
   if (url) return { url };
   return undefined;
 };
+
+type GetStorageDirectory = () => string;
