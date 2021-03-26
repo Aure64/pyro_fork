@@ -74,107 +74,115 @@ export const load = async (): Promise<Config> => {
     console.log(`Config directory: ${configDirectory}`);
   }
   nconf.argv(
-    yargs.strict().options({
-      [BAKER]: {
-        describe: "Node to watch for baking events.",
-        parseValues: true,
-        type: "array",
-      },
-      [NODE]: {
-        describe: "Node URLs to watch for node events.",
-        parseValues: true,
-        type: "array",
-      },
-      [RPC]: {
-        describe: "Tezos RPC URL to query for baker and chain info",
-        parseValues: true,
-        type: "string",
-      },
-      [LOGGING]: {
-        describe: "Level of logging. [trace, debug, info, warn, error]",
-        parseValues: true,
-        type: "string",
-      },
-      [CHAIN]: {
-        describe: "Chain to monitor and query against",
-        parseValues: true,
-        type: "string",
-      },
-      [EXCLUDED_EVENTS]: {
-        describe: "Events to omit from notifications",
-        parseValues: true,
-        type: "array",
-      },
-      [SLACK_URL]: {
-        describe: "Webhook URL for Slack notifications",
-        parseValues: true,
-        type: "string",
-      },
-      [TELEGRAM_TOKEN]: {
-        describe: "API token for Telegram notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [TELEGRAM_CHAT_ID]: {
-        describe: "Bot chat ID for Telegram notification channel",
-        parseValues: true,
-        type: "number",
-      },
-      [EMAIL_HOST]: {
-        describe: "Host for email notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_PORT]: {
-        describe: "Port for email notification channel",
-        parseValues: true,
-        type: "number",
-      },
-      [EMAIL_PROTOCOL]: {
-        describe:
-          "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_USERNAME]: {
-        describe: "Username for email notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_PASSWORD]: {
-        describe: "Password for email notification channel",
-        parseValues: true,
-        type: "string",
-      },
-      [EMAIL_EMAIL]: {
-        describe: "Address for email notifier channel",
-        parseValues: true,
-        type: "string",
-      },
-      [DESKTOP_ENABLED]: {
-        describe: "Whether desktop notifier is enabled",
-        parseValues: true,
-        type: "boolean",
-        default: true,
-      },
-      [DESKTOP_SOUND]: {
-        describe: "Whether desktop notifier should use sound",
-        parseValues: true,
-        type: "boolean",
-        default: false,
-      },
-      [ENDPOINT_URL]: {
-        describe: "URL for posting raw JSON notifications",
-        parseValues: true,
-        type: "string",
-      },
-      [CONFIG_FILE]: {
-        describe:
-          "Path to config file.  If present, it will override the default user config file.",
-        parseValues: true,
-        type: "string",
-      },
-    })
+    yargs
+      .strict()
+      .options({
+        [BAKER]: {
+          describe: "Node to watch for baking events.",
+          parseValues: true,
+          type: "array",
+          alias: "b",
+        },
+        [NODE]: {
+          describe: "Node URLs to watch for node events.",
+          parseValues: true,
+          type: "array",
+          alias: "n",
+        },
+        [RPC]: {
+          describe: "Tezos RPC URL to query for baker and chain info",
+          parseValues: true,
+          type: "string",
+          alias: "r",
+        },
+        [LOGGING]: {
+          describe: "Level of logging. [trace, debug, info, warn, error]",
+          parseValues: true,
+          type: "string",
+          alias: "l",
+        },
+        [CHAIN]: {
+          describe: "Chain to monitor and query against",
+          parseValues: true,
+          type: "string",
+        },
+        [EXCLUDED_EVENTS]: {
+          describe: "Events to omit from notifications",
+          parseValues: true,
+          type: "array",
+        },
+        [SLACK_URL]: {
+          describe: "Webhook URL for Slack notifications",
+          parseValues: true,
+          type: "string",
+        },
+        [TELEGRAM_TOKEN]: {
+          describe: "API token for Telegram notification channel",
+          parseValues: true,
+          type: "string",
+        },
+        [TELEGRAM_CHAT_ID]: {
+          describe: "Bot chat ID for Telegram notification channel",
+          parseValues: true,
+          type: "number",
+        },
+        [EMAIL_HOST]: {
+          describe: "Host for email notification channel",
+          parseValues: true,
+          type: "string",
+        },
+        [EMAIL_PORT]: {
+          describe: "Port for email notification channel",
+          parseValues: true,
+          type: "number",
+        },
+        [EMAIL_PROTOCOL]: {
+          describe:
+            "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
+          parseValues: true,
+          type: "string",
+        },
+        [EMAIL_USERNAME]: {
+          describe: "Username for email notification channel",
+          parseValues: true,
+          type: "string",
+        },
+        [EMAIL_PASSWORD]: {
+          describe: "Password for email notification channel",
+          parseValues: true,
+          type: "string",
+        },
+        [EMAIL_EMAIL]: {
+          describe: "Address for email notifier channel",
+          parseValues: true,
+          type: "string",
+        },
+        [DESKTOP_ENABLED]: {
+          describe: "Whether desktop notifier is enabled",
+          parseValues: true,
+          type: "boolean",
+          default: true,
+        },
+        [DESKTOP_SOUND]: {
+          describe: "Whether desktop notifier should use sound",
+          parseValues: true,
+          type: "boolean",
+          default: false,
+        },
+        [ENDPOINT_URL]: {
+          describe: "URL for posting raw JSON notifications",
+          parseValues: true,
+          type: "string",
+        },
+        [CONFIG_FILE]: {
+          describe:
+            "Path to config file.  If present, it will override the default user config file.",
+          parseValues: true,
+          type: "string",
+        },
+      })
+      .alias("help", "h")
+      .alias("version", "v")
   );
   // user config file from argv overrides default location
   const configPath = nconf.get(CONFIG_FILE) || userConfigPath(configDirectory);
