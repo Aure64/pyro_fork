@@ -12,26 +12,205 @@ import envPaths from "env-paths";
 import * as yargs from "yargs";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
-
-const BAKER = "baker";
-const LOGGING = "logging";
-const NODE = "node";
-const RPC = "rpc";
+// system prefs
 const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:lastBlockLevel`;
-const EXCLUDED_EVENTS = "filter:omit";
-const SLACK_URL = "notifier:slack:url";
-const TELEGRAM_TOKEN = "notifier:telegram:token";
-const TELEGRAM_CHAT_ID = "notifier:telegram:chat";
-const EMAIL_HOST = "notifier:email:host";
-const EMAIL_PORT = "notifier:email:port";
-const EMAIL_PROTOCOL = "notifier:email:protocol";
-const EMAIL_USERNAME = "notifier:email:username";
-const EMAIL_PASSWORD = "notifier:email:password";
-const EMAIL_EMAIL = "notifier:email:email";
-const DESKTOP_ENABLED = "notifier:desktop:enabled";
-const DESKTOP_SOUND = "notifier:desktop:sound";
-const ENDPOINT_URL = "notifier:endpoint:url";
-const CONFIG_FILE = "config";
+
+// user prefs
+type UserPref = {
+  key: string;
+  default: unknown;
+  description: string;
+  type: yargs.PositionalOptionsType | undefined;
+  alias: string | undefined;
+  group: string | undefined;
+  array: boolean;
+};
+const BAKER: UserPref = {
+  key: "baker",
+  default: [],
+  description: "Node to watch for baking events.",
+  alias: "b",
+  type: "string",
+  group: undefined,
+  array: true,
+};
+const LOGGING: UserPref = {
+  key: "logging",
+  default: "info",
+  description: "Level of logging. [trace, debug, info, warn, error]",
+  alias: "l",
+  type: "string",
+  group: undefined,
+  array: false,
+};
+const NODE: UserPref = {
+  key: "node",
+  default: [],
+  description: "Node URLs to watch for node events.",
+  alias: "n",
+  type: "string",
+  group: undefined,
+  array: true,
+};
+const RPC: UserPref = {
+  key: "rpc",
+  default: "https://mainnet-tezos.giganode.io/",
+  description: "Tezos RPC URL to query for baker and chain info",
+  alias: "r",
+  type: "string",
+  group: undefined,
+  array: false,
+};
+const EXCLUDED_EVENTS: UserPref = {
+  key: "filter:omit",
+  default: [],
+  description: "Events to omit from notifications",
+  alias: undefined,
+  type: "string",
+  group: undefined,
+  array: true,
+};
+const SLACK_URL: UserPref = {
+  key: "notifier:slack:url",
+  default: undefined,
+  description: "Webhook URL for Slack notifications",
+  alias: undefined,
+  type: "string",
+  group: "Slack Notifications:",
+  array: false,
+};
+const TELEGRAM_TOKEN: UserPref = {
+  key: "notifier:telegram:token",
+  default: undefined,
+  description: "API token for Telegram notification channel",
+  alias: undefined,
+  type: "string",
+  group: "Telegram Notifications:",
+  array: false,
+};
+const TELEGRAM_CHAT_ID: UserPref = {
+  key: "notifier:telegram:chat",
+  default: undefined,
+  description: "Bot chat ID for Telegram notification channel",
+  alias: undefined,
+  type: "string",
+  group: "Telegram Notifications:",
+  array: false,
+};
+const EMAIL_HOST: UserPref = {
+  key: "notifier:email:host",
+  default: undefined,
+  description: "Host for email notification channel",
+  alias: undefined,
+  type: "string",
+  group: "Email Notifications:",
+  array: false,
+};
+const EMAIL_PORT: UserPref = {
+  key: "notifier:email:port",
+  default: undefined,
+  description: "Port for email notification channel",
+  alias: undefined,
+  type: "number",
+  group: "Email Notifications:",
+  array: false,
+};
+const EMAIL_PROTOCOL: UserPref = {
+  key: "notifier:email:protocol",
+  default: undefined,
+  description:
+    "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
+  alias: undefined,
+  type: "string",
+  group: "Email Notifications:",
+  array: false,
+};
+const EMAIL_USERNAME: UserPref = {
+  key: "notifier:email:username",
+  default: undefined,
+  description: "Username for email notification channel",
+  alias: undefined,
+  type: "string",
+  group: "Email Notifications:",
+  array: false,
+};
+const EMAIL_PASSWORD: UserPref = {
+  key: "notifier:email:password",
+  default: undefined,
+  description: "Password for email notification channel",
+  alias: undefined,
+  type: "string",
+  group: "Email Notifications:",
+  array: false,
+};
+const EMAIL_EMAIL: UserPref = {
+  key: "notifier:email:email",
+  default: undefined,
+  description: "Address for email notifier channel",
+  alias: undefined,
+  type: "string",
+  group: "Email Notifications:",
+  array: false,
+};
+const DESKTOP_ENABLED: UserPref = {
+  key: "notifier:desktop:enabled",
+  default: true,
+  description: "Whether desktop notifier is enabled",
+  alias: undefined,
+  type: "boolean",
+  group: "Desktop Notifications:",
+  array: false,
+};
+const DESKTOP_SOUND: UserPref = {
+  key: "notifier:desktop:sound",
+  default: false,
+  description: "Whether desktop notifier should use sound",
+  alias: undefined,
+  type: "boolean",
+  group: "Desktop Notifications:",
+  array: false,
+};
+const ENDPOINT_URL: UserPref = {
+  key: "notifier:endpoint:url",
+  default: undefined,
+  description: "URL for posting raw JSON notifications",
+  alias: undefined,
+  type: "string",
+  group: "JSON Notifications:",
+  array: false,
+};
+const CONFIG_FILE: UserPref = {
+  key: "config",
+  default: undefined,
+  description:
+    "Path to config file.  If present, it will override the default user config file.",
+  alias: undefined,
+  type: "string",
+  group: undefined,
+  array: false,
+};
+
+// list of all prefs that should be iterated to build yargs options and nconf defaults
+const userPrefs = [
+  BAKER,
+  LOGGING,
+  NODE,
+  RPC,
+  EXCLUDED_EVENTS,
+  SLACK_URL,
+  TELEGRAM_TOKEN,
+  TELEGRAM_CHAT_ID,
+  EMAIL_HOST,
+  EMAIL_PORT,
+  EMAIL_PROTOCOL,
+  EMAIL_EMAIL,
+  EMAIL_USERNAME,
+  EMAIL_PASSWORD,
+  DESKTOP_ENABLED,
+  DESKTOP_SOUND,
+  ENDPOINT_URL,
+  CONFIG_FILE,
+];
 
 export type Config = {
   save: () => void;
@@ -50,6 +229,38 @@ export type Config = {
   getDesktopConfig: GetDesktopConfig;
   getEndpointConfig: GetEndpointConfig;
   getStorageDirectory: GetStorageDirectory;
+};
+
+const makeYargOptions = () => {
+  const options = userPrefs.reduce(
+    (accumulator: { [key: string]: yargs.Options }, pref: UserPref) => {
+      const defaultDescription = pref.default ? `${pref.default}` : undefined;
+      accumulator[pref.key] = {
+        type: pref.type,
+        alias: pref.alias,
+        description: pref.description,
+        defaultDescription,
+        group: pref.group,
+        array: pref.array,
+      };
+      return accumulator;
+    },
+    {}
+  );
+  return options;
+};
+
+const makeYargDefaults = () => {
+  const defaults = userPrefs.reduce(
+    (accumulator: { [key: string]: unknown }, pref: UserPref) => {
+      if (pref.default !== undefined) {
+        accumulator[pref.key] = pref.default;
+      }
+      return accumulator;
+    },
+    {}
+  );
+  return defaults;
 };
 
 const userConfigPath = (path: string) => Path.join(path, "config.json");
@@ -74,122 +285,16 @@ export const load = async (): Promise<Config> => {
   nconf.argv(
     yargs
       .strict()
-      .options({
-        [BAKER]: {
-          describe: "Node to watch for baking events.",
-          parseValues: true,
-          type: "array",
-          alias: "b",
-        },
-        [NODE]: {
-          describe: "Node URLs to watch for node events.",
-          parseValues: true,
-          type: "array",
-          alias: "n",
-        },
-        [RPC]: {
-          describe: "Tezos RPC URL to query for baker and chain info",
-          parseValues: true,
-          type: "string",
-          alias: "r",
-        },
-        [LOGGING]: {
-          describe: "Level of logging. [trace, debug, info, warn, error]",
-          parseValues: true,
-          type: "string",
-          alias: "l",
-        },
-        [EXCLUDED_EVENTS]: {
-          describe: "Events to omit from notifications",
-          parseValues: true,
-          type: "array",
-        },
-        [SLACK_URL]: {
-          describe: "Webhook URL for Slack notifications",
-          parseValues: true,
-          type: "string",
-        },
-        [TELEGRAM_TOKEN]: {
-          describe: "API token for Telegram notification channel",
-          parseValues: true,
-          type: "string",
-        },
-        [TELEGRAM_CHAT_ID]: {
-          describe: "Bot chat ID for Telegram notification channel",
-          parseValues: true,
-          type: "number",
-        },
-        [EMAIL_HOST]: {
-          describe: "Host for email notification channel",
-          parseValues: true,
-          type: "string",
-        },
-        [EMAIL_PORT]: {
-          describe: "Port for email notification channel",
-          parseValues: true,
-          type: "number",
-        },
-        [EMAIL_PROTOCOL]: {
-          describe:
-            "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
-          parseValues: true,
-          type: "string",
-        },
-        [EMAIL_USERNAME]: {
-          describe: "Username for email notification channel",
-          parseValues: true,
-          type: "string",
-        },
-        [EMAIL_PASSWORD]: {
-          describe: "Password for email notification channel",
-          parseValues: true,
-          type: "string",
-        },
-        [EMAIL_EMAIL]: {
-          describe: "Address for email notifier channel",
-          parseValues: true,
-          type: "string",
-        },
-        [DESKTOP_ENABLED]: {
-          describe: "Whether desktop notifier is enabled",
-          parseValues: true,
-          type: "boolean",
-          default: true,
-        },
-        [DESKTOP_SOUND]: {
-          describe: "Whether desktop notifier should use sound",
-          parseValues: true,
-          type: "boolean",
-          default: false,
-        },
-        [ENDPOINT_URL]: {
-          describe: "URL for posting raw JSON notifications",
-          parseValues: true,
-          type: "string",
-        },
-        [CONFIG_FILE]: {
-          describe:
-            "Path to config file.  If present, it will override the default user config file.",
-          parseValues: true,
-          type: "string",
-        },
-      })
+      .options(makeYargOptions())
       .alias("help", "h")
       .alias("version", "v")
   );
   // user config file from argv overrides default location
-  const configPath = nconf.get(CONFIG_FILE) || userConfigPath(configDirectory);
+  const configPath =
+    nconf.get(CONFIG_FILE.key) || userConfigPath(configDirectory);
   nconf.file("user", configPath);
   nconf.file("system", systemConfigPath(configDirectory));
-  nconf.defaults({
-    [BAKER]: [],
-    [NODE]: [],
-    [RPC]: "https://mainnet-tezos.giganode.io/",
-    [LOGGING]: "info",
-    [EXCLUDED_EVENTS]: [],
-    [DESKTOP_ENABLED]: true,
-    [DESKTOP_SOUND]: false,
-  });
+  nconf.defaults(makeYargDefaults());
 
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
@@ -227,24 +332,24 @@ const save = (path: string): void => {
 type GetBakers = () => string[];
 
 const getBakers: GetBakers = () => {
-  return nconf.get(BAKER);
+  return nconf.get(BAKER.key);
 };
 
 type GetRpc = () => string;
 
 const getRpc: GetRpc = () => {
-  return nconf.get(RPC);
+  return nconf.get(RPC.key);
 };
 
 type GetNodes = () => string[];
 const getNodes: GetNodes = () => {
-  return nconf.get(NODE);
+  return nconf.get(NODE.key);
 };
 
 type GetLogLevel = () => LogLevelDesc;
 
 const getLogLevel: GetLogLevel = () => {
-  const value = nconf.get(LOGGING);
+  const value = nconf.get(LOGGING.key);
   return logLevelFromString(value);
 };
 
@@ -292,13 +397,13 @@ const setNumber: SetNumber = (key, value) => {
 type GetExcludedEvents = () => string[];
 
 const getExcludedEvents: GetExcludedEvents = () => {
-  return nconf.get(EXCLUDED_EVENTS) || [];
+  return nconf.get(EXCLUDED_EVENTS.key) || [];
 };
 
 type GetSlackConfig = () => SlackConfig | undefined;
 
 const getSlackConfig: GetSlackConfig = () => {
-  const url = nconf.get(SLACK_URL);
+  const url = nconf.get(SLACK_URL.key);
   if (url) return { url };
   return undefined;
 };
@@ -306,8 +411,8 @@ const getSlackConfig: GetSlackConfig = () => {
 type GetTelegramConfig = () => TelegramConfig | undefined;
 
 const getTelegramConfig: GetTelegramConfig = () => {
-  const token = nconf.get(TELEGRAM_TOKEN);
-  const chatId = nconf.get(TELEGRAM_CHAT_ID);
+  const token = nconf.get(TELEGRAM_TOKEN.key);
+  const chatId = nconf.get(TELEGRAM_CHAT_ID.key);
   if (token && chatId !== undefined) return { token, chatId };
   return undefined;
 };
@@ -315,12 +420,12 @@ const getTelegramConfig: GetTelegramConfig = () => {
 type GetEmailConfig = () => EmailConfig | undefined;
 
 const getEmailConfig: GetEmailConfig = () => {
-  const host = nconf.get(EMAIL_HOST);
-  const port = nconf.get(EMAIL_PORT);
-  const protocol = nconf.get(EMAIL_PROTOCOL);
-  const username = nconf.get(EMAIL_USERNAME);
-  const password = nconf.get(EMAIL_PASSWORD);
-  const email = nconf.get(EMAIL_EMAIL);
+  const host = nconf.get(EMAIL_HOST.key);
+  const port = nconf.get(EMAIL_PORT.key);
+  const protocol = nconf.get(EMAIL_PROTOCOL.key);
+  const username = nconf.get(EMAIL_USERNAME.key);
+  const password = nconf.get(EMAIL_PASSWORD.key);
+  const email = nconf.get(EMAIL_EMAIL.key);
   if (host && port && protocol && email)
     return { host, port, protocol, username, password, email };
   return undefined;
@@ -329,15 +434,15 @@ const getEmailConfig: GetEmailConfig = () => {
 type GetDesktopConfig = () => DesktopConfig;
 
 const getDesktopConfig: GetDesktopConfig = () => {
-  const enableSound = nconf.get(DESKTOP_SOUND);
-  const enabled = nconf.get(DESKTOP_ENABLED);
+  const enableSound = nconf.get(DESKTOP_SOUND.key);
+  const enabled = nconf.get(DESKTOP_ENABLED.key);
   return { enabled, enableSound };
 };
 
 type GetEndpointConfig = () => EndpointConfig | undefined;
 
 const getEndpointConfig: GetEndpointConfig = () => {
-  const url = nconf.get(ENDPOINT_URL);
+  const url = nconf.get(ENDPOINT_URL.key);
   if (url) return { url };
   return undefined;
 };
