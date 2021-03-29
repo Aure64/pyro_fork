@@ -10,6 +10,8 @@ import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import to from "await-to-js";
 
+const CHAIN = "main";
+
 type Monitor = {
   subscriptions: Subscription<string>[];
   nodes: string[];
@@ -19,20 +21,18 @@ type StartArgs = {
   nodes: string[];
   onEvent: (event: TezosNodeEvent) => void;
   referenceNode: string;
-  chain: string;
 };
 
 export const start = ({
   nodes,
   onEvent,
   referenceNode,
-  chain,
 }: StartArgs): Monitor => {
   let referenceNodeBlockHistory: BlockHeaderResponse[];
 
   const { rpc, subscription: referenceSubscription } = subscribeToNode(
     referenceNode,
-    chain
+    CHAIN
   );
   //override getBlockHeader to memoize it
   rpc.getBlockHeader = makeMemoizedGetBlockHeader(rpc.getBlockHeader.bind(rpc));
@@ -65,7 +65,7 @@ export const start = ({
 
   // watch all other nodes
   const subscriptions = nodes.map((node) => {
-    const { rpc, subscription } = subscribeToNode(node, chain);
+    const { rpc, subscription } = subscribeToNode(node, CHAIN);
     //override getBlockHeader to memoize it
     rpc.getBlockHeader = makeMemoizedGetBlockHeader(
       rpc.getBlockHeader.bind(rpc)
@@ -80,7 +80,6 @@ export const start = ({
         node,
         blockHash,
         rpc,
-        chain,
       });
       if (nodeInfoResult.type === "ERROR") {
         const errorEvent: PeerNodeEvent = {
@@ -157,19 +156,17 @@ type UpdateNodeInfoArgs = {
   node: string;
   blockHash: string;
   rpc: RpcClient;
-  chain: string;
 };
 
 const updateNodeInfo = async ({
   node,
   blockHash,
   rpc,
-  chain,
 }: UpdateNodeInfoArgs): Promise<Result<NodeInfo>> => {
   debug(`Node monitor received block ${blockHash} for node ${node}`);
 
   const [bootstrappedError, bootstrappedStatus] = await to(
-    isBootstrapped(node, chain)
+    isBootstrapped(node, CHAIN)
   );
 
   if (bootstrappedError) {

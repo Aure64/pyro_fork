@@ -52,7 +52,6 @@ const main = async () => {
   const nodes = config.getNodes();
   const bakers = config.getBakers();
   const rpcNode = config.getRpc();
-  const chain = config.getChain();
   if (bakers.length === 0 && nodes.length === 0) {
     console.error("You must specify nodes or bakers to watch");
     process.exit(1);
@@ -70,7 +69,7 @@ const main = async () => {
       : null;
   const nodeMonitor =
     nodes.length > 0
-      ? NodeMonitor.start({ onEvent, nodes, referenceNode: rpcNode, chain })
+      ? NodeMonitor.start({ onEvent, nodes, referenceNode: rpcNode })
       : null;
   const server = Server.start();
 

@@ -17,7 +17,6 @@ const BAKER = "baker";
 const LOGGING = "logging";
 const NODE = "node";
 const RPC = "rpc";
-const CHAIN = "chain";
 const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:lastBlockLevel`;
 const EXCLUDED_EVENTS = "filter:omit";
 const SLACK_URL = "notifier:slack:url";
@@ -40,7 +39,6 @@ export type Config = {
   getRpc: GetRpc;
   getNodes: GetNodes;
   getLogLevel: GetLogLevel;
-  getChain: GetChain;
   getLastBlockLevel: GetLastBlockLevel;
   setLastBlockLevel: SetLastBlockLevel;
   getNumber: GetNumber;
@@ -100,11 +98,6 @@ export const load = async (): Promise<Config> => {
           parseValues: true,
           type: "string",
           alias: "l",
-        },
-        [CHAIN]: {
-          describe: "Chain to monitor and query against",
-          parseValues: true,
-          type: "string",
         },
         [EXCLUDED_EVENTS]: {
           describe: "Events to omit from notifications",
@@ -191,7 +184,6 @@ export const load = async (): Promise<Config> => {
   nconf.defaults({
     [BAKER]: [],
     [NODE]: [],
-    [CHAIN]: "main",
     [RPC]: "https://mainnet-tezos.giganode.io/",
     [LOGGING]: "info",
     [EXCLUDED_EVENTS]: [],
@@ -207,7 +199,6 @@ export const load = async (): Promise<Config> => {
     getRpc,
     getNodes,
     getLogLevel,
-    getChain,
     getLastBlockLevel,
     setLastBlockLevel,
     getNumber,
@@ -265,12 +256,6 @@ const logLevelFromString = (value: string): LogLevelDesc => {
     warn("Unknown logging level, using info");
     return "info";
   }
-};
-
-type GetChain = () => string;
-
-const getChain: GetChain = () => {
-  return nconf.get(CHAIN);
 };
 
 type GetLastBlockLevel = () => number | undefined;
