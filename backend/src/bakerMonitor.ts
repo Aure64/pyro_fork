@@ -163,6 +163,13 @@ const checkBlock = async ({
       constants,
     } = blockResult.data;
 
+    if (!metadata.level) {
+      return {
+        type: "ERROR",
+        message: `Missing block metadata level`,
+      };
+    }
+
     for (const baker of bakers) {
       const endorsementOperations = block.operations[0];
       const anonymousOperations = block.operations[2];
@@ -249,7 +256,7 @@ export const loadBlockData = async ({
   if (metadataError) {
     warn(`Error fetching block metadata: ${metadataError.message}`);
     return { type: "ERROR", message: "Error loading block metadata" };
-  } else if (!metadata) {
+  } else if (!metadata?.level) {
     warn("Error fetching block metadata: no metadata");
     return { type: "ERROR", message: "Error loading block metadata" };
   }
@@ -257,7 +264,7 @@ export const loadBlockData = async ({
   const bakingRightsPromise = rpc.getBakingRights(
     {
       max_priority: 0,
-      cycle: metadata.level.cycle,
+      cycle: metadata.level?.cycle,
       delegate: bakers,
     },
     { block: blockId }

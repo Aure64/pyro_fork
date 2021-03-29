@@ -20,7 +20,7 @@ describe("notify", () => {
     notify(notifier, event);
     expect(fetchMock.mock.calls.length).toBe(1);
     expect(fetchMock.mock.calls[0][0]).toEqual(notifier.url);
-    expect(fetchMock.mock.calls[0][1].body).toEqual(JSON.stringify(event));
+    expect(fetchMock.mock.calls[0][1]?.body).toEqual(JSON.stringify(event));
   });
 
   test("resolves to success string when successful", () => {
