@@ -10,6 +10,7 @@ import * as FS from "fs";
 import * as Path from "path";
 import envPaths from "env-paths";
 import * as yargs from "yargs";
+import * as R from "ramda";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
@@ -24,10 +25,11 @@ type UserPref = {
   alias: string | undefined;
   group: string | undefined;
   array: boolean;
+  cliOnly?: boolean;
 };
 const BAKER: UserPref = {
   key: "baker",
-  default: [],
+  default: undefined,
   description: "Node to watch for baking events.",
   alias: "b",
   type: "string",
@@ -45,7 +47,7 @@ const LOGGING: UserPref = {
 };
 const NODE: UserPref = {
   key: "node",
-  default: [],
+  default: undefined,
   description: "Node URLs to watch for node events.",
   alias: "n",
   type: "string",
@@ -63,7 +65,7 @@ const RPC: UserPref = {
 };
 const EXCLUDED_EVENTS: UserPref = {
   key: "filter:omit",
-  default: [],
+  default: undefined,
   description: "Events to omit from notifications",
   alias: undefined,
   type: "string",
@@ -188,6 +190,7 @@ const CONFIG_FILE: UserPref = {
   type: "string",
   group: undefined,
   array: false,
+  cliOnly: true,
 };
 
 // list of all prefs that should be iterated to build yargs options and nconf defaults
@@ -212,25 +215,10 @@ const userPrefs = [
   CONFIG_FILE,
 ];
 
-export type Config = {
-  save: () => void;
-  getBakers: GetBakers;
-  getRpc: GetRpc;
-  getNodes: GetNodes;
-  getLogLevel: GetLogLevel;
-  getLastBlockLevel: GetLastBlockLevel;
-  setLastBlockLevel: SetLastBlockLevel;
-  getNumber: GetNumber;
-  setNumber: SetNumber;
-  getExcludedEvents: GetExcludedEvents;
-  getSlackConfig: GetSlackConfig;
-  getTelegramConfig: GetTelegramConfig;
-  getEmailConfig: GetEmailConfig;
-  getDesktopConfig: GetDesktopConfig;
-  getEndpointConfig: GetEndpointConfig;
-  getStorageDirectory: GetStorageDirectory;
-};
-
+/**
+ * Iterates through the UserPrefs to create the Yarg settings used for parsing and providing help
+ * for argv options.
+ */
 const makeYargOptions = () => {
   const options = userPrefs.reduce(
     (accumulator: { [key: string]: yargs.Options }, pref: UserPref) => {
@@ -250,7 +238,10 @@ const makeYargOptions = () => {
   return options;
 };
 
-const makeYargDefaults = () => {
+/**
+ * Iterates through the UserPrefs to create a object of default config values for Nconf.
+ */
+const makeConfigDefaults = () => {
   const defaults = userPrefs.reduce(
     (accumulator: { [key: string]: unknown }, pref: UserPref) => {
       if (pref.default !== undefined) {
@@ -263,9 +254,74 @@ const makeYargDefaults = () => {
   return defaults;
 };
 
+/**
+ * Calls makeConfigFile and writes the result to the specified path.
+ */
+const writeSampleConfig = (path: string) => {
+  console.log(`Creating User Config file at ${path}`);
+  console.log(
+    "Note: config has invalid placeholder data that must be replaced before this config can be used."
+  );
+  const sampleConfig = makeConfigFile();
+  FS.writeFileSync(path, JSON.stringify(sampleConfig, null, 2));
+};
+
+/**
+ * Creates a sample config, with the proper structure.  The values will be populated with defaults where
+ * present, otherwise placeholder text with the option's description and type.
+ */
+const makeConfigFile = (): Record<string, string> => {
+  const sampleConfig = userPrefs.reduce(
+    (accumulator: Record<string, string>, userPref: UserPref) => {
+      // ignore user prefs that are only supported by the command line
+      if (!userPref.cliOnly) {
+        const fieldType = userPref.array ? "array" : userPref.type;
+        const value =
+          userPref.default !== undefined
+            ? userPref.default
+            : `${userPref.description} [${fieldType}]`;
+        // break colon-separated path into array
+        const objectPath = userPref.key.split(":");
+        // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
+        const lensPath = R.lensPath(objectPath);
+        const updatedAccumulator = R.set(lensPath, value, accumulator);
+
+        return updatedAccumulator;
+      } else {
+        return accumulator;
+      }
+    },
+    {}
+  );
+  return sampleConfig;
+};
+
 const userConfigPath = (path: string) => Path.join(path, "config.json");
 const systemConfigPath = (path: string) => Path.join(path, "system.json");
 
+export type Config = {
+  save: () => void;
+  getBakers: GetBakers;
+  getRpc: GetRpc;
+  getNodes: GetNodes;
+  getLogLevel: GetLogLevel;
+  getLastBlockLevel: GetLastBlockLevel;
+  setLastBlockLevel: SetLastBlockLevel;
+  getNumber: GetNumber;
+  setNumber: SetNumber;
+  getExcludedEvents: GetExcludedEvents;
+  getSlackConfig: GetSlackConfig;
+  getTelegramConfig: GetTelegramConfig;
+  getEmailConfig: GetEmailConfig;
+  getDesktopConfig: GetDesktopConfig;
+  getEndpointConfig: GetEndpointConfig;
+  getStorageDirectory: GetStorageDirectory;
+};
+
+/**
+ * Load config settings from argv and the file system.  File system will use the path from envPaths
+ * unless overriden by argv.
+ */
 export const load = async (): Promise<Config> => {
   const { data: dataDirectory, config: configDirectory } = envPaths(
     "kiln-next"
@@ -288,13 +344,24 @@ export const load = async (): Promise<Config> => {
       .options(makeYargOptions())
       .alias("help", "h")
       .alias("version", "v")
+      .command(
+        "create-config <path>",
+        "Create a sample user config at the provided path.",
+        () => {
+          /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
+        },
+        ({ path }: { path: string }) => {
+          writeSampleConfig(path);
+          process.exit(1);
+        }
+      )
   );
   // user config file from argv overrides default location
   const configPath =
     nconf.get(CONFIG_FILE.key) || userConfigPath(configDirectory);
   nconf.file("user", configPath);
   nconf.file("system", systemConfigPath(configDirectory));
-  nconf.defaults(makeYargDefaults());
+  nconf.defaults(makeConfigDefaults());
 
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
@@ -332,7 +399,7 @@ const save = (path: string): void => {
 type GetBakers = () => string[];
 
 const getBakers: GetBakers = () => {
-  return nconf.get(BAKER.key);
+  return nconf.get(BAKER.key) || [];
 };
 
 type GetRpc = () => string;
@@ -343,7 +410,7 @@ const getRpc: GetRpc = () => {
 
 type GetNodes = () => string[];
 const getNodes: GetNodes = () => {
-  return nconf.get(NODE.key);
+  return nconf.get(NODE.key) || [];
 };
 
 type GetLogLevel = () => LogLevelDesc;
