@@ -57,8 +57,8 @@ export const start = ({
   referenceSubscription.on("error", (error) => {
     warn(`Reference node subscription error: ${error.message}`);
     onEvent({
-      type: "RPC",
-      kind: "SUBSCRIPTION_ERROR",
+      type: "PEER_DATA",
+      kind: "ERROR",
       message: error.message,
     });
   });
@@ -106,8 +106,8 @@ export const start = ({
     subscription.on("error", (error) => {
       warn(`Node subscription error: ${error.message}`);
       onEvent({
-        type: "RPC",
-        kind: "SUBSCRIPTION_ERROR",
+        type: "PEER_DATA",
+        kind: "ERROR",
         message: error.message,
       });
     });

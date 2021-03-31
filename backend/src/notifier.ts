@@ -7,6 +7,7 @@ import * as EndpointChannel from "./endpointNotificationChannel";
 import { apply as applyToString } from "./notifierMiddleware/toString";
 import { apply as bindNotifier } from "./notifierMiddleware/bindNotifier";
 import { create as createFilter } from "./notifierMiddleware/filter";
+import { create as createOfflineFilter } from "./notifierMiddleware/offlineFilter";
 import { create as createQueue } from "./notifierMiddleware/queue";
 import { trace } from "loglevel";
 import { Config } from "./config";
@@ -41,6 +42,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     notify(notifier, event);
 
   if (config.emailConfig) {
+    const channelName = EmailChannel.channelName;
     const emailNotify = bindNotifier(
       EmailChannel.create(config.emailConfig),
       EmailChannel.notify
@@ -49,20 +51,26 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
       {
         ...config.queue,
         storageDirectory: config.storageDirectory,
-        channelName: EmailChannel.channelName,
+        channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
-      channelName: EmailChannel.channelName,
+      channelName,
       config: config.config,
     });
+    const applyOfflineFilter = await createOfflineFilter({
+      channelName,
+    });
 
-    const emailChannel = applyQueue(applyFilter(applyToString(emailNotify)));
+    const emailChannel = applyQueue(
+      applyFilter(applyOfflineFilter(applyToString(emailNotify)))
+    );
     channels.push(emailChannel);
   }
 
   if (config.desktopConfig?.enabled) {
+    const channelName = DesktopChannel.channelName;
     const desktopNotify = bindNotifier(
       DesktopChannel.create(config.desktopConfig),
       DesktopChannel.notify
@@ -71,20 +79,24 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
       {
         ...config.queue,
         storageDirectory: config.storageDirectory,
-        channelName: DesktopChannel.channelName,
+        channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
-      channelName: DesktopChannel.channelName,
+      channelName,
       config: config.config,
     });
+    const applyOfflineFilter = await createOfflineFilter({
+      channelName,
+    });
     const desktopChannel = applyQueue(
-      applyFilter(applyToString(desktopNotify))
+      applyFilter(applyOfflineFilter(applyToString(desktopNotify)))
     );
     channels.push(desktopChannel);
   }
   if (config.slackConfig) {
+    const channelName = SlackChannel.channelName;
     const slackNotify = bindNotifier(
       SlackChannel.create(config.slackConfig),
       SlackChannel.notify
@@ -93,18 +105,24 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
       {
         ...config.queue,
         storageDirectory: config.storageDirectory,
-        channelName: SlackChannel.channelName,
+        channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
-      channelName: SlackChannel.channelName,
+      channelName,
       config: config.config,
     });
-    const slackChannel = applyQueue(applyFilter(applyToString(slackNotify)));
+    const applyOfflineFilter = await createOfflineFilter({
+      channelName,
+    });
+    const slackChannel = applyQueue(
+      applyFilter(applyOfflineFilter(applyToString(slackNotify)))
+    );
     channels.push(slackChannel);
   }
   if (config.telegramConfig) {
+    const channelName = TelegramChannel.channelName;
     const telegramNotify = bindNotifier(
       TelegramChannel.create(config.telegramConfig),
       TelegramChannel.notify
@@ -113,20 +131,24 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
       {
         ...config.queue,
         storageDirectory: config.storageDirectory,
-        channelName: TelegramChannel.channelName,
+        channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
-      channelName: TelegramChannel.channelName,
+      channelName,
       config: config.config,
     });
+    const applyOfflineFilter = await createOfflineFilter({
+      channelName,
+    });
     const telegramChannel = applyQueue(
-      applyFilter(applyToString(telegramNotify))
+      applyFilter(applyOfflineFilter(applyToString(telegramNotify)))
     );
     channels.push(telegramChannel);
   }
   if (config.endpointConfig) {
+    const channelName = EndpointChannel.channelName;
     // we don't use bindNotifier and toString like other channels as this channel uses
     // the raw JSON event, not a toString'ed representation
     const endpointNotifier = EndpointChannel.create(config.endpointConfig);
@@ -136,15 +158,20 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
       {
         ...config.queue,
         storageDirectory: config.storageDirectory,
-        channelName: EndpointChannel.channelName,
+        channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
-      channelName: EndpointChannel.channelName,
+      channelName,
       config: config.config,
     });
-    const endpointChannel = applyQueue(applyFilter(endpointNotify));
+    const applyOfflineFilter = await createOfflineFilter({
+      channelName,
+    });
+    const endpointChannel = applyQueue(
+      applyFilter(applyOfflineFilter(endpointNotify))
+    );
     channels.push(endpointChannel);
   }
 

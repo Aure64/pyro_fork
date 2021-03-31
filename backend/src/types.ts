@@ -15,6 +15,12 @@ type FutureBakingEvent = {
   date: Date;
 };
 
+type BakerDataEvent = {
+  type: "BAKER_DATA";
+  kind: "ERROR" | "RECONNECTED";
+  message: string;
+};
+
 export type BakerNodeEvent =
   | FutureBakingEvent
   | {
@@ -22,7 +28,14 @@ export type BakerNodeEvent =
       type: "BAKER";
       message: string;
       baker: string;
-    };
+    }
+  | BakerDataEvent;
+
+type NodeDataEvent = {
+  type: "PEER_DATA";
+  kind: "ERROR" | "RECONNECTED";
+  message: string;
+};
 
 export type PeerNodeEventKind =
   | "NODE_BEHIND"
@@ -31,16 +44,16 @@ export type PeerNodeEventKind =
   | "NODE_ON_A_BRANCH"
   | "NODE_LOW_PEERS";
 
-export type PeerNodeEvent = {
-  kind: PeerNodeEventKind;
-  type: "PEER";
-  message: string;
-  node: string;
-};
+export type PeerNodeEvent =
+  | {
+      kind: PeerNodeEventKind;
+      type: "PEER";
+      message: string;
+      node: string;
+    }
+  | NodeDataEvent;
 
-export type RpcEvent = { kind: string; type: "RPC"; message: string };
-
-export type TezosNodeEvent = BakerNodeEvent | PeerNodeEvent | RpcEvent;
+export type TezosNodeEvent = BakerNodeEvent | PeerNodeEvent;
 
 export type NotifierEvent = {
   type: "NOTIFIER";

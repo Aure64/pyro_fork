@@ -68,7 +68,7 @@ export const start = ({
 
       if (result.type === "ERROR") {
         onEvent({
-          type: "RPC",
+          type: "BAKER_DATA",
           kind: "ERROR",
           message: result.message,
         });
@@ -106,8 +106,8 @@ export const start = ({
   subscription.on("error", (error) => {
     warn(`Baking subscription error: ${error.message}`);
     onEvent({
-      type: "RPC",
-      kind: "SUBSCRIPTION_ERROR",
+      type: "BAKER_DATA",
+      kind: "ERROR",
       message: error.message,
     });
   });
