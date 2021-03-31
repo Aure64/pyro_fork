@@ -39,7 +39,6 @@ type NodeDataEvent = {
 
 export type PeerNodeEventKind =
   | "NODE_BEHIND"
-  | "UPDATE_ERROR"
   | "NODE_CAUGHT_UP"
   | "NODE_ON_A_BRANCH"
   | "NODE_LOW_PEERS";

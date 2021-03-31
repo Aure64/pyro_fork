@@ -45,10 +45,9 @@ export const start = ({
         `fetchBlockheaders failed for reference node ${referenceNode} because of ${historyResult.message}`
       );
       onEvent({
-        type: "PEER",
-        kind: "UPDATE_ERROR",
+        type: "PEER_DATA",
+        kind: "ERROR",
         message: historyResult.message,
-        node: referenceNode,
       });
     } else {
       referenceNodeBlockHistory = historyResult.data;
@@ -83,9 +82,8 @@ export const start = ({
       });
       if (nodeInfoResult.type === "ERROR") {
         const errorEvent: PeerNodeEvent = {
-          type: "PEER",
-          kind: "UPDATE_ERROR",
-          node,
+          type: "PEER_DATA",
+          kind: "ERROR",
           message: `Error updating info for node ${node}`,
         };
         onEvent(errorEvent);

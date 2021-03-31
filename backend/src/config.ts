@@ -65,7 +65,12 @@ const RPC: UserPref = {
 };
 const EXCLUDED_EVENTS: UserPref = {
   key: "filter:omit",
-  default: undefined,
+  default: [
+    "FUTURE_BAKING_OPPORTUNITY",
+    "FUTURE_ENDORSING_OPPORTUNITY",
+    "SUCCESSFUL_ENDORSE",
+    "SUCCESSFUL_BAKE",
+  ],
   description: "Events to omit from notifications",
   alias: undefined,
   type: "string",
@@ -245,7 +250,11 @@ const makeConfigDefaults = () => {
   const defaults = userPrefs.reduce(
     (accumulator: { [key: string]: unknown }, pref: UserPref) => {
       if (pref.default !== undefined) {
-        accumulator[pref.key] = pref.default;
+        const objectPath = pref.key.split(":");
+        // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
+        const lensPath = R.lensPath(objectPath);
+        const updatedAccumulator = R.set(lensPath, pref.default, accumulator);
+        return updatedAccumulator;
       }
       return accumulator;
     },
@@ -392,7 +401,10 @@ const save = (path: string): void => {
   debug("Saving config to disk.");
   // save system config
   if (systemSettings) {
-    FS.writeFileSync(systemConfigPath(path), JSON.stringify(systemSettings));
+    FS.writeFileSync(
+      systemConfigPath(path),
+      JSON.stringify({ system: systemSettings })
+    );
   }
 };
 
