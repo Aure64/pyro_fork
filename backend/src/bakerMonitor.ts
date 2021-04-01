@@ -80,12 +80,13 @@ export const start = ({
         const lastBlockLevel = config.getLastBlockLevel();
         debug(`Previous block level from config: ${lastBlockLevel}`);
         if (lastBlockLevel && blockLevel - lastBlockLevel > 1) {
-          for (let i = lastBlockLevel + 1; i < blockLevel; i++) {
-            debug(
-              `Queue'ing block level ${i} to check for previous baking events`
-            );
-            queue.push(i.toString());
-          }
+          const catchupLimit = config.getBakerCatchupLimit();
+          queueMissedBlocks({
+            lastBlockLevel,
+            blockLevel,
+            catchupLimit,
+            queue,
+          });
         }
         if (!lastBlockLevel || blockLevel > lastBlockLevel) {
           debug(`Saving previous block level: ${blockLevel}`);
@@ -121,6 +122,37 @@ export const start = ({
 export const halt = (monitor: Monitor): void => {
   info("Halting baker monitor");
   monitor.subscription.close();
+};
+
+type QueueMissedBlocksArgs = {
+  queue: BetterQueue<string>;
+  lastBlockLevel: number;
+  blockLevel: number;
+  catchupLimit: number | undefined;
+};
+
+/**
+ * Adds any missing blocks between lastBlockLevel and blockLevel to the job queue.  If catchupLimit is present,
+ * it will limit the maximum number of previous blocks to queue.
+ */
+const queueMissedBlocks = ({
+  queue,
+  lastBlockLevel,
+  blockLevel,
+  catchupLimit,
+}: QueueMissedBlocksArgs) => {
+  let startingBlock = lastBlockLevel + 1;
+  trace({ lastBlockLevel, blockLevel, catchupLimit });
+  if (catchupLimit !== undefined && blockLevel - startingBlock > catchupLimit) {
+    startingBlock = blockLevel - catchupLimit;
+    debug(
+      `Block level ${lastBlockLevel} exceeds limit of ${catchupLimit}.  Catching up from ${startingBlock} instead`
+    );
+  }
+  for (let i = startingBlock; i < blockLevel; i++) {
+    debug(`Queue'ing block level ${i} to check for previous baking events`);
+    queue.push(i.toString());
+  }
 };
 
 type CheckBlockArgs = {

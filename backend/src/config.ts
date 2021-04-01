@@ -22,20 +22,34 @@ type UserPref = {
   default: unknown;
   description: string;
   type: yargs.PositionalOptionsType | undefined;
-  alias: string | undefined;
+  alias: string | string[] | undefined;
   group: string | undefined;
   array: boolean;
   cliOnly?: boolean;
 };
+
+// baker monitor config
+const BAKER_GROUP = "Baker Monitor:";
 const BAKER: UserPref = {
-  key: "baker",
+  key: "bakerMonitor:baker",
   default: undefined,
   description: "Node to watch for baking events.",
-  alias: "b",
+  alias: ["b", "baker"],
   type: "string",
-  group: undefined,
+  group: BAKER_GROUP,
   array: true,
 };
+const BAKER_CATCHUP_LIMIT: UserPref = {
+  key: "bakerMonitor:catchupLimit",
+  default: 12288,
+  description:
+    "The maximum number of blocks to catch up on after reconnecting.",
+  alias: undefined,
+  type: "number",
+  group: BAKER_GROUP,
+  array: false,
+};
+
 const LOGGING: UserPref = {
   key: "logging",
   default: "info",
@@ -86,13 +100,17 @@ const SLACK_URL: UserPref = {
   group: "Slack Notifications:",
   array: false,
 };
+
+// telegram notifier config
+const TELEGRAM_NOTIFIER_GROUP = "Telegram Notifications:";
+
 const TELEGRAM_TOKEN: UserPref = {
   key: "notifier:telegram:token",
   default: undefined,
   description: "API token for Telegram notification channel",
   alias: undefined,
   type: "string",
-  group: "Telegram Notifications:",
+  group: TELEGRAM_NOTIFIER_GROUP,
   array: false,
 };
 const TELEGRAM_CHAT_ID: UserPref = {
@@ -101,16 +119,20 @@ const TELEGRAM_CHAT_ID: UserPref = {
   description: "Bot chat ID for Telegram notification channel",
   alias: undefined,
   type: "string",
-  group: "Telegram Notifications:",
+  group: TELEGRAM_NOTIFIER_GROUP,
   array: false,
 };
+
+// email notifier config
+//
+const EMAIL_NOTIFIER_GROUP = "Email Notifications:";
 const EMAIL_HOST: UserPref = {
   key: "notifier:email:host",
   default: undefined,
   description: "Host for email notification channel",
   alias: undefined,
   type: "string",
-  group: "Email Notifications:",
+  group: EMAIL_NOTIFIER_GROUP,
   array: false,
 };
 const EMAIL_PORT: UserPref = {
@@ -119,7 +141,7 @@ const EMAIL_PORT: UserPref = {
   description: "Port for email notification channel",
   alias: undefined,
   type: "number",
-  group: "Email Notifications:",
+  group: EMAIL_NOTIFIER_GROUP,
   array: false,
 };
 const EMAIL_PROTOCOL: UserPref = {
@@ -129,7 +151,7 @@ const EMAIL_PROTOCOL: UserPref = {
     "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
   alias: undefined,
   type: "string",
-  group: "Email Notifications:",
+  group: EMAIL_NOTIFIER_GROUP,
   array: false,
 };
 const EMAIL_USERNAME: UserPref = {
@@ -138,7 +160,7 @@ const EMAIL_USERNAME: UserPref = {
   description: "Username for email notification channel",
   alias: undefined,
   type: "string",
-  group: "Email Notifications:",
+  group: EMAIL_NOTIFIER_GROUP,
   array: false,
 };
 const EMAIL_PASSWORD: UserPref = {
@@ -147,7 +169,7 @@ const EMAIL_PASSWORD: UserPref = {
   description: "Password for email notification channel",
   alias: undefined,
   type: "string",
-  group: "Email Notifications:",
+  group: EMAIL_NOTIFIER_GROUP,
   array: false,
 };
 const EMAIL_EMAIL: UserPref = {
@@ -156,16 +178,19 @@ const EMAIL_EMAIL: UserPref = {
   description: "Address for email notifier channel",
   alias: undefined,
   type: "string",
-  group: "Email Notifications:",
+  group: EMAIL_NOTIFIER_GROUP,
   array: false,
 };
+
+// desktop notifier config
+const DESKTOP_NOTIFIER_GROUP = "Desktop Notifications:";
 const DESKTOP_ENABLED: UserPref = {
   key: "notifier:desktop:enabled",
   default: true,
   description: "Whether desktop notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: "Desktop Notifications:",
+  group: DESKTOP_NOTIFIER_GROUP,
   array: false,
 };
 const DESKTOP_SOUND: UserPref = {
@@ -174,9 +199,10 @@ const DESKTOP_SOUND: UserPref = {
   description: "Whether desktop notifier should use sound",
   alias: undefined,
   type: "boolean",
-  group: "Desktop Notifications:",
+  group: DESKTOP_NOTIFIER_GROUP,
   array: false,
 };
+
 const ENDPOINT_URL: UserPref = {
   key: "notifier:endpoint:url",
   default: undefined,
@@ -201,6 +227,7 @@ const CONFIG_FILE: UserPref = {
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
   BAKER,
+  BAKER_CATCHUP_LIMIT,
   LOGGING,
   NODE,
   RPC,
@@ -325,6 +352,7 @@ export type Config = {
   getDesktopConfig: GetDesktopConfig;
   getEndpointConfig: GetEndpointConfig;
   getStorageDirectory: GetStorageDirectory;
+  getBakerCatchupLimit: GetBakerCatchupLimit;
 };
 
 /**
@@ -391,6 +419,7 @@ export const load = async (): Promise<Config> => {
     getDesktopConfig,
     getEndpointConfig,
     getStorageDirectory: () => dataDirectory,
+    getBakerCatchupLimit,
   };
   return config;
 };
@@ -527,3 +556,9 @@ const getEndpointConfig: GetEndpointConfig = () => {
 };
 
 type GetStorageDirectory = () => string;
+
+type GetBakerCatchupLimit = () => number | undefined;
+
+const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
+  return nconf.get(BAKER_CATCHUP_LIMIT.key);
+};
