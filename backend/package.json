@@ -48,7 +48,7 @@
     "await-to-js": "3.0.0",
     "better-queue": "3.8.10",
     "better-queue-sqlite": "1.0.6",
-    "cross-fetch": "3.1.3-alpha.6",
+    "cross-fetch": "3.1.4",
     "date-fns": "2.19.0",
     "env-paths": "2.2.1",
     "loglevel": "1.7.1",
