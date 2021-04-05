@@ -13,22 +13,31 @@ const notifier: TelegramNotificationChannel = {
 
 describe("notify", () => {
   test("sends telegram notification", () => {
-    notify(notifier, "some error message");
+    notify(notifier, { title: "some title", message: "some error message" });
     expect(sendMessage.mock.calls.length).toBe(1);
-    expect(sendMessage.mock.calls[0]).toEqual([12, "some error message"]);
+    expect(sendMessage.mock.calls[0]).toEqual([
+      12,
+      "some title\nsome error message",
+    ]);
   });
 
   test("resolves to success string when successful", () => {
     sendMessage.mockResolvedValue(true);
 
-    const result = notify(notifier, "some error message");
+    const result = notify(notifier, {
+      title: "some title",
+      message: "some error message",
+    });
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
   test("resolves to error object when unsuccessful", () => {
     const error = new Error("error showing notification");
     sendMessage.mockRejectedValue(error);
-    const result = notify(notifier, "some error message");
+    const result = notify(notifier, {
+      title: "some title",
+      message: "some error message",
+    });
     return expect(result).resolves.toEqual({
       kind: "ERROR",
       error,

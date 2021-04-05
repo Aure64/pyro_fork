@@ -14,11 +14,11 @@ const notifier = {
 
 describe("notify", () => {
   test("sends desktop notification", () => {
-    notify(notifier, "some error message");
+    notify(notifier, { title: "some title", message: "some error message" });
     expect(mockedNotifier.mock.calls.length).toBe(1);
     expect(mockedNotifier.mock.calls[0][0]).toEqual({
       message: "some error message",
-      title: "Kiln Event",
+      title: "some title",
       sound: false,
     });
   });
@@ -29,7 +29,10 @@ describe("notify", () => {
       return {} as NodeNotifier;
     });
 
-    const result = notify(notifier, "some error message");
+    const result = notify(notifier, {
+      title: "some title",
+      message: "some error message",
+    });
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
@@ -39,7 +42,10 @@ describe("notify", () => {
       callback?.(error, "");
       return {} as NodeNotifier;
     });
-    const result = notify(notifier, "some error message");
+    const result = notify(notifier, {
+      title: "some title",
+      message: "some error message",
+    });
     return expect(result).resolves.toEqual({
       kind: "ERROR",
       error,

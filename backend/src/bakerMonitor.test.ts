@@ -35,6 +35,7 @@ describe("checkBlockBakingRights", () => {
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      blockLevel: 1299013,
       kind: "SUCCESSFUL_BAKE",
       message:
         "Successful bake for block some_block for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -52,6 +53,7 @@ describe("checkBlockBakingRights", () => {
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      blockLevel: 1299013,
       kind: "MISSED_BAKE",
       message:
         "Missed bake detected for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -167,6 +169,7 @@ describe("checkBlockEndorsingRights", () => {
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      blockLevel: 1318231,
       kind: "SUCCESSFUL_ENDORSE",
       message:
         "Successful endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -183,6 +186,7 @@ describe("checkBlockEndorsingRights", () => {
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      blockLevel: 1318231,
       kind: "MISSED_ENDORSE",
       message: "Missed endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
       type: "BAKER",
@@ -224,9 +228,11 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       baker: endorsementBaker,
       rpc,
       operations: operationsWithDoubleEndorsementAccusation,
+      blockLevel: 1000,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      blockLevel: 1000,
       kind: "DOUBLE_ENDORSE",
       message:
         "Double endorsement for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at block some_hash",
@@ -243,6 +249,7 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       baker: endorsementBaker,
       rpc,
       operations: [],
+      blockLevel: 1000,
     });
     expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);
@@ -262,9 +269,11 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       baker: delegate,
       rpc,
       operations: operationsWithDoubleBakeAccusation,
+      blockLevel: 1000,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      blockLevel: 1000,
       kind: "DOUBLE_BAKE",
       message:
         "Double bake for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1299013 with hash opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
@@ -281,6 +290,7 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       baker: delegate,
       rpc,
       operations: [],
+      blockLevel: 1000,
     });
     expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);

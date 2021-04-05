@@ -35,14 +35,14 @@ export const create = (config: EmailConfig): EmailNotificationChannel => {
 
 export const notify: Notify<EmailNotificationChannel> = async (
   notifier,
-  message
+  { message, title }
 ) => {
   const { transporter, config } = notifier;
   const [error] = await to(
     transporter.sendMail({
-      from: config.email,
+      from: `Kiln ${config.email}`,
       to: config.email,
-      subject: "Kiln Event",
+      subject: title,
       text: message,
     })
   );

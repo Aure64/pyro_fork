@@ -1,4 +1,4 @@
-import { BakerNodeEvent, Result, TezosNodeEvent } from "./types";
+import { BakerEvent, Result, TezosNodeEvent } from "./types";
 import { debug, warn, info, trace } from "loglevel";
 import {
   Context,
@@ -232,6 +232,7 @@ const checkBlock = async ({
         baker,
         operations: anonymousOperations,
         rpc,
+        blockLevel: metadata.level.level,
       });
       if (doubleBakeEvent) {
         events.push(doubleBakeEvent);
@@ -241,6 +242,7 @@ const checkBlock = async ({
           baker,
           operations: anonymousOperations,
           rpc,
+          blockLevel: metadata.level.level,
         }
       );
       if (doubleEndorseEvent) {
@@ -467,7 +469,7 @@ export const checkBlockBakingRights = ({
   blockLevel,
   bakingRights,
   blockId,
-}: CheckBlockBakingRightsArgs): BakerNodeEvent | null => {
+}: CheckBlockBakingRightsArgs): BakerEvent | null => {
   for (const bakingRight of bakingRights) {
     if (bakingRight.level === blockLevel && bakingRight.priority === priority) {
       debug(`found baking slot for priority ${priority} for baker ${baker}`);
@@ -480,6 +482,7 @@ export const checkBlockBakingRights = ({
           kind: "MISSED_BAKE",
           message,
           baker,
+          blockLevel,
         };
       } else {
         const message = `Successful bake for block ${blockId} for baker ${baker}`;
@@ -489,6 +492,7 @@ export const checkBlockBakingRights = ({
           kind: "SUCCESSFUL_BAKE",
           message,
           baker,
+          blockLevel,
         };
       }
     }
@@ -513,7 +517,7 @@ export const checkBlockEndorsingRights = ({
   endorsementOperations,
   blockLevel,
   endorsingRights,
-}: CheckBlockEndorsingRightsArgs): BakerNodeEvent | null => {
+}: CheckBlockEndorsingRightsArgs): BakerEvent | null => {
   const shouldEndorse =
     endorsingRights.find(
       (right) => right.level === blockLevel - 1 && right.delegate === baker
@@ -532,6 +536,7 @@ export const checkBlockEndorsingRights = ({
         kind: "SUCCESSFUL_ENDORSE",
         message,
         baker,
+        blockLevel,
       };
     } else {
       const message = `Missed endorse for baker ${baker}`;
@@ -541,6 +546,7 @@ export const checkBlockEndorsingRights = ({
         kind: "MISSED_ENDORSE",
         message,
         baker,
+        blockLevel,
       };
     }
   }
@@ -567,12 +573,14 @@ type CheckBlockAccusationsForDoubleEndorsementArgs = {
   baker: string;
   operations: OperationEntry[];
   rpc: RpcClient;
+  blockLevel: number;
 };
 
 export const checkBlockAccusationsForDoubleEndorsement = async ({
   baker,
   operations,
   rpc,
+  blockLevel,
 }: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<TezosNodeEvent | null> => {
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
@@ -597,6 +605,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
                 kind: "DOUBLE_ENDORSE",
                 message,
                 baker,
+                blockLevel,
               };
             }
           } else {
@@ -636,12 +645,14 @@ type CheckBlockAccusationsForDoubleBakeArgs = {
   baker: string;
   operations: OperationEntry[];
   rpc: RpcClient;
+  blockLevel: number;
 };
 
 export const checkBlockAccusationsForDoubleBake = async ({
   baker,
   operations,
   rpc,
+  blockLevel,
 }: CheckBlockAccusationsForDoubleBakeArgs): Promise<TezosNodeEvent | null> => {
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
@@ -669,6 +680,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
               kind: "DOUBLE_BAKE",
               message,
               baker,
+              blockLevel,
             };
           }
         } else if (bakingRightsError) {
@@ -703,7 +715,7 @@ export const checkFutureBlockBakingRights = ({
   blockLevel,
   bakingRights,
   timeBetweenBlocks,
-}: CheckFutureBlockBakingRightsArgs): BakerNodeEvent | null => {
+}: CheckFutureBlockBakingRightsArgs): BakerEvent | null => {
   for (const bakingRight of bakingRights) {
     if (bakingRight.level > blockLevel && bakingRight.priority === 0) {
       const delegate = bakingRight.delegate;
@@ -752,7 +764,7 @@ export const checkFutureBlockEndorsingRights = ({
   blockLevel,
   endorsingRights,
   timeBetweenBlocks,
-}: CheckFutureBlockEndorsingRightsArgs): BakerNodeEvent | null => {
+}: CheckFutureBlockEndorsingRightsArgs): BakerEvent | null => {
   for (const endorsingRight of endorsingRights) {
     if (
       endorsingRight.level > blockLevel &&

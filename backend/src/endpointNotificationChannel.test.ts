@@ -1,4 +1,4 @@
-import { BakerNodeEvent } from "./types";
+import { BakerEvent } from "./types";
 import {
   notify,
   EndpointNotificationChannel,
@@ -11,11 +11,12 @@ const notifier: EndpointNotificationChannel = {
 
 describe("notify", () => {
   test("posts JSON notification", () => {
-    const event: BakerNodeEvent = {
+    const event: BakerEvent = {
       type: "BAKER",
       kind: "MISSED_BAKE",
       baker: "some_baker",
       message: "Missed bake",
+      blockLevel: 1000,
     };
     notify(notifier, event);
     expect(fetchMock.mock.calls.length).toBe(1);
@@ -26,22 +27,24 @@ describe("notify", () => {
   test("resolves to success string when successful", () => {
     fetchMock.mockResponse("true");
 
-    const event: BakerNodeEvent = {
+    const event: BakerEvent = {
       type: "BAKER",
       kind: "MISSED_BAKE",
       baker: "some_baker",
       message: "Missed bake",
+      blockLevel: 1000,
     };
     const result = notify(notifier, event);
     return expect(result).resolves.toEqual({ kind: "SUCCESS" });
   });
 
   test("resolves to error object when unsuccessful", () => {
-    const event: BakerNodeEvent = {
+    const event: BakerEvent = {
       type: "BAKER",
       kind: "MISSED_BAKE",
       baker: "some_baker",
       message: "Missed bake",
+      blockLevel: 1000,
     };
     fetchMock.mockResponse("Error", { status: 401 });
     const result = notify(notifier, event);

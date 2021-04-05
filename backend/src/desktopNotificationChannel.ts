@@ -15,13 +15,13 @@ export const create = (config: DesktopConfig): DesktopNotificationChannel => {
 
 export const notify: Notify<DesktopNotificationChannel> = async (
   notifier,
-  message
+  { message, title }
 ) =>
   new Promise((resolve) => {
     desktopNotify(
       {
-        title: `Kiln Event`,
-        message: message,
+        title,
+        message,
         sound: notifier.config.enableSound,
       },
       (error) => {

@@ -1,10 +1,18 @@
-export type BakerNodeEventKind =
+type BakerNodeEventKind =
   | "MISSED_BAKE"
   | "SUCCESSFUL_BAKE"
   | "DOUBLE_BAKE"
   | "MISSED_ENDORSE"
   | "SUCCESSFUL_ENDORSE"
   | "DOUBLE_ENDORSE";
+
+type BakerNodeEvent = {
+  kind: BakerNodeEventKind;
+  type: "BAKER";
+  message: string;
+  baker: string;
+  blockLevel: number;
+};
 
 type FutureBakingEvent = {
   kind: "FUTURE_BAKING_OPPORTUNITY" | "FUTURE_ENDORSING_OPPORTUNITY";
@@ -21,15 +29,7 @@ type BakerDataEvent = {
   message: string;
 };
 
-export type BakerNodeEvent =
-  | FutureBakingEvent
-  | {
-      kind: BakerNodeEventKind;
-      type: "BAKER";
-      message: string;
-      baker: string;
-    }
-  | BakerDataEvent;
+export type BakerEvent = FutureBakingEvent | BakerNodeEvent | BakerDataEvent;
 
 type NodeDataEvent = {
   type: "PEER_DATA";
@@ -52,7 +52,12 @@ export type PeerNodeEvent =
     }
   | NodeDataEvent;
 
-export type TezosNodeEvent = BakerNodeEvent | PeerNodeEvent;
+export type TezosNodeEvent = BakerEvent | PeerNodeEvent;
+
+export type Message = {
+  title: string;
+  message: string;
+};
 
 export type NotifierEvent = {
   type: "NOTIFIER";
@@ -64,8 +69,11 @@ export type NotifyResult =
   | { kind: "SUCCESS" }
   | { kind: "ERROR"; error: Error; channelName: string };
 
-export type Notify<T> = (notifier: T, message: string) => Promise<NotifyResult>;
-export type NotifyFunction = (message: string) => Promise<NotifyResult>;
+export type Notify<T> = (
+  notifier: T,
+  message: Message
+) => Promise<NotifyResult>;
+export type NotifyFunction = (message: Message) => Promise<NotifyResult>;
 export type NotifyEventFunction = (
   event: TezosNodeEvent | NotifierEvent
 ) => Promise<NotifyResult>;

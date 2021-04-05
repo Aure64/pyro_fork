@@ -21,10 +21,10 @@ export const create = (config: TelegramConfig): TelegramNotificationChannel => {
 
 export const notify: Notify<TelegramNotificationChannel> = async (
   notifier,
-  message
+  { message, title }
 ) => {
   try {
-    await notifier.bot.sendMessage(notifier.chatId, message);
+    await notifier.bot.sendMessage(notifier.chatId, `${title}\n${message}`);
     return { kind: "SUCCESS" };
   } catch (error) {
     return { kind: "ERROR", error, channelName };
