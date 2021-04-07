@@ -215,7 +215,7 @@ const checkBlock = async ({
       if (bakingEvent) events.push(bakingEvent);
       const endorsingEvent = checkBlockEndorsingRights({
         baker,
-        blockLevel: metadata.level.level,
+        blockLevel: metadata.level.level - 1,
         endorsementOperations,
         endorsingRights,
       });
@@ -309,7 +309,7 @@ export const loadBlockData = async ({
       cycle: metadata.level.cycle,
       delegate: bakers,
     },
-    { block: `${metadata.level.level - 1}` }
+    { block: blockId }
   );
   const blockPromise = rpc.getBlock({ block: blockId });
 
@@ -519,12 +519,12 @@ export const checkBlockEndorsingRights = ({
   endorsingRights,
 }: CheckBlockEndorsingRightsArgs): BakerEvent | null => {
   const endorsingRight = endorsingRights.find(
-    (right) => right.level === blockLevel - 1 && right.delegate === baker
+    (right) => right.level === blockLevel && right.delegate === baker
   );
   const shouldEndorse = endorsingRight !== undefined;
 
   if (shouldEndorse) {
-    debug(`found endorsing slot for for baker ${baker} at level ${blockLevel}`);
+    debug(`found endorsing slot for baker ${baker} at level ${blockLevel}`);
     const didEndorse =
       endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
       undefined;
@@ -560,10 +560,14 @@ const isEndorsementByDelegate = (
   delegate: string
 ): boolean => {
   for (const contentsItem of operation.contents) {
-    if (contentsItem.kind === OpKind.ENDORSEMENT && "metadata" in contentsItem)
+    if (
+      contentsItem.kind === OpKind.ENDORSEMENT &&
+      "metadata" in contentsItem
+    ) {
       if (contentsItem.metadata.delegate === delegate) {
         return true;
       }
+    }
   }
 
   return false;

@@ -164,12 +164,12 @@ describe("checkBlockEndorsingRights", () => {
     const result = checkBlockEndorsingRights({
       baker: endorsementBaker,
       endorsementOperations: endorsementsWithSuccess,
-      blockLevel: endorsementLevel + 1,
+      blockLevel: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1318231,
+      blockLevel: 1318230,
       kind: "SUCCESSFUL_ENDORSE",
       message:
         "Successful endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -181,15 +181,15 @@ describe("checkBlockEndorsingRights", () => {
     const result = checkBlockEndorsingRights({
       baker: endorsementBaker,
       endorsementOperations: endorsementsWithMiss,
-      blockLevel: endorsementLevel + 1,
+      blockLevel: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1318231,
+      blockLevel: 1318230,
       kind: "MISSED_ENDORSE",
       message:
-        "Missed endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1318231",
+        "Missed endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1318230",
       type: "BAKER",
     });
   });
