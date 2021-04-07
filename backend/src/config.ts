@@ -1,6 +1,6 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
-import { LogLevelDesc, debug, warn } from "loglevel";
+import { LogLevelDesc, debug } from "loglevel";
 import { SlackConfig } from "./slackNotificationChannel";
 import { TelegramConfig } from "./telegramNotificationChannel";
 import { EmailConfig } from "./emailNotificationChannel";
@@ -11,6 +11,8 @@ import * as Path from "path";
 import envPaths from "env-paths";
 import * as yargs from "yargs";
 import * as R from "ramda";
+import * as Validator from "validatorjs";
+import * as Yaml from "js-yaml";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
@@ -24,40 +26,48 @@ type UserPref = {
   type: yargs.PositionalOptionsType | undefined;
   alias: string | string[] | undefined;
   group: string | undefined;
-  array: boolean;
+  isArray: boolean;
   cliOnly?: boolean;
+  validationRule?:
+    | string
+    | Array<string | Validator.TypeCheckingRule>
+    | Validator.Rules;
 };
 
 // baker monitor config
 const BAKER_GROUP = "Baker Monitor:";
 const BAKER: UserPref = {
-  key: "bakerMonitor:baker",
+  key: "baker_monitor:baker",
   default: undefined,
   description: "Node to watch for baking events.",
   alias: ["b", "baker"],
   type: "string",
   group: BAKER_GROUP,
-  array: true,
+  isArray: true,
+  validationRule: "baker",
 };
 const BAKER_CATCHUP_LIMIT: UserPref = {
-  key: "bakerMonitor:catchupLimit",
+  key: "baker_monitor:catchup_limit",
   default: 12288,
   description:
     "The maximum number of blocks to catch up on after reconnecting.",
   alias: undefined,
   type: "number",
   group: BAKER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: "numeric",
 };
 
+const LOG_LEVELS = ["trace", "info", "debug", "warn", "error"];
 const LOGGING: UserPref = {
   key: "logging",
   default: "info",
-  description: "Level of logging. [trace, debug, info, warn, error]",
+  description: `Level of logging. [${LOG_LEVELS}]`,
   alias: "l",
   type: "string",
   group: undefined,
-  array: false,
+  isArray: false,
+  validationRule: "loglevel",
 };
 const NODE: UserPref = {
   key: "node",
@@ -66,7 +76,8 @@ const NODE: UserPref = {
   alias: "n",
   type: "string",
   group: undefined,
-  array: true,
+  isArray: true,
+  validationRule: "url",
 };
 const RPC: UserPref = {
   key: "rpc",
@@ -75,7 +86,8 @@ const RPC: UserPref = {
   alias: "r",
   type: "string",
   group: undefined,
-  array: false,
+  isArray: false,
+  validationRule: "url",
 };
 const EXCLUDED_EVENTS: UserPref = {
   key: "filter:omit",
@@ -89,7 +101,8 @@ const EXCLUDED_EVENTS: UserPref = {
   alias: undefined,
   type: "string",
   group: undefined,
-  array: true,
+  isArray: true,
+  validationRule: "string",
 };
 const SLACK_URL: UserPref = {
   key: "notifier:slack:url",
@@ -98,7 +111,8 @@ const SLACK_URL: UserPref = {
   alias: undefined,
   type: "string",
   group: "Slack Notifications:",
-  array: false,
+  isArray: false,
+  validationRule: "url",
 };
 
 // telegram notifier config
@@ -111,7 +125,8 @@ const TELEGRAM_TOKEN: UserPref = {
   alias: undefined,
   type: "string",
   group: TELEGRAM_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["string", "required_with:notifier.telegram"],
 };
 const TELEGRAM_CHAT_ID: UserPref = {
   key: "notifier:telegram:chat",
@@ -120,7 +135,8 @@ const TELEGRAM_CHAT_ID: UserPref = {
   alias: undefined,
   type: "string",
   group: TELEGRAM_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["numeric", "required_with:notifier.telegram"],
 };
 
 // email notifier config
@@ -133,7 +149,8 @@ const EMAIL_HOST: UserPref = {
   alias: undefined,
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["string", "required_with:notifier.email"],
 };
 const EMAIL_PORT: UserPref = {
   key: "notifier:email:port",
@@ -142,17 +159,19 @@ const EMAIL_PORT: UserPref = {
   alias: undefined,
   type: "number",
   group: EMAIL_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["numeric", "required_with:notifier.email"],
 };
+const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
 const EMAIL_PROTOCOL: UserPref = {
   key: "notifier:email:protocol",
   default: undefined,
-  description:
-    "Protocol for email notification channel [Plain,  SSL,  STARTTLS]",
+  description: `Protocol for email notification channel [${PROTOCOL_OPTIONS}]`,
   alias: undefined,
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["email_protocol", "required_with:notifier.email"],
 };
 const EMAIL_USERNAME: UserPref = {
   key: "notifier:email:username",
@@ -161,7 +180,8 @@ const EMAIL_USERNAME: UserPref = {
   alias: undefined,
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["string", "required_with:notifier.email"],
 };
 const EMAIL_PASSWORD: UserPref = {
   key: "notifier:email:password",
@@ -170,7 +190,8 @@ const EMAIL_PASSWORD: UserPref = {
   alias: undefined,
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["string", "required_with:notifier.email"],
 };
 const EMAIL_EMAIL: UserPref = {
   key: "notifier:email:email",
@@ -179,7 +200,8 @@ const EMAIL_EMAIL: UserPref = {
   alias: undefined,
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["string", "required_with:notifier.email"],
 };
 
 // desktop notifier config
@@ -191,7 +213,8 @@ const DESKTOP_ENABLED: UserPref = {
   alias: undefined,
   type: "boolean",
   group: DESKTOP_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: ["boolean", "required_with:notifier.desktop"],
 };
 const DESKTOP_SOUND: UserPref = {
   key: "notifier:desktop:sound",
@@ -200,7 +223,8 @@ const DESKTOP_SOUND: UserPref = {
   alias: undefined,
   type: "boolean",
   group: DESKTOP_NOTIFIER_GROUP,
-  array: false,
+  isArray: false,
+  validationRule: "boolean",
 };
 
 const ENDPOINT_URL: UserPref = {
@@ -210,7 +234,8 @@ const ENDPOINT_URL: UserPref = {
   alias: undefined,
   type: "string",
   group: "JSON Notifications:",
-  array: false,
+  isArray: false,
+  validationRule: "url",
 };
 const CONFIG_FILE: UserPref = {
   key: "config",
@@ -220,8 +245,9 @@ const CONFIG_FILE: UserPref = {
   alias: undefined,
   type: "string",
   group: undefined,
-  array: false,
+  isArray: false,
   cliOnly: true,
+  validationRule: "string",
 };
 
 // list of all prefs that should be iterated to build yargs options and nconf defaults
@@ -261,7 +287,7 @@ const makeYargOptions = () => {
         description: pref.description,
         defaultDescription,
         group: pref.group,
-        array: pref.array,
+        array: pref.isArray,
       };
       return accumulator;
     },
@@ -271,7 +297,7 @@ const makeYargOptions = () => {
 };
 
 /**
- * Iterates through the UserPrefs to create a object of default config values for Nconf.
+ * Iterates through the UserPrefs to create an object of default config values for Nconf.
  */
 const makeConfigDefaults = () => {
   const defaults = userPrefs.reduce(
@@ -311,18 +337,12 @@ const makeConfigFile = (): Record<string, string> => {
     (accumulator: Record<string, string>, userPref: UserPref) => {
       // ignore user prefs that are only supported by the command line
       if (!userPref.cliOnly) {
-        const fieldType = userPref.array ? "array" : userPref.type;
+        const fieldType = userPref.isArray ? "array" : userPref.type;
         const value =
           userPref.default !== undefined
             ? userPref.default
             : `${userPref.description} [${fieldType}]`;
-        // break colon-separated path into array
-        const objectPath = userPref.key.split(":");
-        // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
-        const lensPath = R.lensPath(objectPath);
-        const updatedAccumulator = R.set(lensPath, value, accumulator);
-
-        return updatedAccumulator;
+        return setPath(userPref.key, accumulator, value);
       } else {
         return accumulator;
       }
@@ -330,6 +350,64 @@ const makeConfigFile = (): Record<string, string> => {
     {}
   );
   return sampleConfig;
+};
+
+/**
+ * Iterates through the UserPrefs to create the validations object used by validatorjs.  Also creates a
+ * few custom validators for specific fields.
+ */
+const makeConfigValidations = (): Validator.Rules => {
+  const bakerRegex = new RegExp(/^tz[\d\w]*$/);
+  Validator.register(
+    "baker",
+    (value) => {
+      return bakerRegex.test(`${value}`);
+    },
+    "The :attribute is not a proper baker hash."
+  );
+  Validator.register(
+    "loglevel",
+    (value) => {
+      return LOG_LEVELS.includes(`${value}`);
+    },
+    "The :attribute is not a valid log level."
+  );
+  Validator.register(
+    "email_protocol",
+    (value) => {
+      return PROTOCOL_OPTIONS.includes(`${value}`);
+    },
+    "The :attribute is not a valid email protocol."
+  );
+
+  const rules = userPrefs.reduce(
+    (accumulator: Validator.Rules, userPref: UserPref) => {
+      const validationRule = userPref.validationRule;
+      if (validationRule && userPref.isArray) {
+        const settingsWithArrayRule = setPath(
+          userPref.key,
+          accumulator,
+          "array"
+        );
+        // array validations belong on key.*
+        const childKey = `${userPref.key}.*`;
+        return setPath(childKey, settingsWithArrayRule, validationRule);
+      } else if (validationRule) {
+        return setPath(userPref.key, accumulator, validationRule);
+      } else {
+        return accumulator;
+      }
+    },
+    {}
+  );
+  return rules;
+};
+
+const setPath = <T>(path: string, data: T, value: unknown): T => {
+  const objectPath = path.split(":");
+  // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
+  const lensPath = R.lensPath(objectPath);
+  return R.set(lensPath, value, data);
 };
 
 const userConfigPath = (path: string) => Path.join(path, "config.json");
@@ -402,6 +480,15 @@ export const load = async (): Promise<Config> => {
 
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync().then(console.log);
+  const loadedConfig = nconf.get();
+  const validation = new Validator(loadedConfig, makeConfigValidations());
+  if (validation.fails()) {
+    console.log("Your config is invalid. Kiln cannot start.");
+    const errors = validation.errors.all();
+    console.log(Yaml.dump(errors));
+    process.exit(1);
+  }
+
   const config: Config = {
     save: () => save(configDirectory),
     getBakers,
@@ -461,14 +548,8 @@ const getLogLevel: GetLogLevel = () => {
   return logLevelFromString(value);
 };
 
-const logLevels: LogLevelDesc[] = ["trace", "info", "debug", "warn", "error"];
 const logLevelFromString = (value: string): LogLevelDesc => {
-  if (logLevels.includes(value as LogLevelDesc)) {
-    return value as LogLevelDesc;
-  } else {
-    warn("Unknown logging level, using info");
-    return "info";
-  }
+  return value as LogLevelDesc;
 };
 
 type GetLastBlockLevel = () => number | undefined;

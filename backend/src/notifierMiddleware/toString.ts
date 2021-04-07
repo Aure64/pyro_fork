@@ -4,7 +4,7 @@ import {
   NotifierEvent,
   TezosNodeEvent,
 } from "../types";
-import * as yaml from "js-yaml";
+import * as Yaml from "js-yaml";
 
 /**
  * Convert a notify channel from one that takes message and title strings to one that takes an event. This
@@ -16,7 +16,7 @@ export const apply = (notifyFunction: NotifyFunction): NotifyEventFunction => {
     if ("kind" in event) {
       title += ` (${event.kind})`;
     }
-    const message = `${event.message}\n\nDetails:\n${yaml.dump(event)}`;
+    const message = `${event.message}\n\nDetails:\n${Yaml.dump(event)}`;
     return notifyFunction({ title, message });
   };
 };

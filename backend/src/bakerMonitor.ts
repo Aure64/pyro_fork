@@ -518,13 +518,13 @@ export const checkBlockEndorsingRights = ({
   blockLevel,
   endorsingRights,
 }: CheckBlockEndorsingRightsArgs): BakerEvent | null => {
-  const shouldEndorse =
-    endorsingRights.find(
-      (right) => right.level === blockLevel - 1 && right.delegate === baker
-    ) !== undefined;
+  const endorsingRight = endorsingRights.find(
+    (right) => right.level === blockLevel - 1 && right.delegate === baker
+  );
+  const shouldEndorse = endorsingRight !== undefined;
 
   if (shouldEndorse) {
-    debug(`found endorsing slot for for baker ${baker}`);
+    debug(`found endorsing slot for for baker ${baker} at level ${blockLevel}`);
     const didEndorse =
       endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
       undefined;
@@ -539,7 +539,8 @@ export const checkBlockEndorsingRights = ({
         blockLevel,
       };
     } else {
-      const message = `Missed endorse for baker ${baker}`;
+      const message = `Missed endorse for baker ${baker} at level ${blockLevel}`;
+      console.log(JSON.stringify(endorsementOperations, null, 2));
       debug(message);
       return {
         type: "BAKER",

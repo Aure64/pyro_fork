@@ -188,7 +188,8 @@ describe("checkBlockEndorsingRights", () => {
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
       blockLevel: 1318231,
       kind: "MISSED_ENDORSE",
-      message: "Missed endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      message:
+        "Missed endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1318231",
       type: "BAKER",
     });
   });
