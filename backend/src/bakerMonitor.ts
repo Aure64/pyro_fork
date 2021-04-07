@@ -203,6 +203,7 @@ const checkBlock = async ({
     }
 
     for (const baker of bakers) {
+      console.log(block.operations);
       const endorsementOperations = block.operations[0];
       const anonymousOperations = block.operations[2];
       const bakingEvent = checkBlockBakingRights({

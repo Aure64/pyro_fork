@@ -109,7 +109,7 @@ const EXCLUDED_EVENTS: UserPref = {
 const SLACK_NOTIFIER_GROUP = "Slack Notifications:";
 const SLACK_ENABLED: UserPref = {
   key: "notifier:slack:enabled",
-  default: false,
+  default: undefined,
   description: "Whether slack notifier is enabled",
   alias: undefined,
   type: "boolean",
@@ -167,7 +167,7 @@ const TELEGRAM_CHAT_ID: UserPref = {
 const EMAIL_NOTIFIER_GROUP = "Email Notifications:";
 const EMAIL_ENABLED: UserPref = {
   key: "notifier:email:enabled",
-  default: false,
+  default: undefined,
   description: "Whether email notifier is enabled",
   alias: undefined,
   type: "boolean",
@@ -241,7 +241,7 @@ const EMAIL_EMAIL: UserPref = {
 const DESKTOP_NOTIFIER_GROUP = "Desktop Notifications:";
 const DESKTOP_ENABLED: UserPref = {
   key: "notifier:desktop:enabled",
-  default: false,
+  default: true,
   description: "Whether desktop notifier is enabled",
   alias: undefined,
   type: "boolean",
@@ -263,7 +263,7 @@ const DESKTOP_SOUND: UserPref = {
 const ENDPOINT_NOTIFIER_GROUP = "Endpoint Notifications:";
 const ENDPOINT_ENABLED: UserPref = {
   key: "notifier:endpoint:enabled",
-  default: false,
+  default: undefined,
   description: "Whether endpoint notifier is enabled",
   alias: undefined,
   type: "boolean",
