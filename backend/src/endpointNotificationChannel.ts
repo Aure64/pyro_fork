@@ -4,7 +4,10 @@ import { debug, trace } from "loglevel";
 
 export const channelName = "endpoint";
 
-export type EndpointConfig = { url: string };
+export type EndpointConfig = {
+  enabled: boolean;
+  url: string;
+};
 
 export type EndpointNotificationChannel = {
   url: string;

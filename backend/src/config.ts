@@ -104,20 +104,43 @@ const EXCLUDED_EVENTS: UserPref = {
   isArray: true,
   validationRule: "string",
 };
+
+// email notifier config
+const SLACK_NOTIFIER_GROUP = "Slack Notifications:";
+const SLACK_ENABLED: UserPref = {
+  key: "notifier:slack:enabled",
+  default: false,
+  description: "Whether slack notifier is enabled",
+  alias: undefined,
+  type: "boolean",
+  group: SLACK_NOTIFIER_GROUP,
+  isArray: false,
+  validationRule: ["boolean", "required_with:notifier.slack"],
+};
 const SLACK_URL: UserPref = {
   key: "notifier:slack:url",
   default: undefined,
   description: "Webhook URL for Slack notifications",
   alias: undefined,
   type: "string",
-  group: "Slack Notifications:",
+  group: SLACK_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: "url",
+  validationRule: ["url", "required_with:notifier.slack"],
 };
 
 // telegram notifier config
 const TELEGRAM_NOTIFIER_GROUP = "Telegram Notifications:";
 
+const TELEGRAM_ENABLED: UserPref = {
+  key: "notifier:telegram:enabled",
+  default: false,
+  description: "Whether telegram notifier is enabled",
+  alias: undefined,
+  type: "boolean",
+  group: TELEGRAM_NOTIFIER_GROUP,
+  isArray: false,
+  validationRule: ["boolean", "required_with:notifier.telegram"],
+};
 const TELEGRAM_TOKEN: UserPref = {
   key: "notifier:telegram:token",
   default: undefined,
@@ -142,6 +165,16 @@ const TELEGRAM_CHAT_ID: UserPref = {
 // email notifier config
 //
 const EMAIL_NOTIFIER_GROUP = "Email Notifications:";
+const EMAIL_ENABLED: UserPref = {
+  key: "notifier:email:enabled",
+  default: false,
+  description: "Whether email notifier is enabled",
+  alias: undefined,
+  type: "boolean",
+  group: EMAIL_NOTIFIER_GROUP,
+  isArray: false,
+  validationRule: ["boolean", "required_with:notifier.email"],
+};
 const EMAIL_HOST: UserPref = {
   key: "notifier:email:host",
   default: undefined,
@@ -208,7 +241,7 @@ const EMAIL_EMAIL: UserPref = {
 const DESKTOP_NOTIFIER_GROUP = "Desktop Notifications:";
 const DESKTOP_ENABLED: UserPref = {
   key: "notifier:desktop:enabled",
-  default: true,
+  default: false,
   description: "Whether desktop notifier is enabled",
   alias: undefined,
   type: "boolean",
@@ -224,18 +257,29 @@ const DESKTOP_SOUND: UserPref = {
   type: "boolean",
   group: DESKTOP_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: "boolean",
+  validationRule: ["boolean", "required_with:notifier.desktop"],
 };
-
+// endpoint notifier config
+const ENDPOINT_NOTIFIER_GROUP = "Endpoint Notifications:";
+const ENDPOINT_ENABLED: UserPref = {
+  key: "notifier:endpoint:enabled",
+  default: false,
+  description: "Whether endpoint notifier is enabled",
+  alias: undefined,
+  type: "boolean",
+  group: ENDPOINT_NOTIFIER_GROUP,
+  isArray: false,
+  validationRule: ["boolean", "required_with:notifier.endpoint"],
+};
 const ENDPOINT_URL: UserPref = {
   key: "notifier:endpoint:url",
   default: undefined,
   description: "URL for posting raw JSON notifications",
   alias: undefined,
   type: "string",
-  group: "JSON Notifications:",
+  group: ENDPOINT_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: "url",
+  validationRule: ["boolean", "required_with:notifier.endpoint"],
 };
 const CONFIG_FILE: UserPref = {
   key: "config",
@@ -258,9 +302,12 @@ const userPrefs = [
   NODE,
   RPC,
   EXCLUDED_EVENTS,
+  SLACK_ENABLED,
   SLACK_URL,
+  TELEGRAM_ENABLED,
   TELEGRAM_TOKEN,
   TELEGRAM_CHAT_ID,
+  EMAIL_ENABLED,
   EMAIL_HOST,
   EMAIL_PORT,
   EMAIL_PROTOCOL,
@@ -269,6 +316,7 @@ const userPrefs = [
   EMAIL_PASSWORD,
   DESKTOP_ENABLED,
   DESKTOP_SOUND,
+  ENDPOINT_ENABLED,
   ENDPOINT_URL,
   CONFIG_FILE,
 ];
@@ -280,7 +328,8 @@ const userPrefs = [
 const makeYargOptions = () => {
   const options = userPrefs.reduce(
     (accumulator: { [key: string]: yargs.Options }, pref: UserPref) => {
-      const defaultDescription = pref.default ? `${pref.default}` : undefined;
+      const defaultDescription =
+        pref.default !== undefined ? `${pref.default}` : undefined;
       accumulator[pref.key] = {
         type: pref.type,
         alias: pref.alias,
@@ -403,6 +452,10 @@ const makeConfigValidations = (): Validator.Rules => {
   return rules;
 };
 
+/**
+ * Creates a new `data` with the `value` set to the nested `path`.  `path` is a UserPref style path
+ * delimited by colons.
+ */
 const setPath = <T>(path: string, data: T, value: unknown): T => {
   const objectPath = path.split(":");
   // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
@@ -592,23 +645,26 @@ const getExcludedEvents: GetExcludedEvents = () => {
 type GetSlackConfig = () => SlackConfig | undefined;
 
 const getSlackConfig: GetSlackConfig = () => {
+  const enabled = nconf.get(SLACK_ENABLED.key);
   const url = nconf.get(SLACK_URL.key);
-  if (url) return { url };
+  if (url) return { enabled, url };
   return undefined;
 };
 
 type GetTelegramConfig = () => TelegramConfig | undefined;
 
 const getTelegramConfig: GetTelegramConfig = () => {
+  const enabled = nconf.get(TELEGRAM_ENABLED.key);
   const token = nconf.get(TELEGRAM_TOKEN.key);
   const chatId = nconf.get(TELEGRAM_CHAT_ID.key);
-  if (token && chatId !== undefined) return { token, chatId };
+  if (token && chatId !== undefined) return { enabled, token, chatId };
   return undefined;
 };
 
 type GetEmailConfig = () => EmailConfig | undefined;
 
 const getEmailConfig: GetEmailConfig = () => {
+  const enabled = nconf.get(EMAIL_ENABLED.key);
   const host = nconf.get(EMAIL_HOST.key);
   const port = nconf.get(EMAIL_PORT.key);
   const protocol = nconf.get(EMAIL_PROTOCOL.key);
@@ -616,7 +672,7 @@ const getEmailConfig: GetEmailConfig = () => {
   const password = nconf.get(EMAIL_PASSWORD.key);
   const email = nconf.get(EMAIL_EMAIL.key);
   if (host && port && protocol && email)
-    return { host, port, protocol, username, password, email };
+    return { enabled, host, port, protocol, username, password, email };
   return undefined;
 };
 
@@ -631,8 +687,9 @@ const getDesktopConfig: GetDesktopConfig = () => {
 type GetEndpointConfig = () => EndpointConfig | undefined;
 
 const getEndpointConfig: GetEndpointConfig = () => {
+  const enabled = nconf.get(ENDPOINT_ENABLED.key);
   const url = nconf.get(ENDPOINT_URL.key);
-  if (url) return { url };
+  if (url) return { enabled, url };
   return undefined;
 };
 

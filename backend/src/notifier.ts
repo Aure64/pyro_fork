@@ -41,7 +41,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
   const boundNotify = (event: TezosNodeEvent | NotifierEvent) =>
     notify(notifier, event);
 
-  if (config.emailConfig) {
+  if (config.emailConfig?.enabled) {
     const channelName = EmailChannel.channelName;
     const emailNotify = bindNotifier(
       EmailChannel.create(config.emailConfig),
@@ -95,7 +95,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     );
     channels.push(desktopChannel);
   }
-  if (config.slackConfig) {
+  if (config.slackConfig?.enabled) {
     const channelName = SlackChannel.channelName;
     const slackNotify = bindNotifier(
       SlackChannel.create(config.slackConfig),
@@ -121,7 +121,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     );
     channels.push(slackChannel);
   }
-  if (config.telegramConfig) {
+  if (config.telegramConfig?.enabled) {
     const channelName = TelegramChannel.channelName;
     const telegramNotify = bindNotifier(
       TelegramChannel.create(config.telegramConfig),
@@ -147,7 +147,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     );
     channels.push(telegramChannel);
   }
-  if (config.endpointConfig) {
+  if (config.endpointConfig?.enabled) {
     const channelName = EndpointChannel.channelName;
     // we don't use bindNotifier and toString like other channels as this channel uses
     // the raw JSON event, not a toString'ed representation

@@ -5,6 +5,7 @@ import { Notify } from "./types";
 export const channelName = "telegram";
 
 export type TelegramConfig = {
+  enabled: boolean;
   token: string;
   chatId: number;
 };

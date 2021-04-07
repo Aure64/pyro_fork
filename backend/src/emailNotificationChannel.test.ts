@@ -3,6 +3,7 @@ import { notify, EmailConfig } from "./emailNotificationChannel";
 import { Transporter } from "nodemailer";
 
 const config: EmailConfig = {
+  enabled: true,
   host: "localhost",
   port: 367,
   username: "admin",

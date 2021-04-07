@@ -7,6 +7,7 @@ export const channelName = "email";
 type Protocol = "Plain" | "SSL" | "STARTTLS";
 
 export type EmailConfig = {
+  enabled: boolean;
   host: string;
   port: number;
   protocol: Protocol;
