@@ -203,7 +203,6 @@ const checkBlock = async ({
     }
 
     for (const baker of bakers) {
-      console.log(block.operations);
       const endorsementOperations = block.operations[0];
       const anonymousOperations = block.operations[2];
       const bakingEvent = checkBlockBakingRights({
@@ -541,7 +540,6 @@ export const checkBlockEndorsingRights = ({
       };
     } else {
       const message = `Missed endorse for baker ${baker} at level ${blockLevel}`;
-      console.log(JSON.stringify(endorsementOperations, null, 2));
       debug(message);
       return {
         type: "BAKER",
