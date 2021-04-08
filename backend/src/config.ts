@@ -16,7 +16,8 @@ import * as Yaml from "js-yaml";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
-const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:lastBlockLevel`;
+const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:last_block_level`;
+const TELEGRAM_CHAT_ID = `${SYSTEM_PREFIX}:telegram_chat_id`;
 
 // user prefs
 type UserPref = {
@@ -133,7 +134,7 @@ const TELEGRAM_NOTIFIER_GROUP = "Telegram Notifications:";
 
 const TELEGRAM_ENABLED: UserPref = {
   key: "notifier:telegram:enabled",
-  default: false,
+  default: undefined,
   description: "Whether telegram notifier is enabled",
   alias: undefined,
   type: "boolean",
@@ -150,16 +151,6 @@ const TELEGRAM_TOKEN: UserPref = {
   group: TELEGRAM_NOTIFIER_GROUP,
   isArray: false,
   validationRule: ["string", "required_with:notifier.telegram"],
-};
-const TELEGRAM_CHAT_ID: UserPref = {
-  key: "notifier:telegram:chat",
-  default: undefined,
-  description: "Bot chat ID for Telegram notification channel",
-  alias: undefined,
-  type: "string",
-  group: TELEGRAM_NOTIFIER_GROUP,
-  isArray: false,
-  validationRule: ["numeric", "required_with:notifier.telegram"],
 };
 
 // email notifier config
@@ -306,7 +297,6 @@ const userPrefs = [
   SLACK_URL,
   TELEGRAM_ENABLED,
   TELEGRAM_TOKEN,
-  TELEGRAM_CHAT_ID,
   EMAIL_ENABLED,
   EMAIL_HOST,
   EMAIL_PORT,
@@ -484,6 +474,7 @@ export type Config = {
   getEndpointConfig: GetEndpointConfig;
   getStorageDirectory: GetStorageDirectory;
   getBakerCatchupLimit: GetBakerCatchupLimit;
+  setTelegramChatId: SetTelegramChatId;
 };
 
 /**
@@ -554,6 +545,7 @@ export const load = async (): Promise<Config> => {
     setNumber,
     getExcludedEvents,
     getSlackConfig,
+    setTelegramChatId,
     getTelegramConfig,
     getEmailConfig,
     getDesktopConfig,
@@ -655,9 +647,9 @@ type GetTelegramConfig = () => TelegramConfig | undefined;
 
 const getTelegramConfig: GetTelegramConfig = () => {
   const enabled = nconf.get(TELEGRAM_ENABLED.key);
+  const chatId = nconf.get(TELEGRAM_CHAT_ID);
   const token = nconf.get(TELEGRAM_TOKEN.key);
-  const chatId = nconf.get(TELEGRAM_CHAT_ID.key);
-  if (token && chatId !== undefined) return { enabled, token, chatId };
+  if (token) return { chatId, enabled, token };
   return undefined;
 };
 
@@ -699,4 +691,10 @@ type GetBakerCatchupLimit = () => number | undefined;
 
 const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
   return nconf.get(BAKER_CATCHUP_LIMIT.key);
+};
+
+type SetTelegramChatId = (value: number) => void;
+
+const setTelegramChatId: SetTelegramChatId = (value) => {
+  nconf.set(TELEGRAM_CHAT_ID, value);
 };

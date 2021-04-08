@@ -124,7 +124,10 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
   if (config.telegramConfig?.enabled) {
     const channelName = TelegramChannel.channelName;
     const telegramNotify = bindNotifier(
-      TelegramChannel.create(config.telegramConfig),
+      TelegramChannel.create(
+        config.telegramConfig,
+        config.config.setTelegramChatId
+      ),
       TelegramChannel.notify
     );
     const applyQueue = createQueue(
