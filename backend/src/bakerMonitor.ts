@@ -64,7 +64,14 @@ export const start = ({
   });
   const queue = new BetterQueue<string>(
     async (blockId, callback) => {
-      const result = await checkBlock({ bakers, rpc, blockId });
+      const lastBlockCycle = config.getLastBlockCycle();
+      const lastBlockLevel = config.getLastBlockLevel();
+      const result = await checkBlock({
+        bakers,
+        rpc,
+        blockId,
+        lastCycle: lastBlockCycle,
+      });
 
       if (result.type === "ERROR") {
         onEvent({
@@ -74,10 +81,9 @@ export const start = ({
         });
         callback(result, null);
       } else {
-        const { events, blockLevel } = result.data;
+        const { events, blockLevel, blockCycle } = result.data;
         events.map(onEvent);
 
-        const lastBlockLevel = config.getLastBlockLevel();
         debug(`Previous block level from config: ${lastBlockLevel}`);
         if (lastBlockLevel && blockLevel - lastBlockLevel > 1) {
           const catchupLimit = config.getBakerCatchupLimit();
@@ -92,6 +98,11 @@ export const start = ({
           debug(`Saving previous block level: ${blockLevel}`);
           // only update last block level if it's bigger.  it could be smaller if this was a catch up event
           config.setLastBlockLevel(blockLevel);
+        }
+        if (!lastBlockCycle || blockCycle > lastBlockCycle) {
+          debug(`Saving previous block level: ${blockLevel}`);
+          // only update last block cycle if it's bigger.  it could be smaller if this was a catch up event
+          config.setLastBlockCycle(blockCycle);
         }
 
         callback(null, result);
@@ -159,11 +170,13 @@ type CheckBlockArgs = {
   bakers: string[];
   blockId: string;
   rpc: RpcClient;
+  lastCycle: number | undefined;
 };
 
 type CheckBlockResult = {
   events: TezosNodeEvent[];
   blockLevel: number;
+  blockCycle: number;
 };
 
 /**
@@ -173,6 +186,7 @@ const checkBlock = async ({
   bakers,
   blockId,
   rpc,
+  lastCycle,
 }: CheckBlockArgs): Promise<Result<CheckBlockResult>> => {
   const blockResult = await loadBlockData({
     bakers,
@@ -201,6 +215,8 @@ const checkBlock = async ({
         message: `Missing block metadata level`,
       };
     }
+    const blockLevel = metadata.level.level;
+    const blockCycle = metadata.level.cycle;
 
     for (const baker of bakers) {
       const endorsementOperations = block.operations[0];
@@ -220,14 +236,28 @@ const checkBlock = async ({
         endorsingRights,
       });
       if (endorsingEvent) events.push(endorsingEvent);
-      const futureBakingEvent = checkFutureBlockBakingRights({
-        baker,
-        bakingRights,
-        blockBaker: metadata.baker,
-        blockLevel: metadata.level.level,
-        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
-      });
-      if (futureBakingEvent) events.push(futureBakingEvent);
+      // only check future rights once per block
+      if (!lastCycle || blockCycle > lastCycle) {
+        const futureBakingEvent = checkFutureBlockBakingRights({
+          baker,
+          bakingRights,
+          blockBaker: metadata.baker,
+          blockLevel: metadata.level.level,
+          timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
+        });
+        if (futureBakingEvent) events.push(futureBakingEvent);
+        const futureEndorsingEvent = checkFutureBlockEndorsingRights({
+          baker,
+          endorsingRights,
+          blockLevel: metadata.level.level,
+          timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
+        });
+        if (futureEndorsingEvent) events.push(futureEndorsingEvent);
+      } else {
+        trace(
+          `Not checking for future baking / endorsing rights as this cycle was (${blockCycle}) already checked`
+        );
+      }
       const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
         baker,
         operations: anonymousOperations,
@@ -248,16 +278,8 @@ const checkBlock = async ({
       if (doubleEndorseEvent) {
         events.push(doubleEndorseEvent);
       }
-      const futureEndorsingEvent = checkFutureBlockEndorsingRights({
-        baker,
-        endorsingRights,
-        blockLevel: metadata.level.level,
-        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
-      });
-      if (futureEndorsingEvent) events.push(futureEndorsingEvent);
     }
-    const blockLevel = metadata.level.level;
-    return { type: "SUCCESS", data: { events, blockLevel } };
+    return { type: "SUCCESS", data: { events, blockLevel, blockCycle } };
   }
 };
 

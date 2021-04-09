@@ -17,6 +17,7 @@ import * as Yaml from "js-yaml";
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
 const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:last_block_level`;
+const LAST_BLOCK_CYCLE = `${SYSTEM_PREFIX}:last_block_cycle`;
 const TELEGRAM_CHAT_ID = `${SYSTEM_PREFIX}:telegram_chat_id`;
 
 // user prefs
@@ -464,6 +465,8 @@ export type Config = {
   getLogLevel: GetLogLevel;
   getLastBlockLevel: GetLastBlockLevel;
   setLastBlockLevel: SetLastBlockLevel;
+  getLastBlockCycle: GetLastBlockCycle;
+  setLastBlockCycle: SetLastBlockCycle;
   getNumber: GetNumber;
   setNumber: SetNumber;
   getExcludedEvents: GetExcludedEvents;
@@ -541,6 +544,8 @@ export const load = async (): Promise<Config> => {
     getLogLevel,
     getLastBlockLevel,
     setLastBlockLevel,
+    getLastBlockCycle,
+    setLastBlockCycle,
     getNumber,
     setNumber,
     getExcludedEvents,
@@ -607,6 +612,18 @@ type SetLastBlockLevel = (value: number) => void;
 
 const setLastBlockLevel: SetLastBlockLevel = (value) => {
   nconf.set(LAST_BLOCK_LEVEL, value);
+};
+
+type GetLastBlockCycle = () => number | undefined;
+
+const getLastBlockCycle: GetLastBlockCycle = () => {
+  return nconf.get(LAST_BLOCK_CYCLE);
+};
+
+type SetLastBlockCycle = (value: number) => void;
+
+const setLastBlockCycle: SetLastBlockCycle = (value) => {
+  nconf.set(LAST_BLOCK_CYCLE, value);
 };
 
 type GetNumber = (key: string) => number | undefined;
