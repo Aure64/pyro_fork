@@ -79,7 +79,7 @@ const NODE: UserPref = {
   type: "string",
   group: undefined,
   isArray: true,
-  validationRule: "url",
+  validationRule: "link",
 };
 const RPC: UserPref = {
   key: "rpc",
@@ -89,7 +89,7 @@ const RPC: UserPref = {
   type: "string",
   group: undefined,
   isArray: false,
-  validationRule: "url",
+  validationRule: "link",
 };
 const EXCLUDED_EVENTS: UserPref = {
   key: "filter:omit",
@@ -127,7 +127,7 @@ const SLACK_URL: UserPref = {
   type: "string",
   group: SLACK_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: ["url", "required_with:notifier.slack"],
+  validationRule: ["link", "required_with:notifier.slack"],
 };
 
 // telegram notifier config
@@ -271,7 +271,7 @@ const ENDPOINT_URL: UserPref = {
   type: "string",
   group: ENDPOINT_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.endpoint"],
+  validationRule: ["link", "required_with:notifier.endpoint"],
 };
 const CONFIG_FILE: UserPref = {
   key: "config",
@@ -418,6 +418,15 @@ const makeConfigValidations = (): Validator.Rules => {
       return PROTOCOL_OPTIONS.includes(`${value}`);
     },
     "The :attribute is not a valid email protocol."
+  );
+  // Validator's URL regex is strict and doesn't accept localhost or IP addresses
+  const linkRegex = /^https?:\/\/\w+(\.\w+)*(:[0-9]+)?(\/.*)?$/;
+  Validator.register(
+    "link",
+    (value) => {
+      return linkRegex.test(`${value}`);
+    },
+    "The :attribute is not a valid RPC address."
   );
 
   const rules = userPrefs.reduce(
