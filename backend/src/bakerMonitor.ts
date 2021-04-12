@@ -188,17 +188,20 @@ const checkBlock = async ({
   rpc,
   lastCycle,
 }: CheckBlockArgs): Promise<Result<CheckBlockResult>> => {
+  trace(`Fetching baker data for block ${blockId}`);
   const blockResult = await loadBlockData({
     bakers,
     blockId,
     rpc,
   });
   if (blockResult.type === "ERROR") {
+    debug(`Error fetching baker data for block ${blockId}`);
     return {
       type: "ERROR",
       message: `Error loading data for block ${blockId}`,
     };
   } else {
+    trace(`Successfully retrieved baker data for block ${blockId}`);
     const events: TezosNodeEvent[] = [];
 
     const {

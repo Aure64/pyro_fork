@@ -206,7 +206,7 @@ const EMAIL_USERNAME: UserPref = {
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: ["string", "required_with:notifier.email"],
+  validationRule: "string",
 };
 const EMAIL_PASSWORD: UserPref = {
   key: "notifier:email:password",
@@ -216,7 +216,7 @@ const EMAIL_PASSWORD: UserPref = {
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: ["string", "required_with:notifier.email"],
+  validationRule: "string",
 };
 const EMAIL_EMAIL: UserPref = {
   key: "notifier:email:email",
