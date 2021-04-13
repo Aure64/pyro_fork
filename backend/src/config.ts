@@ -420,13 +420,13 @@ const makeConfigValidations = (): Validator.Rules => {
     "The :attribute is not a valid email protocol."
   );
   // Validator's URL regex is strict and doesn't accept localhost or IP addresses
-  const linkRegex = /^https?:\/\/\w+(\.\w+)*(:[0-9]+)?(\/.*)?$/;
+  const linkRegex = /^https?:\/\/[^/\s]+(\/.*)?$/;
   Validator.register(
     "link",
     (value) => {
       return linkRegex.test(`${value}`);
     },
-    "The :attribute is not a valid RPC address."
+    "The :attribute is not a valid link."
   );
 
   const rules = userPrefs.reduce(
@@ -487,6 +487,7 @@ export type Config = {
   getStorageDirectory: GetStorageDirectory;
   getBakerCatchupLimit: GetBakerCatchupLimit;
   setTelegramChatId: SetTelegramChatId;
+  printHelp: () => void;
 };
 
 /**
@@ -494,6 +495,7 @@ export type Config = {
  * unless overriden by argv.
  */
 export const load = async (): Promise<Config> => {
+  let help: string;
   const { data: dataDirectory, config: configDirectory } = envPaths(
     "kiln-next"
   );
@@ -526,6 +528,17 @@ export const load = async (): Promise<Config> => {
           process.exit(1);
         }
       )
+      .command(
+        "print-config",
+        "Print the entire config, derived from the CLI and config files.",
+        () => {
+          /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
+        },
+        () => {
+          setTimeout(printConfig, 1000);
+        }
+      )
+      .showHelp((yargsHelp) => (help = yargsHelp))
   );
   // user config file from argv overrides default location
   const configPath =
@@ -535,7 +548,7 @@ export const load = async (): Promise<Config> => {
   nconf.defaults(makeConfigDefaults());
 
   const loadAsync = promisify(nconf.load.bind(nconf));
-  await loadAsync().then(console.log);
+  await loadAsync();
   const loadedConfig = nconf.get();
   const validation = new Validator(loadedConfig, makeConfigValidations());
   if (validation.fails()) {
@@ -566,6 +579,7 @@ export const load = async (): Promise<Config> => {
     getEndpointConfig,
     getStorageDirectory: () => dataDirectory,
     getBakerCatchupLimit,
+    printHelp: () => console.log(help),
   };
   return config;
 };
@@ -723,4 +737,9 @@ type SetTelegramChatId = (value: number) => void;
 
 const setTelegramChatId: SetTelegramChatId = (value) => {
   nconf.set(TELEGRAM_CHAT_ID, value);
+};
+
+const printConfig = () => {
+  console.log(JSON.stringify(nconf.get(), null, 2));
+  process.exit(1);
 };

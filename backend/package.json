@@ -62,7 +62,8 @@
     "nodemailer": "6.5.0",
     "ramda": "0.27.1",
     "sqlite3": "5.0.2",
-    "validatorjs": "3.22.1"
+    "validatorjs": "3.22.1",
+    "yargs": "16.2.0"
   },
   "resolutions": {
     "sqlite3": "5.0.2"

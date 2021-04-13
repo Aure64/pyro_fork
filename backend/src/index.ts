@@ -54,6 +54,7 @@ const main = async () => {
   const rpcNode = config.getRpc();
   if (bakers.length === 0 && nodes.length === 0) {
     console.error("You must specify nodes or bakers to watch");
+    config.printHelp();
     process.exit(1);
   }
 
