@@ -13,6 +13,7 @@ import * as yargs from "yargs";
 import * as R from "ramda";
 import * as Validator from "validatorjs";
 import * as Yaml from "js-yaml";
+import { normalize } from "path";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
@@ -538,6 +539,14 @@ export const load = async (): Promise<Config> => {
           setTimeout(printConfig, 1000);
         }
       )
+      .command(
+        "clear-data",
+        "Deletes all system data, including queued notifications and block history.",
+        () => {
+          /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
+        },
+        () => clearData(dataDirectory)
+      )
       .showHelp((yargsHelp) => (help = yargsHelp))
   );
   // user config file from argv overrides default location
@@ -741,5 +750,16 @@ const setTelegramChatId: SetTelegramChatId = (value) => {
 
 const printConfig = () => {
   console.log(JSON.stringify(nconf.get(), null, 2));
+  process.exit(1);
+};
+
+const clearData = (dataDirectory: string) => {
+  const path = normalize(dataDirectory);
+  if (FS.existsSync(path)) {
+    FS.rmdirSync(path, { recursive: true });
+    console.log(`Data directory deleted: ${path}`);
+  } else {
+    console.log("Data directory does not exist");
+  }
   process.exit(1);
 };

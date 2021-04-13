@@ -8,6 +8,7 @@ import {
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 import { normalize } from "path";
+import { debug } from "loglevel";
 
 export type Config = {
   maxRetries: number;
@@ -25,11 +26,11 @@ export const create = (
   notify: (event: NotifierEvent | TezosNodeEvent) => void
 ): NotificationChannelMiddleware => {
   return (notifyFunction: NotifyEventFunction): NotifyEventFunction => {
-    const store = new SqlLiteStore<NotifierEvent | TezosNodeEvent>({
-      path: normalize(
-        `${config.storageDirectory}/${config.channelName}Notifier.db`
-      ),
-    });
+    const path = normalize(
+      `${config.storageDirectory}/${config.channelName}Notifier.db`
+    );
+    debug(`Loading notification channel queue from ${path}`);
+    const store = new SqlLiteStore<NotifierEvent | TezosNodeEvent>({ path });
     const queue: BetterQueue<NotifierEvent | TezosNodeEvent> = new BetterQueue(
       // callback: (error, result) => void
       async (event: TezosNodeEvent | NotifierEvent, callback) => {
