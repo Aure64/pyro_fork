@@ -500,18 +500,9 @@ export const load = async (): Promise<Config> => {
   const { data: dataDirectory, config: configDirectory } = envPaths(
     "kiln-next"
   );
-  if (!FS.existsSync(dataDirectory)) {
-    console.log(`Creating data directory: ${dataDirectory}`);
-    FS.mkdirSync(dataDirectory, { recursive: true });
-  } else {
-    console.log(`Data directory: ${dataDirectory}`);
-  }
-  if (!FS.existsSync(configDirectory)) {
-    console.log(`Creating config directory: ${configDirectory}`);
-    FS.mkdirSync(configDirectory, { recursive: true });
-  } else {
-    console.log(`Config directory: ${configDirectory}`);
-  }
+  createDirectory(dataDirectory);
+  createDirectory(configDirectory);
+
   nconf.argv(
     yargs
       .strict()
@@ -762,4 +753,11 @@ const clearData = (dataDirectory: string) => {
     console.log("Data directory does not exist");
   }
   process.exit(1);
+};
+
+const createDirectory = (path: string) => {
+  if (!FS.existsSync(path)) {
+    console.log(`Creating directory: ${path}`);
+    FS.mkdirSync(path, { recursive: true });
+  }
 };

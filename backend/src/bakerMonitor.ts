@@ -17,6 +17,7 @@ import {
   OperationEntry,
   OpKind,
   RpcClient,
+  DelegatesResponse,
 } from "@taquito/rpc";
 import to from "await-to-js";
 import { Config } from "./config";
@@ -255,6 +256,12 @@ const checkBlock = async ({
           blockLevel: metadata.level.level,
           timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
         });
+        const deactivationEvent = await getDeactivationEvent({
+          baker,
+          rpc,
+          cycle: metadata.level.cycle,
+        });
+        if (deactivationEvent) events.push(deactivationEvent);
         if (futureEndorsingEvent) events.push(futureEndorsingEvent);
       } else {
         trace(
@@ -818,5 +825,78 @@ export const checkFutureBlockEndorsingRights = ({
   }
 
   debug(`No future endorsing opportunties for baker ${baker}`);
+  return null;
+};
+
+type GetDeactivationEventsArgs = {
+  baker: string;
+  cycle: number;
+  rpc: RpcClient;
+};
+
+const getDeactivationEvent = async ({
+  baker,
+  cycle,
+  rpc,
+}: GetDeactivationEventsArgs): Promise<TezosNodeEvent | null> => {
+  const [delegatesError, delegatesResponse] = await to(rpc.getDelegates(baker));
+  if (delegatesError) {
+    const message = `Error loading delegate info for delegate ${baker}`;
+    warn(`${message} because of ${delegatesError.message}`);
+    return {
+      type: "BAKER_DATA",
+      kind: "ERROR",
+      message,
+    };
+  } else if (!delegatesResponse) {
+    const message = `Empty delegate info for delegate ${baker}`;
+    warn(message);
+    return {
+      type: "BAKER_DATA",
+      kind: "ERROR",
+      message,
+    };
+  } else {
+    return checkForDeactivations({ baker, cycle, delegatesResponse });
+  }
+};
+
+type CheckForDeactivationsArgs = {
+  baker: string;
+  cycle: number;
+  delegatesResponse: DelegatesResponse;
+};
+
+export const checkForDeactivations = async ({
+  baker,
+  cycle,
+  delegatesResponse,
+}: CheckForDeactivationsArgs): Promise<TezosNodeEvent | null> => {
+  console.log({ baker, cycle, grace: delegatesResponse.grace_period });
+  if (delegatesResponse.deactivated) {
+    const message = `Baker ${baker} is deactivated (on or before cycle ${cycle})`;
+    debug(message);
+    return {
+      type: "BAKER",
+      kind: "BAKER_DEACTIVATED",
+      baker,
+      cycle,
+      message,
+    };
+  } else if (delegatesResponse.grace_period - cycle <= 1) {
+    const message = `Baker ${baker} is scheduled for deactivation in cycle ${delegatesResponse.grace_period}`;
+    debug(message);
+    return {
+      type: "BAKER",
+      kind: "BAKER_PENDING_DEACTIVATION",
+      baker,
+      cycle: delegatesResponse.grace_period,
+      message,
+    };
+  } else {
+    const message = `Baker ${baker} is not at risk of deactivation`;
+    debug(message);
+  }
+
   return null;
 };

@@ -5,6 +5,7 @@ import {
   checkBlockEndorsingRights,
   checkFutureBlockBakingRights,
   checkFutureBlockEndorsingRights,
+  checkForDeactivations,
   loadBlockData,
   makeMemoizedGetBakingRights,
 } from "./bakerMonitor";
@@ -20,7 +21,8 @@ import {
   operationsWithDoubleBakeAccusation,
 } from "./testFixtures/endorsing";
 setLevel("SILENT");
-import { RpcClient } from "@taquito/rpc";
+import { DelegatesResponse, RpcClient } from "@taquito/rpc";
+import { BigNumber } from "bignumber.js";
 
 const { delegate, level } = priorityZero;
 
@@ -355,5 +357,76 @@ describe("checkFutureBlockEndorsingRights", () => {
       timeBetweenBlocks: 60,
     });
     expect(result).toBe(null);
+  });
+});
+
+describe("checkForDeactivations", () => {
+  const baseDelegatesResponse: DelegatesResponse = {
+    balance: new BigNumber(1000),
+    frozen_balance: new BigNumber(0),
+    frozen_balance_by_cycle: [],
+    staking_balance: new BigNumber(1000),
+    deactivated: false,
+    grace_period: 1010,
+    delegated_balance: new BigNumber(0),
+    delegated_contracts: [],
+  };
+
+  it("returns null for bakers in good standing", async () => {
+    const cycle = 1000;
+    const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
+    const delegatesResponse = {
+      ...baseDelegatesResponse,
+    };
+    const result = await checkForDeactivations({
+      baker,
+      cycle,
+      delegatesResponse,
+    });
+    expect(result).toEqual(null);
+  });
+
+  it("returns an event for deactivated bakers", async () => {
+    const cycle = 1000;
+    const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
+    const delegatesResponse = {
+      ...baseDelegatesResponse,
+      deactivated: true,
+    };
+    const result = await checkForDeactivations({
+      baker,
+      cycle,
+      delegatesResponse,
+    });
+    expect(result).toEqual({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      cycle: 1000,
+      kind: "BAKER_DEACTIVATED",
+      message:
+        "Baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 is deactivated (on or before cycle 1000)",
+      type: "BAKER",
+    });
+  });
+
+  it("returns an event for bakers pending deactivation", async () => {
+    const cycle = 1000;
+    const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
+    const delegatesResponse = {
+      ...baseDelegatesResponse,
+      grace_period: 1001,
+    };
+    const result = await checkForDeactivations({
+      baker,
+      cycle,
+      delegatesResponse,
+    });
+    expect(result).toEqual({
+      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+      cycle: 1001,
+      kind: "BAKER_PENDING_DEACTIVATION",
+      message:
+        "Baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 is scheduled for deactivation in cycle 1001",
+      type: "BAKER",
+    });
   });
 });

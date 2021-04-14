@@ -23,13 +23,25 @@ type FutureBakingEvent = {
   date: Date;
 };
 
+type BakerDeactivationEvent = {
+  kind: "BAKER_DEACTIVATED" | "BAKER_PENDING_DEACTIVATION";
+  type: "BAKER";
+  message: string;
+  baker: string;
+  cycle: number;
+};
+
 type BakerDataEvent = {
   type: "BAKER_DATA";
   kind: "ERROR" | "RECONNECTED";
   message: string;
 };
 
-export type BakerEvent = FutureBakingEvent | BakerNodeEvent | BakerDataEvent;
+export type BakerEvent =
+  | FutureBakingEvent
+  | BakerNodeEvent
+  | BakerDataEvent
+  | BakerDeactivationEvent;
 
 type NodeDataEvent = {
   type: "PEER_DATA";
