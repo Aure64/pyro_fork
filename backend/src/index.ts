@@ -4,12 +4,12 @@ import * as BakerMonitor from "./bakerMonitor";
 import * as Server from "./server";
 import * as Notifier from "./notifier";
 import { debug, info, setLevel } from "loglevel";
-import log from "loglevel";
+import log, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import * as Config from "./config";
 import { format } from "date-fns";
 
-const main = async () => {
+const setupLogging = (logLevel: LogLevelDesc) => {
   // Register prefix plug with loglevel.  This adds timestamp and level to logs.
   const timestampFormatter = (date: Date) =>
     format(date, "MM/dd/yyyy, H:mm:ss");
@@ -17,33 +17,14 @@ const main = async () => {
   prefix.reg(logger);
   prefix.apply(logger, { timestampFormatter });
 
-  const config = await Config.load();
-  const logLevel = config.getLogLevel();
-
   setLevel(logLevel);
+};
 
-  const desktopConfig = config.getDesktopConfig();
-  const emailConfig = config.getEmailConfig();
-  const telegramConfig = config.getTelegramConfig();
-  const slackConfig = config.getSlackConfig();
-  const endpointConfig = config.getEndpointConfig();
-  const storageDirectory = config.getStorageDirectory();
+const main = async () => {
+  const config = await Config.load();
+  setupLogging(config.getLogLevel());
 
-  const notifierConfig: Notifier.NotifierConfig = {
-    desktopConfig,
-    emailConfig,
-    telegramConfig,
-    slackConfig,
-    endpointConfig,
-    queue: {
-      maxRetries: 10,
-      retryDelay: 60000,
-    },
-    storageDirectory,
-    config,
-  };
-
-  const notifier = await Notifier.create(notifierConfig);
+  const notifier = await Notifier.create(config);
 
   const onEvent = (event: TezosNodeEvent) => {
     Notifier.notify(notifier, event);
@@ -53,8 +34,7 @@ const main = async () => {
   const bakers = config.getBakers();
   const rpcNode = config.getRpc();
   if (bakers.length === 0 && nodes.length === 0) {
-    console.error("You must specify nodes or bakers to watch");
-    config.printHelp();
+    console.error("You must specify nodes or bakers to watch.");
     process.exit(1);
   }
 
@@ -65,7 +45,7 @@ const main = async () => {
           config,
           onEvent,
           rpcNode,
-          storageDirectory,
+          storageDirectory: config.storageDirectory,
         })
       : null;
   const nodeMonitor =
@@ -82,7 +62,7 @@ const main = async () => {
     Server.halt(server);
     process.exit(0);
   });
+  info("Kiln started");
 };
 
 main();
-info("Kiln started");

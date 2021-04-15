@@ -264,8 +264,8 @@ const checkBlock = async ({
         if (deactivationEvent) events.push(deactivationEvent);
         if (futureEndorsingEvent) events.push(futureEndorsingEvent);
       } else {
-        trace(
-          `Not checking for future baking / endorsing rights as this cycle was (${blockCycle}) already checked`
+        debug(
+          `Not checking for future rights or deactivations as this cycle (${blockCycle}) was already checked`
         );
       }
       const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
@@ -872,7 +872,6 @@ export const checkForDeactivations = async ({
   cycle,
   delegatesResponse,
 }: CheckForDeactivationsArgs): Promise<TezosNodeEvent | null> => {
-  console.log({ baker, cycle, grace: delegatesResponse.grace_period });
   if (delegatesResponse.deactivated) {
     const message = `Baker ${baker} is deactivated (on or before cycle ${cycle})`;
     debug(message);

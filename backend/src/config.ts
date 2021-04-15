@@ -13,7 +13,6 @@ import * as yargs from "yargs";
 import * as R from "ramda";
 import * as Validator from "validatorjs";
 import * as Yaml from "js-yaml";
-import { normalize } from "path";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
@@ -287,6 +286,29 @@ const CONFIG_FILE: UserPref = {
   validationRule: "string",
 };
 
+// queue config
+const QUEUE_GROUP = "Notification Queues:";
+const QUEUE_RETRIES: UserPref = {
+  key: "notifier:queue:max_retries",
+  default: 10,
+  description: "Maximum number of times to retry notifications",
+  alias: undefined,
+  type: "number",
+  group: QUEUE_GROUP,
+  isArray: false,
+  validationRule: "numeric",
+};
+const QUEUE_DELAY: UserPref = {
+  key: "notifier:queue:retry_delay",
+  default: 60000,
+  description: "Delay between retries in milliseconds",
+  alias: undefined,
+  type: "number",
+  group: QUEUE_GROUP,
+  isArray: false,
+  validationRule: "numeric",
+};
+
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
   BAKER,
@@ -311,6 +333,8 @@ const userPrefs = [
   ENDPOINT_ENABLED,
   ENDPOINT_URL,
   CONFIG_FILE,
+  QUEUE_RETRIES,
+  QUEUE_DELAY,
 ];
 
 /**
@@ -464,8 +488,8 @@ const setPath = <T>(path: string, data: T, value: unknown): T => {
   return R.set(lensPath, value, data);
 };
 
-const userConfigPath = (path: string) => Path.join(path, "config.json");
-const systemConfigPath = (path: string) => Path.join(path, "system.json");
+const makeUserConfigPath = (path: string) => Path.join(path, "config.json");
+const makeSystemConfigPath = (path: string) => Path.join(path, "system.json");
 
 export type Config = {
   save: () => void;
@@ -485,10 +509,10 @@ export type Config = {
   getEmailConfig: GetEmailConfig;
   getDesktopConfig: GetDesktopConfig;
   getEndpointConfig: GetEndpointConfig;
-  getStorageDirectory: GetStorageDirectory;
+  storageDirectory: string;
   getBakerCatchupLimit: GetBakerCatchupLimit;
   setTelegramChatId: SetTelegramChatId;
-  printHelp: () => void;
+  getQueueConfig: GetQueueConfig;
 };
 
 /**
@@ -496,10 +520,10 @@ export type Config = {
  * unless overriden by argv.
  */
 export const load = async (): Promise<Config> => {
-  let help: string;
   const { data: dataDirectory, config: configDirectory } = envPaths(
     "kiln-next"
   );
+  // ensure system directories exist
   createDirectory(dataDirectory);
   createDirectory(configDirectory);
 
@@ -517,7 +541,7 @@ export const load = async (): Promise<Config> => {
         },
         ({ path }: { path: string }) => {
           writeSampleConfig(path);
-          process.exit(1);
+          process.exit(0);
         }
       )
       .command(
@@ -527,24 +551,30 @@ export const load = async (): Promise<Config> => {
           /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
         },
         () => {
-          setTimeout(printConfig, 1000);
+          setTimeout(() => {
+            printConfig();
+            process.exit(0);
+          }, 1000);
         }
       )
       .command(
         "clear-data",
-        "Deletes all system data, including queued notifications and block history.",
+        "Deletes all system data, including job queues and block history.",
         () => {
           /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
         },
-        () => clearData(dataDirectory)
+        () => {
+          clearData({ dataDirectory, configDirectory });
+          process.exit(0);
+        }
       )
-      .showHelp((yargsHelp) => (help = yargsHelp))
   );
   // user config file from argv overrides default location
   const configPath =
-    nconf.get(CONFIG_FILE.key) || userConfigPath(configDirectory);
+    nconf.get(CONFIG_FILE.key) || makeUserConfigPath(configDirectory);
   nconf.file("user", configPath);
-  nconf.file("system", systemConfigPath(configDirectory));
+  const systemConfigPath = makeSystemConfigPath(configDirectory);
+  nconf.file("system", systemConfigPath);
   nconf.defaults(makeConfigDefaults());
 
   const loadAsync = promisify(nconf.load.bind(nconf));
@@ -559,7 +589,7 @@ export const load = async (): Promise<Config> => {
   }
 
   const config: Config = {
-    save: () => save(configDirectory),
+    save: () => save(systemConfigPath),
     getBakers,
     getRpc,
     getNodes,
@@ -577,21 +607,21 @@ export const load = async (): Promise<Config> => {
     getEmailConfig,
     getDesktopConfig,
     getEndpointConfig,
-    getStorageDirectory: () => dataDirectory,
+    storageDirectory: dataDirectory,
     getBakerCatchupLimit,
-    printHelp: () => console.log(help),
+    getQueueConfig,
   };
   return config;
 };
 
-const save = (path: string): void => {
+const save = (systemConfigPath: string): void => {
   // read in system config.  Kiln currently doesn't update user settings
   const { [SYSTEM_PREFIX]: systemSettings } = nconf.get();
   debug("Saving config to disk.");
   // save system config
   if (systemSettings) {
     FS.writeFileSync(
-      systemConfigPath(path),
+      systemConfigPath,
       JSON.stringify({ system: systemSettings })
     );
   }
@@ -725,8 +755,6 @@ const getEndpointConfig: GetEndpointConfig = () => {
   return undefined;
 };
 
-type GetStorageDirectory = () => string;
-
 type GetBakerCatchupLimit = () => number | undefined;
 
 const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
@@ -741,18 +769,27 @@ const setTelegramChatId: SetTelegramChatId = (value) => {
 
 const printConfig = () => {
   console.log(JSON.stringify(nconf.get(), null, 2));
-  process.exit(1);
 };
 
-const clearData = (dataDirectory: string) => {
-  const path = normalize(dataDirectory);
-  if (FS.existsSync(path)) {
-    FS.rmdirSync(path, { recursive: true });
-    console.log(`Data directory deleted: ${path}`);
+type ClearDataArgs = {
+  dataDirectory: string;
+  configDirectory: string;
+};
+
+const clearData = ({ dataDirectory, configDirectory }: ClearDataArgs) => {
+  if (FS.existsSync(dataDirectory)) {
+    FS.rmdirSync(dataDirectory, { recursive: true });
+    console.log(`Data directory deleted: ${dataDirectory}`);
   } else {
     console.log("Data directory does not exist");
   }
-  process.exit(1);
+  const systemConfigPath = makeSystemConfigPath(configDirectory);
+  if (FS.existsSync(systemConfigPath)) {
+    FS.rmSync(systemConfigPath);
+    console.log(`System config deleted: ${systemConfigPath}`);
+  } else {
+    console.log(`System config does not exist: ${systemConfigPath}`);
+  }
 };
 
 const createDirectory = (path: string) => {
@@ -760,4 +797,18 @@ const createDirectory = (path: string) => {
     console.log(`Creating directory: ${path}`);
     FS.mkdirSync(path, { recursive: true });
   }
+};
+
+type GetQueueConfig = () => {
+  maxRetries: number;
+  retryDelay: number;
+};
+
+const getQueueConfig: GetQueueConfig = () => {
+  const maxRetries = nconf.get(QUEUE_RETRIES.key);
+  const retryDelay = nconf.get(QUEUE_DELAY.key);
+  return {
+    maxRetries,
+    retryDelay,
+  };
 };

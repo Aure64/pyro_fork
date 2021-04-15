@@ -12,20 +12,6 @@ import { create as createQueue } from "./notifierMiddleware/queue";
 import { trace } from "loglevel";
 import { Config } from "./config";
 
-export type NotifierConfig = {
-  emailConfig?: EmailChannel.EmailConfig;
-  desktopConfig?: DesktopChannel.DesktopConfig;
-  slackConfig?: SlackChannel.SlackConfig;
-  telegramConfig?: TelegramChannel.TelegramConfig;
-  endpointConfig?: EndpointChannel.EndpointConfig;
-  queue: {
-    maxRetries: number;
-    retryDelay: number;
-  };
-  storageDirectory: string;
-  config: Config;
-};
-
 type Notifier = {
   channels: NotifyEventFunction[];
 };
@@ -33,31 +19,35 @@ type Notifier = {
 /**
  * Create and configure the notifier for use with `notify(,)`.
  */
-export const create = async (config: NotifierConfig): Promise<Notifier> => {
+export const create = async (config: Config): Promise<Notifier> => {
   const channels: NotifyEventFunction[] = [];
   const notifier: Notifier = {
     channels,
   };
+  const queue = config.getQueueConfig();
+  const storageDirectory = config.storageDirectory;
   const boundNotify = (event: TezosNodeEvent | NotifierEvent) =>
     notify(notifier, event);
 
-  if (config.emailConfig?.enabled) {
+  // email config
+  const emailConfig = config.getEmailConfig();
+  if (emailConfig?.enabled) {
     const channelName = EmailChannel.channelName;
     const emailNotify = bindNotifier(
-      EmailChannel.create(config.emailConfig),
+      EmailChannel.create(emailConfig),
       EmailChannel.notify
     );
     const applyQueue = createQueue(
       {
-        ...config.queue,
-        storageDirectory: config.storageDirectory,
+        ...queue,
+        storageDirectory,
         channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
       channelName,
-      config: config.config,
+      config,
     });
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
@@ -69,23 +59,25 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     channels.push(emailChannel);
   }
 
-  if (config.desktopConfig?.enabled) {
+  // desktop config
+  const desktopConfig = config.getDesktopConfig();
+  if (desktopConfig?.enabled) {
     const channelName = DesktopChannel.channelName;
     const desktopNotify = bindNotifier(
-      DesktopChannel.create(config.desktopConfig),
+      DesktopChannel.create(desktopConfig),
       DesktopChannel.notify
     );
     const applyQueue = createQueue(
       {
-        ...config.queue,
-        storageDirectory: config.storageDirectory,
+        ...queue,
+        storageDirectory,
         channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
       channelName,
-      config: config.config,
+      config,
     });
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
@@ -95,23 +87,26 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     );
     channels.push(desktopChannel);
   }
-  if (config.slackConfig?.enabled) {
+
+  // slack config
+  const slackConfig = config.getSlackConfig();
+  if (slackConfig?.enabled) {
     const channelName = SlackChannel.channelName;
     const slackNotify = bindNotifier(
-      SlackChannel.create(config.slackConfig),
+      SlackChannel.create(slackConfig),
       SlackChannel.notify
     );
     const applyQueue = createQueue(
       {
-        ...config.queue,
-        storageDirectory: config.storageDirectory,
+        ...queue,
+        storageDirectory,
         channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
       channelName,
-      config: config.config,
+      config,
     });
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
@@ -121,26 +116,26 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     );
     channels.push(slackChannel);
   }
-  if (config.telegramConfig?.enabled) {
+
+  // telegram config
+  const telegramConfig = config.getTelegramConfig();
+  if (telegramConfig?.enabled) {
     const channelName = TelegramChannel.channelName;
     const telegramNotify = bindNotifier(
-      TelegramChannel.create(
-        config.telegramConfig,
-        config.config.setTelegramChatId
-      ),
+      TelegramChannel.create(telegramConfig, config.setTelegramChatId),
       TelegramChannel.notify
     );
     const applyQueue = createQueue(
       {
-        ...config.queue,
-        storageDirectory: config.storageDirectory,
+        ...queue,
+        storageDirectory,
         channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
       channelName,
-      config: config.config,
+      config,
     });
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
@@ -150,24 +145,27 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
     );
     channels.push(telegramChannel);
   }
-  if (config.endpointConfig?.enabled) {
+
+  // endpoint config
+  const endpointConfig = config.getEndpointConfig();
+  if (endpointConfig?.enabled) {
     const channelName = EndpointChannel.channelName;
     // we don't use bindNotifier and toString like other channels as this channel uses
     // the raw JSON event, not a toString'ed representation
-    const endpointNotifier = EndpointChannel.create(config.endpointConfig);
+    const endpointNotifier = EndpointChannel.create(endpointConfig);
     const endpointNotify: NotifyEventFunction = (event) =>
       EndpointChannel.notify(endpointNotifier, event);
     const applyQueue = createQueue(
       {
-        ...config.queue,
-        storageDirectory: config.storageDirectory,
+        ...queue,
+        storageDirectory,
         channelName,
       },
       boundNotify
     );
     const applyFilter = await createFilter({
       channelName,
-      config: config.config,
+      config,
     });
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
@@ -182,8 +180,7 @@ export const create = async (config: NotifierConfig): Promise<Notifier> => {
 };
 
 /**
- * Push Tezos event onto notification job queue.  If a notification fails it will automatically
- * be retried according to your retry settings in Config.
+ * Send event to enabled notification channels.
  */
 export const notify = (
   notifier: Notifier,
