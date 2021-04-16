@@ -15,6 +15,7 @@ Kiln is a tool for both baking and monitoring on the [Tezos](https://tezos.com/)
 ### Docker
 
 Start Kiln from Docker with arguments:
+
 ```bash 
 docker login registry.gitlab.com/tezos-kiln/kiln-next -u <username> -p <token>
 docker run registry.gitlab.com/tezos-kiln/kiln-next:main --baker tz1Z1tMai15JWUWeN2PKL9faXXVPMuWamzJj
@@ -28,13 +29,22 @@ If your setup is more complex (e.g. email notifier, custom notifications, lots o
 docker run -v /absolute/path/to/your/config/folder:/home/node/.config/kiln-next-nodejs registry.gitlab.com/tezos-kiln/kiln-next
 ```
 
-### From Source
+### Using Node
 
-See the [backend README](backend/README.md) for instructions on running Kiln from source using Yarn and NPM.
+This method requires [Node](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/).
+
+⚠️  While this repository is private, you'll need to authenticate to the registry before connecting. Follow [Gitlab's Instructions](https://docs.gitlab.com/ee/user/packages/npm_registry/index.html#authenticate-to-the-package-registry) before trying the below commands.
+
+```bash
+npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
+yarn global add @tezos-kiln/kiln-next
+npx kiln-next
+```
 
 ## Docker Build
 
 To build the Docker image from scratch, clone this repo and run:
+
 ```bash
 docker build -t tezos-kiln/kiln-next .
 ```

@@ -44,8 +44,6 @@ const main = async () => {
           bakers,
           config,
           onEvent,
-          rpcNode,
-          storageDirectory: config.storageDirectory,
         })
       : null;
   const nodeMonitor =

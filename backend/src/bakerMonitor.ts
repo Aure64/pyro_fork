@@ -33,19 +33,13 @@ type Monitor = {
 
 type StartArgs = {
   bakers: string[];
-  rpcNode: string;
   onEvent: (event: TezosNodeEvent) => void;
-  storageDirectory: string;
   config: Config;
 };
 
-export const start = ({
-  bakers,
-  rpcNode,
-  onEvent,
-  storageDirectory,
-  config,
-}: StartArgs): Monitor => {
+export const start = ({ bakers, onEvent, config }: StartArgs): Monitor => {
+  const rpcNode = config.getRpc();
+  const storageDirectory = config.storageDirectory;
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc, undefined, undefined, {
     shouldObservableSubscriptionRetry: true,

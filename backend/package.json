@@ -1,5 +1,5 @@
 {
-  "name": "@tezos-kiln/backend",
+  "name": "@tezos-kiln/kiln-next",
   "version": "0.0.1",
   "license": "MIT",
   "main": "dist/index.js",
@@ -14,7 +14,11 @@
     "prettier:fix": "prettier --write 'src/**/*.ts'",
     "prettier:lint": "prettier --check 'src/**/*.ts'",
     "test": "jest",
-    "tsc:lint": "tsc --noEmit -p ."
+    "tsc:lint": "tsc --noEmit -p .",
+    "prepublishOnly": "yarn build"
+  },
+  "bin": {
+    "kiln-next": "./bin/kiln-next.js"
   },
   "devDependencies": {
     "@types/better-queue": "3.8.2",
@@ -26,6 +30,9 @@
     "@types/nodemailer": "6.4.1",
     "@typescript-eslint/eslint-plugin": "4.19.0",
     "@typescript-eslint/parser": "4.19.0",
+    "@types/js-yaml": "4.0.0",
+    "@types/ramda": "0.27.40",
+    "@types/validatorjs": "3.15.0",
     "eslint": "7.23.0",
     "eslint-config-prettier": "8.1.0",
     "jest": "26.6.3",
@@ -44,9 +51,6 @@
   "dependencies": {
     "@slack/webhook": "6.0.0",
     "@taquito/taquito": "8.1.0",
-    "@types/js-yaml": "4.0.0",
-    "@types/ramda": "0.27.40",
-    "@types/validatorjs": "3.15.0",
     "await-to-js": "3.0.0",
     "better-queue": "3.8.10",
     "better-queue-sqlite": "1.0.6",

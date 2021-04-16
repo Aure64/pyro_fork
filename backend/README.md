@@ -13,15 +13,6 @@ git clone https://gitlab.com/tezos-kiln/kiln-next.git
 git@gitlab.com:tezos-kiln/kiln-next.git
 ```
 
-### Via NPM / Yarn
-
-```
-npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
-yarn add @tezos-kiln/backend
-```
-
-While this repository is private, you'll need to authenticate before connecting. Follow [Gitlab's Instructions](https://docs.gitlab.com/ee/user/packages/npm_registry/index.html#authenticate-to-the-package-registry) for authenticating.
-
 ## Scripts
 
 ### `yarn dev`
@@ -105,7 +96,11 @@ Notification Channels are simple functions that take a string message and return
 ├── README.md               # you are here
 ├── package.json            # node config
 ├── src
+│   ├── bakerMonitor.ts     # Monitor for baking / endorsing events
+│   ├── config.ts           # Module responsible for reading/writing system and user config for other modules
 │   ├── index.ts            # Application entry point
+│   ├── nodeMonitor.ts      # Monitor for node events
+│   ├── notifierMiddleware  # Middleware functions to alter the behaviour of notification channels
 │   └── types.ts            # Shared types used by multiple modules
-└── yarn.lock               # lockfile for node dependencies. Do not modify directly.
+└── yarn.lock               # lockfile for node dependencies. Do not modify directly
 ```
