@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@slack/webhook": "6.0.0",
-    "@taquito/taquito": "8.1.0",
+    "@taquito/taquito": "8.1.1",
     "await-to-js": "3.0.0",
     "better-queue": "3.8.10",
     "better-queue-sqlite": "1.0.6",
