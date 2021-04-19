@@ -21,10 +21,7 @@ export type Config = {
  * Middleware that adds a job queue to a notification channel.  Channel will use required `notify` function
  * to dispatch any failures.
  */
-export const create = (
-  config: Config,
-  notify: (event: NotifierEvent | TezosNodeEvent) => void
-): NotificationChannelMiddleware => {
+export const create = (config: Config): NotificationChannelMiddleware => {
   return (notifyFunction: NotifyEventFunction): NotifyEventFunction => {
     const path = normalize(
       `${config.storageDirectory}/${config.channelName}Notifier.db`
@@ -39,12 +36,6 @@ export const create = (
         switch (result.kind) {
           case "ERROR":
             callback(result, null);
-            notify({
-              type: "NOTIFIER",
-              kind: "ERROR",
-              channelName: config.channelName,
-              message: `Error sending ${config.channelName} notification`,
-            });
             break;
 
           default:
@@ -58,8 +49,8 @@ export const create = (
     ): Promise<NotifyResult> => {
       queue.push(event);
       // Because events are queued up to deliver in the future, we can't resolve success or failure.
-      // Default to success since we queued it successfully.  Queue will use callback in the case of
-      // future failures.
+      // Default to success since we queued it successfully.  use failureHandler middleware to
+      // receive messages about failures.
       return { kind: "SUCCESS" };
     };
   };

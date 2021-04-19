@@ -9,6 +9,7 @@ import { apply as bindNotifier } from "./notifierMiddleware/bindNotifier";
 import { create as createFilter } from "./notifierMiddleware/filter";
 import { create as createOfflineFilter } from "./notifierMiddleware/offlineFilter";
 import { create as createQueue } from "./notifierMiddleware/queue";
+import { create as createFailureHandler } from "./notifierMiddleware/failureHandler";
 import { trace } from "loglevel";
 import { Config } from "./config";
 
@@ -37,14 +38,12 @@ export const create = async (config: Config): Promise<Notifier> => {
       EmailChannel.create(emailConfig),
       EmailChannel.notify
     );
-    const applyQueue = createQueue(
-      {
-        ...queue,
-        storageDirectory,
-        channelName,
-      },
-      boundNotify
-    );
+    const applyQueue = createQueue({
+      ...queue,
+      storageDirectory,
+      channelName,
+    });
+    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -54,7 +53,9 @@ export const create = async (config: Config): Promise<Notifier> => {
     });
 
     const emailChannel = applyQueue(
-      applyFilter(applyOfflineFilter(applyToString(emailNotify)))
+      applyFailureHandler(
+        applyFilter(applyOfflineFilter(applyToString(emailNotify)))
+      )
     );
     channels.push(emailChannel);
   }
@@ -67,14 +68,12 @@ export const create = async (config: Config): Promise<Notifier> => {
       DesktopChannel.create(desktopConfig),
       DesktopChannel.notify
     );
-    const applyQueue = createQueue(
-      {
-        ...queue,
-        storageDirectory,
-        channelName,
-      },
-      boundNotify
-    );
+    const applyQueue = createQueue({
+      ...queue,
+      storageDirectory,
+      channelName,
+    });
+    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -83,7 +82,9 @@ export const create = async (config: Config): Promise<Notifier> => {
       channelName,
     });
     const desktopChannel = applyQueue(
-      applyFilter(applyOfflineFilter(applyToString(desktopNotify)))
+      applyFailureHandler(
+        applyFilter(applyOfflineFilter(applyToString(desktopNotify)))
+      )
     );
     channels.push(desktopChannel);
   }
@@ -96,14 +97,12 @@ export const create = async (config: Config): Promise<Notifier> => {
       SlackChannel.create(slackConfig),
       SlackChannel.notify
     );
-    const applyQueue = createQueue(
-      {
-        ...queue,
-        storageDirectory,
-        channelName,
-      },
-      boundNotify
-    );
+    const applyQueue = createQueue({
+      ...queue,
+      storageDirectory,
+      channelName,
+    });
+    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -112,7 +111,9 @@ export const create = async (config: Config): Promise<Notifier> => {
       channelName,
     });
     const slackChannel = applyQueue(
-      applyFilter(applyOfflineFilter(applyToString(slackNotify)))
+      applyFailureHandler(
+        applyFilter(applyOfflineFilter(applyToString(slackNotify)))
+      )
     );
     channels.push(slackChannel);
   }
@@ -125,14 +126,12 @@ export const create = async (config: Config): Promise<Notifier> => {
       TelegramChannel.create(telegramConfig, config.setTelegramChatId),
       TelegramChannel.notify
     );
-    const applyQueue = createQueue(
-      {
-        ...queue,
-        storageDirectory,
-        channelName,
-      },
-      boundNotify
-    );
+    const applyQueue = createQueue({
+      ...queue,
+      storageDirectory,
+      channelName,
+    });
+    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -141,7 +140,9 @@ export const create = async (config: Config): Promise<Notifier> => {
       channelName,
     });
     const telegramChannel = applyQueue(
-      applyFilter(applyOfflineFilter(applyToString(telegramNotify)))
+      applyFailureHandler(
+        applyFilter(applyOfflineFilter(applyToString(telegramNotify)))
+      )
     );
     channels.push(telegramChannel);
   }
@@ -155,14 +156,12 @@ export const create = async (config: Config): Promise<Notifier> => {
     const endpointNotifier = EndpointChannel.create(endpointConfig);
     const endpointNotify: NotifyEventFunction = (event) =>
       EndpointChannel.notify(endpointNotifier, event);
-    const applyQueue = createQueue(
-      {
-        ...queue,
-        storageDirectory,
-        channelName,
-      },
-      boundNotify
-    );
+    const applyQueue = createQueue({
+      ...queue,
+      storageDirectory,
+      channelName,
+    });
+    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -171,7 +170,7 @@ export const create = async (config: Config): Promise<Notifier> => {
       channelName,
     });
     const endpointChannel = applyQueue(
-      applyFilter(applyOfflineFilter(endpointNotify))
+      applyFailureHandler(applyFilter(applyOfflineFilter(endpointNotify)))
     );
     channels.push(endpointChannel);
   }
