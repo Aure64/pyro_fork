@@ -96,7 +96,10 @@ export const shouldNotify = (
     return false;
   }
   if (
-    (event.type === "BAKER" || event.type === "PEER") &&
+    (event.type === "BAKER" ||
+      event.type === "PEER" ||
+      event.type == "BAKER_DATA" ||
+      event.type == "PEER_DATA") &&
     filter.excludedEvents.includes(event.kind)
   ) {
     debug(`Event excluded because type ${event.kind} is filtered`);

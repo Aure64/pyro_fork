@@ -13,6 +13,7 @@ import * as yargs from "yargs";
 import * as R from "ramda";
 import * as Validator from "validatorjs";
 import * as Yaml from "js-yaml";
+import { eventKinds } from "./types";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
@@ -99,7 +100,9 @@ const EXCLUDED_EVENTS: UserPref = {
     "SUCCESSFUL_ENDORSE",
     "SUCCESSFUL_BAKE",
   ],
-  description: "Events to omit from notifications",
+  description: `Events to omit from notifications\nAvailable options: ${eventKinds.join(
+    ", "
+  )}`,
   alias: undefined,
   type: "string",
   group: undefined,

@@ -1,10 +1,21 @@
-type BakerNodeEventKind =
-  | "MISSED_BAKE"
-  | "SUCCESSFUL_BAKE"
-  | "DOUBLE_BAKE"
-  | "MISSED_ENDORSE"
-  | "SUCCESSFUL_ENDORSE"
-  | "DOUBLE_ENDORSE";
+import { Union, Literal, Static } from "runtypes";
+
+/**
+ * This module declares types shared through the various modules.  Some of the
+ * types are defined using the runtypes library.  This extra step allows them
+ * to be logged at runtime to inform users of the available options.
+ */
+
+const BakerNodeEventKind_RT = Union(
+  Literal("MISSED_BAKE"),
+  Literal("SUCCESSFUL_BAKE"),
+  Literal("DOUBLE_BAKE"),
+  Literal("MISSED_ENDORSE"),
+  Literal("SUCCESSFUL_ENDORSE"),
+  Literal("DOUBLE_ENDORSE")
+);
+
+type BakerNodeEventKind = Static<typeof BakerNodeEventKind_RT>;
 
 type BakerNodeEvent = {
   kind: BakerNodeEventKind;
@@ -13,9 +24,15 @@ type BakerNodeEvent = {
   baker: string;
   blockLevel: number;
 };
+const FutureBakingEventKind_RT = Union(
+  Literal("FUTURE_BAKING_OPPORTUNITY"),
+  Literal("FUTURE_ENDORSING_OPPORTUNITY")
+);
+
+type FutureBakingEventKind = Static<typeof FutureBakingEventKind_RT>;
 
 type FutureBakingEvent = {
-  kind: "FUTURE_BAKING_OPPORTUNITY" | "FUTURE_ENDORSING_OPPORTUNITY";
+  kind: FutureBakingEventKind;
   type: "BAKER";
   message: string;
   baker: string;
@@ -31,9 +48,13 @@ type BakerDeactivationEvent = {
   cycle: number;
 };
 
+const DataEventKind_RT = Union(Literal("ERROR"), Literal("RECONNECTED"));
+
+type DataEventKind = Static<typeof DataEventKind_RT>;
+
 type BakerDataEvent = {
   type: "BAKER_DATA";
-  kind: "ERROR" | "RECONNECTED";
+  kind: DataEventKind;
   message: string;
 };
 
@@ -45,15 +66,18 @@ export type BakerEvent =
 
 type NodeDataEvent = {
   type: "PEER_DATA";
-  kind: "ERROR" | "RECONNECTED";
+  kind: DataEventKind;
   message: string;
 };
 
-export type PeerNodeEventKind =
-  | "NODE_BEHIND"
-  | "NODE_CAUGHT_UP"
-  | "NODE_ON_A_BRANCH"
-  | "NODE_LOW_PEERS";
+const PeerNodeEventKind_RT = Union(
+  Literal("NODE_BEHIND"),
+  Literal("NODE_CAUGHT_UP"),
+  Literal("NODE_ON_A_BRANCH"),
+  Literal("NODE_LOW_PEERS")
+);
+
+type PeerNodeEventKind = Static<typeof PeerNodeEventKind_RT>;
 
 export type PeerNodeEvent =
   | {
@@ -96,3 +120,25 @@ export type NotificationChannelMiddleware = (
 export type Result<T> =
   | { type: "SUCCESS"; data: T }
   | { type: "ERROR"; message: string };
+
+// iterate through the various event kinds that we want to expose in docs
+const generateEventKinds = () => {
+  const bakerEventKinds = BakerNodeEventKind_RT.alternatives.map(
+    (lit) => lit.value
+  );
+  const dataEventKinds = DataEventKind_RT.alternatives.map((lit) => lit.value);
+  const peerEventKinds = PeerNodeEventKind_RT.alternatives.map(
+    (lit) => lit.value
+  );
+  const futureBakingEventKinds = FutureBakingEventKind_RT.alternatives.map(
+    (lit) => lit.value
+  );
+
+  return [
+    ...bakerEventKinds,
+    ...dataEventKinds,
+    ...peerEventKinds,
+    ...futureBakingEventKinds,
+  ];
+};
+export const eventKinds = generateEventKinds();
