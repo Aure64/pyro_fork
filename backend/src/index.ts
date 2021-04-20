@@ -8,14 +8,33 @@ import log, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import * as Config from "./config";
 import { format } from "date-fns";
+import * as Chalk from "chalk";
 
 const setupLogging = (logLevel: LogLevelDesc) => {
+  const colors: Record<string, Chalk.Chalk> = {
+    TRACE: Chalk.magenta,
+    DEBUG: Chalk.cyan,
+    INFO: Chalk.blue,
+    WARN: Chalk.yellow,
+    ERROR: Chalk.red,
+  };
+  const colorizeLevel = (level: string): string => {
+    const color = colors[level.toUpperCase()] || Chalk.black;
+    return color(level);
+  };
+
   // Register prefix plug with loglevel.  This adds timestamp and level to logs.
   const timestampFormatter = (date: Date) =>
     format(date, "MM/dd/yyyy, H:mm:ss");
   const logger = log.noConflict();
   prefix.reg(logger);
   prefix.apply(logger, { timestampFormatter });
+  // colorize output
+  prefix.apply(log, {
+    format(level, _name, timestamp) {
+      return `${Chalk.gray(`[${timestamp}]`)} ${colorizeLevel(level)}`;
+    },
+  });
 
   setLevel(logLevel);
 };
