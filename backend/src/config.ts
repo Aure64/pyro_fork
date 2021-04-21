@@ -506,6 +506,8 @@ export type Config = {
   setLastBlockCycle: SetLastBlockCycle;
   getNumber: GetNumber;
   setNumber: SetNumber;
+  getBoolean: GetBoolean;
+  setBoolean: SetBoolean;
   getExcludedEvents: GetExcludedEvents;
   getSlackConfig: GetSlackConfig;
   getTelegramConfig: GetTelegramConfig;
@@ -603,6 +605,8 @@ export const load = async (): Promise<Config> => {
     setLastBlockCycle,
     getNumber,
     setNumber,
+    getBoolean,
+    setBoolean,
     getExcludedEvents,
     getSlackConfig,
     setTelegramChatId,
@@ -698,6 +702,25 @@ type SetNumber = (key: string, value: number) => void;
  * configured via the CLI, as they won't be reported in the CLI help.
  */
 const setNumber: SetNumber = (key, value) => {
+  nconf.set(`${SYSTEM_PREFIX}:${key}`, value);
+};
+
+type GetBoolean = (key: string) => boolean | undefined;
+
+/**
+ * Gets an arbitrary boolean from the system config at `key`.  Do not use this for values that need to be
+ * configured via the CLI, as they won't be reported in the CLI help.
+ */
+const getBoolean: GetBoolean = (key) => {
+  return nconf.get(`${SYSTEM_PREFIX}:${key}`);
+};
+
+type SetBoolean = (key: string, value: boolean) => void;
+/**
+ * Sets an arbitrary boolean to the system config at `key`.  Do not use this for values that need to be
+ * configured via the CLI, as they won't be reported in the CLI help.
+ */
+const setBoolean: SetBoolean = (key, value) => {
   nconf.set(`${SYSTEM_PREFIX}:${key}`, value);
 };
 

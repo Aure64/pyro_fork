@@ -10,8 +10,10 @@ import { create as createFilter } from "./notifierMiddleware/filter";
 import { create as createOfflineFilter } from "./notifierMiddleware/offlineFilter";
 import { create as createQueue } from "./notifierMiddleware/queue";
 import { create as createFailureHandler } from "./notifierMiddleware/failureHandler";
+import { create as createVerifier } from "./notifierMiddleware/verifier";
 import { trace } from "loglevel";
 import { Config } from "./config";
+import { compose } from "ramda";
 
 type Notifier = {
   channels: NotifyEventFunction[];
@@ -25,12 +27,35 @@ export const create = async (config: Config): Promise<Notifier> => {
   const notifier: Notifier = {
     channels,
   };
-  const queue = config.getQueueConfig();
-  const storageDirectory = config.storageDirectory;
+
   const boundNotify = (event: TezosNodeEvent | NotifierEvent) =>
     notify(notifier, event);
 
-  // email config
+  const emailChannel = await configureEmailChannel(config, boundNotify);
+  if (emailChannel) channels.push(emailChannel);
+
+  const desktopChannel = await configureDesktopChannel(config, boundNotify);
+  if (desktopChannel) channels.push(desktopChannel);
+
+  const slackChannel = await configureSlackChannel(config, boundNotify);
+  if (slackChannel) channels.push(slackChannel);
+
+  const telegramChannel = await configureTelegramChannel(config, boundNotify);
+  if (telegramChannel) channels.push(telegramChannel);
+
+  const endpointChannel = await configureEndpointChannel(config, boundNotify);
+  if (endpointChannel) channels.push(endpointChannel);
+
+  return notifier;
+};
+
+const configureEmailChannel = async (
+  config: Config,
+  notify: (event: TezosNodeEvent | NotifierEvent) => void
+): Promise<NotifyEventFunction | null> => {
+  const queue = config.getQueueConfig();
+  const storageDirectory = config.storageDirectory;
+
   const emailConfig = config.getEmailConfig();
   if (emailConfig?.enabled) {
     const channelName = EmailChannel.channelName;
@@ -43,7 +68,7 @@ export const create = async (config: Config): Promise<Notifier> => {
       storageDirectory,
       channelName,
     });
-    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
+    const applyFailureHandler = createFailureHandler(channelName, notify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -51,16 +76,27 @@ export const create = async (config: Config): Promise<Notifier> => {
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
     });
-
-    const emailChannel = applyQueue(
-      applyFailureHandler(
-        applyFilter(applyOfflineFilter(applyToString(emailNotify)))
-      )
+    const applyVerifier = createVerifier(channelName, config);
+    const apply = compose(
+      applyQueue,
+      applyFailureHandler,
+      applyFilter,
+      applyOfflineFilter,
+      applyVerifier,
+      applyToString
     );
-    channels.push(emailChannel);
+    return apply(emailNotify);
   }
+  return null;
+};
 
-  // desktop config
+const configureDesktopChannel = async (
+  config: Config,
+  notify: (event: TezosNodeEvent | NotifierEvent) => void
+): Promise<NotifyEventFunction | null> => {
+  const queue = config.getQueueConfig();
+  const storageDirectory = config.storageDirectory;
+
   const desktopConfig = config.getDesktopConfig();
   if (desktopConfig?.enabled) {
     const channelName = DesktopChannel.channelName;
@@ -73,7 +109,7 @@ export const create = async (config: Config): Promise<Notifier> => {
       storageDirectory,
       channelName,
     });
-    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
+    const applyFailureHandler = createFailureHandler(channelName, notify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -81,15 +117,29 @@ export const create = async (config: Config): Promise<Notifier> => {
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
     });
-    const desktopChannel = applyQueue(
-      applyFailureHandler(
-        applyFilter(applyOfflineFilter(applyToString(desktopNotify)))
-      )
+    const applyVerifier = createVerifier(channelName, config);
+
+    const apply = compose(
+      applyQueue,
+      applyFailureHandler,
+      applyFilter,
+      applyOfflineFilter,
+      applyVerifier,
+      applyToString
     );
-    channels.push(desktopChannel);
+    return apply(desktopNotify);
   }
 
-  // slack config
+  return null;
+};
+
+const configureSlackChannel = async (
+  config: Config,
+  notify: (event: TezosNodeEvent | NotifierEvent) => void
+): Promise<NotifyEventFunction | null> => {
+  const queue = config.getQueueConfig();
+  const storageDirectory = config.storageDirectory;
+
   const slackConfig = config.getSlackConfig();
   if (slackConfig?.enabled) {
     const channelName = SlackChannel.channelName;
@@ -102,7 +152,7 @@ export const create = async (config: Config): Promise<Notifier> => {
       storageDirectory,
       channelName,
     });
-    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
+    const applyFailureHandler = createFailureHandler(channelName, notify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -110,15 +160,29 @@ export const create = async (config: Config): Promise<Notifier> => {
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
     });
-    const slackChannel = applyQueue(
-      applyFailureHandler(
-        applyFilter(applyOfflineFilter(applyToString(slackNotify)))
-      )
+    const applyVerifier = createVerifier(channelName, config);
+
+    const apply = compose(
+      applyQueue,
+      applyFailureHandler,
+      applyFilter,
+      applyOfflineFilter,
+      applyVerifier,
+      applyToString
     );
-    channels.push(slackChannel);
+    return apply(slackNotify);
   }
 
-  // telegram config
+  return null;
+};
+
+const configureTelegramChannel = async (
+  config: Config,
+  notify: (event: TezosNodeEvent | NotifierEvent) => void
+): Promise<NotifyEventFunction | null> => {
+  const queue = config.getQueueConfig();
+  const storageDirectory = config.storageDirectory;
+
   const telegramConfig = config.getTelegramConfig();
   if (telegramConfig?.enabled) {
     const channelName = TelegramChannel.channelName;
@@ -131,7 +195,7 @@ export const create = async (config: Config): Promise<Notifier> => {
       storageDirectory,
       channelName,
     });
-    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
+    const applyFailureHandler = createFailureHandler(channelName, notify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -139,15 +203,29 @@ export const create = async (config: Config): Promise<Notifier> => {
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
     });
-    const telegramChannel = applyQueue(
-      applyFailureHandler(
-        applyFilter(applyOfflineFilter(applyToString(telegramNotify)))
-      )
+    const applyVerifier = createVerifier(channelName, config);
+
+    const apply = compose(
+      applyQueue,
+      applyFailureHandler,
+      applyFilter,
+      applyOfflineFilter,
+      applyVerifier,
+      applyToString
     );
-    channels.push(telegramChannel);
+    return apply(telegramNotify);
   }
 
-  // endpoint config
+  return null;
+};
+
+const configureEndpointChannel = async (
+  config: Config,
+  notify: (event: TezosNodeEvent | NotifierEvent) => void
+): Promise<NotifyEventFunction | null> => {
+  const queue = config.getQueueConfig();
+  const storageDirectory = config.storageDirectory;
+
   const endpointConfig = config.getEndpointConfig();
   if (endpointConfig?.enabled) {
     const channelName = EndpointChannel.channelName;
@@ -161,7 +239,7 @@ export const create = async (config: Config): Promise<Notifier> => {
       storageDirectory,
       channelName,
     });
-    const applyFailureHandler = createFailureHandler(channelName, boundNotify);
+    const applyFailureHandler = createFailureHandler(channelName, notify);
     const applyFilter = await createFilter({
       channelName,
       config,
@@ -169,13 +247,19 @@ export const create = async (config: Config): Promise<Notifier> => {
     const applyOfflineFilter = await createOfflineFilter({
       channelName,
     });
-    const endpointChannel = applyQueue(
-      applyFailureHandler(applyFilter(applyOfflineFilter(endpointNotify)))
+    const applyVerifier = createVerifier(channelName, config);
+
+    const apply = compose(
+      applyQueue,
+      applyFailureHandler,
+      applyFilter,
+      applyOfflineFilter,
+      applyVerifier
     );
-    channels.push(endpointChannel);
+    return apply(endpointNotify);
   }
 
-  return notifier;
+  return null;
 };
 
 /**
