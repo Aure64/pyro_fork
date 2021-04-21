@@ -14,17 +14,22 @@ export const makeMemoizedAsyncFunction = <Args extends any[], Return>(
     if (cache[key]) {
       return cache[key];
     } else {
-      const response: Return = await originalFunction(...args);
-      cache[key] = response;
-      if (maxCacheLength !== undefined) {
-        // trim old cache entries
-        const cacheLength = Object.keys(cache).length;
-        if (cacheLength > maxCacheLength) {
-          const firstCacheKey = Object.keys(cache)[0];
-          delete cache[firstCacheKey];
+      try {
+        const response: Return = await originalFunction(...args);
+        cache[key] = response;
+        if (maxCacheLength !== undefined) {
+          // trim old cache entries
+          const cacheLength = Object.keys(cache).length;
+          if (cacheLength > maxCacheLength) {
+            const firstCacheKey = Object.keys(cache)[0];
+            delete cache[firstCacheKey];
+          }
         }
+        return response;
+      } catch (error) {
+        // rethrow any encountered errors to push the problem off to our caller
+        throw error;
       }
-      return response;
     }
   };
   return memoizedFunction;

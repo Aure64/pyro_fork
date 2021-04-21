@@ -326,25 +326,29 @@ export const loadBlockData = async ({
     return { type: "ERROR", message: "Error loading block metadata" };
   }
 
-  const bakingRightsPromise = rpc.getBakingRights(
-    {
-      max_priority: 0,
-      cycle: metadata.level?.cycle,
-      delegate: bakers,
-    },
-    { block: blockId }
+  const bakingRightsPromise = to(
+    rpc.getBakingRights(
+      {
+        max_priority: 0,
+        cycle: metadata.level?.cycle,
+        delegate: bakers,
+      },
+      { block: blockId }
+    )
   );
 
-  const endorsingRightsPromise = rpc.getEndorsingRights(
-    {
-      cycle: metadata.level.cycle,
-      delegate: bakers,
-    },
-    { block: blockId }
+  const endorsingRightsPromise = to(
+    rpc.getEndorsingRights(
+      {
+        cycle: metadata.level.cycle,
+        delegate: bakers,
+      },
+      { block: blockId }
+    )
   );
-  const blockPromise = rpc.getBlock({ block: blockId });
+  const blockPromise = to(rpc.getBlock({ block: blockId }));
 
-  const constantsPromise = rpc.getConstants({ block: blockId });
+  const constantsPromise = to(rpc.getConstants({ block: blockId }));
 
   // run all promises in parallel
   await Promise.all([
@@ -354,7 +358,7 @@ export const loadBlockData = async ({
     constantsPromise,
   ]);
 
-  const [constantsError, constants] = await to(constantsPromise);
+  const [constantsError, constants] = await constantsPromise;
   if (constantsError) {
     warn(`Error fetching block constants: ${constantsError.message}`);
     return { type: "ERROR", message: "Error loading block constants" };
@@ -363,7 +367,7 @@ export const loadBlockData = async ({
     return { type: "ERROR", message: "Error loading block constants" };
   }
 
-  const [bakingRightsError, bakingRights] = await to(bakingRightsPromise);
+  const [bakingRightsError, bakingRights] = await bakingRightsPromise;
 
   if (bakingRightsError) {
     warn(`Baking rights error: ${bakingRightsError.message}`);
@@ -373,10 +377,7 @@ export const loadBlockData = async ({
     return { type: "ERROR", message: "Error loading baking rights" };
   }
 
-  const [endorsingRightsError, endorsingRights] = await to(
-    endorsingRightsPromise
-  );
-
+  const [endorsingRightsError, endorsingRights] = await endorsingRightsPromise;
   if (endorsingRightsError) {
     warn(`Endorsing rights error: ${endorsingRightsError.message}`);
     return {
@@ -393,7 +394,7 @@ export const loadBlockData = async ({
   }
 
   // taquito currently doesn't expose getBlockOperations
-  const [blockError, block] = await to(blockPromise);
+  const [blockError, block] = await blockPromise;
 
   if (blockError) {
     const message = `Error loading block operations for ${blockId}`;

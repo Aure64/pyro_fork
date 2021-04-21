@@ -40,6 +40,11 @@ const setupLogging = (logLevel: LogLevelDesc) => {
 };
 
 const main = async () => {
+  // Makes the script crash on unhandled rejections instead of silently ignoring them.
+  process.on("unhandledRejection", (err) => {
+    throw err;
+  });
+
   const config = await Config.load();
   setupLogging(config.getLogLevel());
 
