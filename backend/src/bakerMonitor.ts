@@ -24,6 +24,7 @@ import { Config } from "./config";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 import { normalize } from "path";
+import { makeMemoizedAsyncFunction } from "./memoization";
 
 type Monitor = {
   subscription: Subscription<string>;
@@ -47,11 +48,15 @@ export const start = ({ bakers, onEvent, config }: StartArgs): Monitor => {
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
   const rpc = toolkit.rpc;
-  rpc.getBakingRights = makeMemoizedGetBakingRights(
-    rpc.getBakingRights.bind(rpc)
+  rpc.getBakingRights = makeMemoizedAsyncFunction(
+    rpc.getBakingRights.bind(rpc),
+    (args: BakingRightsQueryArguments) => `${args.cycle}`,
+    10
   );
-  rpc.getEndorsingRights = makeMemoizedGetEndorsingRights(
-    rpc.getEndorsingRights.bind(rpc)
+  rpc.getEndorsingRights = makeMemoizedAsyncFunction(
+    rpc.getEndorsingRights.bind(rpc),
+    (args: EndorsingRightsQueryArguments) => `${args.cycle}`,
+    10
   );
 
   const store = new SqlLiteStore<string>({
@@ -409,70 +414,6 @@ export const loadBlockData = async ({
   return {
     type: "SUCCESS",
     data: { metadata, bakingRights, endorsingRights, block, constants },
-  };
-};
-
-type GetBakingRights = (
-  args: BakingRightsQueryArguments,
-  { block }: { block: string }
-) => Promise<BakingRightsResponse>;
-
-/**
- * Create a memoized getBakingRights function.  The request memoizes based on cycle.
- */
-export const makeMemoizedGetBakingRights = (
-  originalFunction: GetBakingRights
-): GetBakingRights => {
-  const cache: Record<string, BakingRightsResponse> = {};
-
-  return async (
-    args: BakingRightsQueryArguments,
-    { block }: { block: string }
-  ) => {
-    const key = `${args.cycle}`;
-    if (cache[key]) {
-      debug(`Memoized getBakingRights cache hit for cycle ${key}`);
-      return cache[key];
-    } else {
-      debug(`Memoized getBakingRights cache miss for ${key}`);
-      const bakingRightsResponse = await originalFunction(args, {
-        block,
-      });
-      cache[key] = bakingRightsResponse;
-      return bakingRightsResponse;
-    }
-  };
-};
-
-type GetEndorsingRights = (
-  args: EndorsingRightsQueryArguments,
-  { block }: { block: string }
-) => Promise<EndorsingRightsResponse>;
-
-/**
- * Create a memoized getEndorsingRights function.  The request memoizes based on cycle.
- */
-export const makeMemoizedGetEndorsingRights = (
-  originalFunction: GetEndorsingRights
-): GetEndorsingRights => {
-  const cache: Record<string, EndorsingRightsResponse> = {};
-
-  return async (
-    args: EndorsingRightsQueryArguments,
-    { block }: { block: string }
-  ) => {
-    const key = `${args.cycle}`;
-    if (cache[key]) {
-      debug(`Memoized getEndorsingRights cache hit for cycle ${key}`);
-      return cache[key];
-    } else {
-      debug(`Memoized getEndorsingRights cache miss for ${key}`);
-      const endorsingRightsResponse = await originalFunction(args, {
-        block,
-      });
-      cache[key] = endorsingRightsResponse;
-      return endorsingRightsResponse;
-    }
   };
 };
 

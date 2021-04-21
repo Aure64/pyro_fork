@@ -7,7 +7,6 @@ import {
   checkFutureBlockEndorsingRights,
   checkForDeactivations,
   loadBlockData,
-  makeMemoizedGetBakingRights,
 } from "./bakerMonitor";
 import { setLevel } from "loglevel";
 import { responseWithPriorityZero, priorityZero } from "./testFixtures/baking";
@@ -127,37 +126,6 @@ describe("loadBlockData", () => {
       type: "ERROR",
       message: "Error loading block metadata",
     });
-  });
-});
-
-describe("makeMemoizedGetBakingRights", () => {
-  it("fetches new data on a first request", async () => {
-    const apiCall = jest.fn().mockResolvedValue([]);
-
-    const getBakingRights = makeMemoizedGetBakingRights(apiCall);
-    const args = {};
-
-    const result = await getBakingRights(args, { block: "block" });
-    expect(result).toEqual([]);
-    expect(apiCall.mock.calls.length).toEqual(1);
-  });
-
-  it("returns existing data on a cache hit", async () => {
-    const apiCall = jest.fn().mockResolvedValue([]);
-
-    const getBakingRights = makeMemoizedGetBakingRights(apiCall);
-    const args = {
-      max_priority: 0,
-      cycle: 199,
-      delegate: "some_baker",
-    };
-
-    const result = await getBakingRights(args, { block: "block" });
-    await getBakingRights(args, { block: "block" });
-    await getBakingRights(args, { block: "another_block" });
-    await getBakingRights(args, { block: "a different block" });
-    expect(result).toEqual([]);
-    expect(apiCall.mock.calls.length).toEqual(1);
   });
 });
 
