@@ -9,6 +9,7 @@ import {
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import to from "await-to-js";
+import { makeMemoizedAsyncFunction } from "./memoization";
 
 const CHAIN = "main";
 
@@ -34,8 +35,6 @@ export const start = ({
     referenceNode,
     CHAIN
   );
-  //override getBlockHeader to memoize it
-  rpc.getBlockHeader = makeMemoizedGetBlockHeader(rpc.getBlockHeader.bind(rpc));
   referenceSubscription.on("data", async (blockHash) => {
     debug(`Reference node subscription received block: ${blockHash}`);
 
@@ -65,20 +64,21 @@ export const start = ({
   // watch all other nodes
   const subscriptions = nodes.map((node) => {
     const { rpc, subscription } = subscribeToNode(node, CHAIN);
-    //override getBlockHeader to memoize it
-    rpc.getBlockHeader = makeMemoizedGetBlockHeader(
-      rpc.getBlockHeader.bind(rpc)
-    );
     const nodeData: Record<string, NodeInfo> = {};
 
     subscription.on("data", async (blockHash) => {
       debug(`Subscription received block: ${blockHash}`);
 
       const previousNodeInfo = nodeData[node];
+      // skip checking boostrapped status if previous check failed
+      const fetchBootstrappedStatus =
+        previousNodeInfo === undefined ||
+        previousNodeInfo.bootstrappedStatus !== undefined;
       const nodeInfoResult = await updateNodeInfo({
         node,
         blockHash,
         rpc,
+        fetchBootstrappedStatus,
       });
       if (nodeInfoResult.type === "ERROR") {
         const errorEvent: PeerNodeEvent = {
@@ -132,6 +132,10 @@ const subscribeToNode = (
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
   const rpc = toolkit.rpc;
+  rpc.getBlockHeader = makeMemoizedAsyncFunction(
+    rpc.getBlockHeader.bind(rpc),
+    ({ block }: { block: string }) => `${block}`
+  );
 
   return { subscription, rpc };
 };
@@ -145,7 +149,7 @@ export const halt = (monitor: Monitor): void => {
 
 export type NodeInfo = {
   head: string;
-  bootstrappedStatus: BootstrappedStatus;
+  bootstrappedStatus: BootstrappedStatus | undefined;
   history: BlockHeaderResponse[];
   peerCount: number;
 };
@@ -154,33 +158,37 @@ type UpdateNodeInfoArgs = {
   node: string;
   blockHash: string;
   rpc: RpcClient;
+  fetchBootstrappedStatus: boolean;
 };
 
 const updateNodeInfo = async ({
   node,
   blockHash,
   rpc,
+  fetchBootstrappedStatus,
 }: UpdateNodeInfoArgs): Promise<Result<NodeInfo>> => {
   debug(`Node monitor received block ${blockHash} for node ${node}`);
+  let bootstrappedStatus, bootstrappedError;
 
-  const [bootstrappedError, bootstrappedStatus] = await to(
-    isBootstrapped(node, CHAIN)
-  );
+  if (fetchBootstrappedStatus) {
+    [bootstrappedError, bootstrappedStatus] = await to(
+      isBootstrapped(node, CHAIN)
+    );
 
-  if (bootstrappedError) {
-    warn(
-      `isBoostrapped failed for node ${node} because of ${bootstrappedError.message}`
-    );
-    return { type: "ERROR", message: bootstrappedError.message };
-  } else if (!bootstrappedStatus) {
-    const message = `Get bootstrapped status returned empty result for ${node}`;
-    warn(message);
-    return { type: "ERROR", message };
-  } else {
-    const { bootstrapped, sync_state } = bootstrappedStatus;
-    debug(
-      `Node ${node} is bootstrapped: ${bootstrapped} with sync_state: ${sync_state}`
-    );
+    if (bootstrappedError) {
+      warn(
+        `isBoostrapped failed for node ${node} because of ${bootstrappedError.message}`
+      );
+      return { type: "ERROR", message: bootstrappedError.message };
+    } else if (!bootstrappedStatus) {
+      const message = `Get bootstrapped status returned empty result for ${node}`;
+      warn(message);
+    } else {
+      const { bootstrapped, sync_state } = bootstrappedStatus;
+      debug(
+        `Node ${node} is bootstrapped: ${bootstrapped} with sync_state: ${sync_state}`
+      );
+    }
   }
 
   const historyResult = await fetchBlockHeaders({ blockHash, rpc });
@@ -235,52 +243,56 @@ export const checkBlockInfo = ({
 }: CheckBlockInfoArgs): TezosNodeEvent[] => {
   const events: TezosNodeEvent[] = [];
 
-  if (
-    nodeInfo.bootstrappedStatus.bootstrapped &&
-    nodeInfo.bootstrappedStatus.sync_state !== "synced"
-  ) {
-    debug(`Node ${node} is behind`);
-    events.push({
-      type: "PEER",
-      kind: "NODE_BEHIND",
-      node,
-      message: "Node is behind",
-    });
-  } else if (
-    catchUpOccurred(
-      previousNodeInfo?.bootstrappedStatus,
-      nodeInfo.bootstrappedStatus
-    )
-  ) {
-    debug(`Node ${node} caught up`);
-    events.push({
-      type: "PEER",
-      kind: "NODE_CAUGHT_UP",
-      node,
-      message: "Node caught up",
-    });
-  }
-  if (
-    referenceNodeBlockHistory &&
-    nodeInfo.bootstrappedStatus.sync_state == "synced"
-  ) {
-    const ancestorDistance = findSharedAncestor(
-      nodeInfo.history,
-      referenceNodeBlockHistory
-    );
-    if (ancestorDistance === NO_ANCESTOR) {
-      debug(`Node ${node} has no shared blocks with reference node`);
+  if (nodeInfo.bootstrappedStatus) {
+    if (
+      nodeInfo.bootstrappedStatus.bootstrapped &&
+      nodeInfo.bootstrappedStatus.sync_state !== "synced"
+    ) {
+      debug(`Node ${node} is behind`);
       events.push({
         type: "PEER",
-        kind: "NODE_ON_A_BRANCH",
+        kind: "NODE_BEHIND",
         node,
-        message: `Node ${node} is on a branch`,
+        message: "Node is behind",
       });
-    } else {
-      debug(
-        `Node ${node} is ${ancestorDistance} blocks away from reference node`
-      );
+    } else if (
+      catchUpOccurred(
+        previousNodeInfo?.bootstrappedStatus,
+        nodeInfo.bootstrappedStatus
+      )
+    ) {
+      debug(`Node ${node} caught up`);
+      events.push({
+        type: "PEER",
+        kind: "NODE_CAUGHT_UP",
+        node,
+        message: "Node caught up",
+      });
     }
+    if (
+      referenceNodeBlockHistory &&
+      nodeInfo.bootstrappedStatus.sync_state == "synced"
+    ) {
+      const ancestorDistance = findSharedAncestor(
+        nodeInfo.history,
+        referenceNodeBlockHistory
+      );
+      if (ancestorDistance === NO_ANCESTOR) {
+        debug(`Node ${node} has no shared blocks with reference node`);
+        events.push({
+          type: "PEER",
+          kind: "NODE_ON_A_BRANCH",
+          node,
+          message: `Node ${node} is on a branch`,
+        });
+      } else {
+        debug(
+          `Node ${node} is ${ancestorDistance} blocks away from reference node`
+        );
+      }
+    }
+  } else {
+    warn(`Unable to check bootstrapped status for ${node}`);
   }
   if (nodeInfo.peerCount < minimumPeers) {
     const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
@@ -377,34 +389,6 @@ const fetchBlockHeaders = async ({
   }
 
   return { type: "SUCCESS", data: history };
-};
-
-type GetBlockHeader = ({
-  block,
-}: {
-  block: string;
-}) => Promise<BlockHeaderResponse>;
-/**
- * Create a memoized getBlockHeader function.  The request memoizes based on block.
- */
-export const makeMemoizedGetBlockHeader = (
-  originalFunction: GetBlockHeader
-): GetBlockHeader => {
-  const cache: Record<string, BlockHeaderResponse> = {};
-
-  return async ({ block }: { block: string }) => {
-    if (cache[block]) {
-      debug(`Memoized getBlockHeader cache hit for ${block}`);
-      return cache[block];
-    } else {
-      debug(`Memoized getBlockHeader cache miss for ${block}`);
-      const blockHeaderResponse = await originalFunction({
-        block,
-      });
-      cache[block] = blockHeaderResponse;
-      return blockHeaderResponse;
-    }
-  };
 };
 
 export type NetworkConnection = {
