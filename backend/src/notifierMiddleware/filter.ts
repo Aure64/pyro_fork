@@ -70,7 +70,7 @@ export const shouldNotify = (
 ): boolean => {
   const { history } = filter;
   if (
-    event.type === "BAKER" &&
+    event.type === "FUTURE_BAKING" &&
     event.kind === "FUTURE_ENDORSING_OPPORTUNITY" &&
     event.level <= history.nextEndorseLevel
   ) {
@@ -80,7 +80,7 @@ export const shouldNotify = (
     return false;
   }
   if (
-    event.type === "BAKER" &&
+    event.type === "FUTURE_BAKING" &&
     event.kind === "FUTURE_BAKING_OPPORTUNITY" &&
     event.level <= history.nextBakeLevel
   ) {
@@ -95,13 +95,7 @@ export const shouldNotify = (
     );
     return false;
   }
-  if (
-    (event.type === "BAKER" ||
-      event.type === "PEER" ||
-      event.type == "BAKER_DATA" ||
-      event.type == "PEER_DATA") &&
-    filter.excludedEvents.includes(event.kind)
-  ) {
+  if ("kind" in event && filter.excludedEvents.includes(event.kind)) {
     debug(`Event excluded because type ${event.kind} is filtered`);
     return false;
   }
@@ -117,10 +111,16 @@ export const updateHistory = (
   event: TezosNodeEvent | NotifierEvent
 ): NotifierHistory => {
   let { nextBakeLevel, nextEndorseLevel } = history;
-  if (event.type === "BAKER" && event.kind === "FUTURE_ENDORSING_OPPORTUNITY") {
+  if (
+    event.type === "FUTURE_BAKING" &&
+    event.kind === "FUTURE_ENDORSING_OPPORTUNITY"
+  ) {
     nextEndorseLevel = Math.max(nextEndorseLevel, event.level);
   }
-  if (event.type === "BAKER" && event.kind === "FUTURE_BAKING_OPPORTUNITY") {
+  if (
+    event.type === "FUTURE_BAKING" &&
+    event.kind === "FUTURE_BAKING_OPPORTUNITY"
+  ) {
     nextBakeLevel = Math.max(nextBakeLevel, event.level);
   }
 

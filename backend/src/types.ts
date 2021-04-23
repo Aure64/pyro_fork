@@ -17,9 +17,9 @@ const BakerNodeEventKind_RT = Union(
 
 type BakerNodeEventKind = Static<typeof BakerNodeEventKind_RT>;
 
-type BakerNodeEvent = {
+export type BakerNodeEvent = {
   kind: BakerNodeEventKind;
-  type: "BAKER";
+  type: "BAKER_NODE";
   message: string;
   baker: string;
   blockLevel: number;
@@ -31,18 +31,18 @@ const FutureBakingEventKind_RT = Union(
 
 type FutureBakingEventKind = Static<typeof FutureBakingEventKind_RT>;
 
-type FutureBakingEvent = {
+export type FutureBakingEvent = {
   kind: FutureBakingEventKind;
-  type: "BAKER";
+  type: "FUTURE_BAKING";
   message: string;
   baker: string;
   level: number;
   date: Date;
 };
 
-type BakerDeactivationEvent = {
+export type BakerDeactivationEvent = {
   kind: "BAKER_DEACTIVATED" | "BAKER_PENDING_DEACTIVATION";
-  type: "BAKER";
+  type: "BAKER_DEACTIVATION";
   message: string;
   baker: string;
   cycle: number;
@@ -52,7 +52,7 @@ const DataEventKind_RT = Union(Literal("ERROR"), Literal("RECONNECTED"));
 
 type DataEventKind = Static<typeof DataEventKind_RT>;
 
-type BakerDataEvent = {
+export type BakerDataEvent = {
   type: "BAKER_DATA";
   kind: DataEventKind;
   message: string;
@@ -64,7 +64,7 @@ export type BakerEvent =
   | BakerDataEvent
   | BakerDeactivationEvent;
 
-type NodeDataEvent = {
+export type PeerDataEvent = {
   type: "PEER_DATA";
   kind: DataEventKind;
   message: string;
@@ -79,16 +79,16 @@ const PeerNodeEventKind_RT = Union(
 
 type PeerNodeEventKind = Static<typeof PeerNodeEventKind_RT>;
 
-export type PeerNodeEvent =
-  | {
-      kind: PeerNodeEventKind;
-      type: "PEER";
-      message: string;
-      node: string;
-    }
-  | NodeDataEvent;
+export type PeerNodeEvent = {
+  kind: PeerNodeEventKind;
+  type: "PEER";
+  message: string;
+  node: string;
+};
 
-export type TezosNodeEvent = BakerEvent | PeerNodeEvent;
+export type PeerEvent = PeerNodeEvent | PeerDataEvent;
+
+export type TezosNodeEvent = BakerEvent | PeerEvent;
 
 export type Message = {
   title: string;

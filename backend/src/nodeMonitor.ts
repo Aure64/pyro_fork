@@ -1,4 +1,4 @@
-import { Result, PeerNodeEvent, TezosNodeEvent } from "./types";
+import { Result, PeerDataEvent, TezosNodeEvent } from "./types";
 import { debug, warn, info } from "loglevel";
 import {
   Context,
@@ -81,7 +81,7 @@ export const start = ({
         fetchBootstrappedStatus,
       });
       if (nodeInfoResult.type === "ERROR") {
-        const errorEvent: PeerNodeEvent = {
+        const errorEvent: PeerDataEvent = {
           type: "PEER_DATA",
           kind: "ERROR",
           message: `Error updating info for node ${node}`,

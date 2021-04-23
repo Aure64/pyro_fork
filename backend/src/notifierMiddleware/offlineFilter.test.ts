@@ -1,5 +1,5 @@
 import { shouldNotify, updateStatus } from "./offlineFilter";
-import { PeerNodeEvent, TezosNodeEvent } from "../types";
+import { PeerEvent, PeerNodeEvent, TezosNodeEvent } from "../types";
 
 describe("shouldNotify", () => {
   it("rejects baker error events when baker monitor is offline", () => {
@@ -56,7 +56,7 @@ describe("updateStatus", () => {
       isBakerMonitorOffline: false,
     };
     const bakeEvent: TezosNodeEvent = {
-      type: "BAKER",
+      type: "FUTURE_BAKING",
       kind: "FUTURE_BAKING_OPPORTUNITY",
       message: "some error",
       level: 900,
@@ -76,7 +76,7 @@ describe("updateStatus", () => {
       isNodeMonitorOffline: false,
       isBakerMonitorOffline: false,
     };
-    const peerEvent: PeerNodeEvent = {
+    const peerEvent: PeerEvent = {
       type: "PEER_DATA",
       kind: "ERROR",
       message: "some error",

@@ -12,7 +12,7 @@ const notifier: EndpointNotificationChannel = {
 describe("notify", () => {
   test("posts JSON notification", () => {
     const event: BakerEvent = {
-      type: "BAKER",
+      type: "BAKER_NODE",
       kind: "MISSED_BAKE",
       baker: "some_baker",
       message: "Missed bake",
@@ -28,7 +28,7 @@ describe("notify", () => {
     fetchMock.mockResponse("true");
 
     const event: BakerEvent = {
-      type: "BAKER",
+      type: "BAKER_NODE",
       kind: "MISSED_BAKE",
       baker: "some_baker",
       message: "Missed bake",
@@ -40,7 +40,7 @@ describe("notify", () => {
 
   test("resolves to error object when unsuccessful", () => {
     const event: BakerEvent = {
-      type: "BAKER",
+      type: "BAKER_NODE",
       kind: "MISSED_BAKE",
       baker: "some_baker",
       message: "Missed bake",

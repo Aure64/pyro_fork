@@ -22,7 +22,7 @@ describe("shouldNotify", () => {
         excludedEvents: [],
       },
       {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_BAKING_OPPORTUNITY",
         message: "some error",
         level: 900,
@@ -41,7 +41,7 @@ describe("shouldNotify", () => {
         excludedEvents: [],
       },
       {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_BAKING_OPPORTUNITY",
         message: "some error",
         level: 900,
@@ -60,7 +60,7 @@ describe("shouldNotify", () => {
         excludedEvents: [],
       },
       {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_ENDORSING_OPPORTUNITY",
         message: "some error",
         level: 900,
@@ -79,7 +79,7 @@ describe("shouldNotify", () => {
         excludedEvents: [],
       },
       {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_BAKING_OPPORTUNITY",
         message: "some error",
         level: 1100,
@@ -98,7 +98,7 @@ describe("shouldNotify", () => {
         excludedEvents: [],
       },
       {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_ENDORSING_OPPORTUNITY",
         message: "some error",
         level: 1100,
@@ -117,7 +117,7 @@ describe("shouldNotify", () => {
         excludedEvents: ["FUTURE_BAKING_OPPORTUNITY"],
       },
       {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_BAKING_OPPORTUNITY",
         message: "some error",
         level: 900,
@@ -133,7 +133,7 @@ describe("updateHistory", () => {
   it("updates nextBakeLevel to higher level", () => {
     const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
     const bakeEvent: TezosNodeEvent = {
-      type: "BAKER",
+      type: "FUTURE_BAKING",
       kind: "FUTURE_BAKING_OPPORTUNITY",
       message: "some error",
       level: 1100,
@@ -148,7 +148,7 @@ describe("updateHistory", () => {
   it("updates nextEndorseLevel to higher level", () => {
     const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
     const bakeEvent: TezosNodeEvent = {
-      type: "BAKER",
+      type: "FUTURE_BAKING",
       kind: "FUTURE_ENDORSING_OPPORTUNITY",
       message: "some error",
       level: 1100,
@@ -163,7 +163,7 @@ describe("updateHistory", () => {
   it("doesn't update nextBakeLevel to lower level", () => {
     const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
     const bakeEvent: TezosNodeEvent = {
-      type: "BAKER",
+      type: "FUTURE_BAKING",
       kind: "FUTURE_BAKING_OPPORTUNITY",
       message: "some error",
       level: 900,
@@ -178,7 +178,7 @@ describe("updateHistory", () => {
   it("doesn't update nextEndorseLevel to lower level", () => {
     const history = { nextBakeLevel: 1000, nextEndorseLevel: 1000 };
     const bakeEvent: TezosNodeEvent = {
-      type: "BAKER",
+      type: "FUTURE_BAKING",
       kind: "FUTURE_ENDORSING_OPPORTUNITY",
       message: "some error",
       level: 900,

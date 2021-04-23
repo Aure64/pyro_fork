@@ -124,7 +124,7 @@ export const updateStatus = (
   // update isBakerMonitorOffline
   if (event.type === "BAKER_DATA" && event.kind === "ERROR") {
     isBakerMonitorOffline = true;
-  } else if (event.type === "BAKER") {
+  } else if (event.type.includes("BAKER")) {
     // any other baking event means the monitor is back online
     isBakerMonitorOffline = false;
   }

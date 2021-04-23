@@ -40,7 +40,7 @@ describe("checkBlockBakingRights", () => {
       kind: "SUCCESSFUL_BAKE",
       message:
         "Successful bake for block some_block for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      type: "BAKER",
+      type: "BAKER_NODE",
     });
   });
 
@@ -58,7 +58,7 @@ describe("checkBlockBakingRights", () => {
       kind: "MISSED_BAKE",
       message:
         "Missed bake detected for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      type: "BAKER",
+      type: "BAKER_NODE",
     });
   });
 
@@ -143,7 +143,7 @@ describe("checkBlockEndorsingRights", () => {
       kind: "SUCCESSFUL_ENDORSE",
       message:
         "Successful endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      type: "BAKER",
+      type: "BAKER_NODE",
     });
   });
 
@@ -160,7 +160,7 @@ describe("checkBlockEndorsingRights", () => {
       kind: "MISSED_ENDORSE",
       message:
         "Missed endorse for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1318230",
-      type: "BAKER",
+      type: "BAKER_NODE",
     });
   });
 
@@ -207,7 +207,7 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       kind: "DOUBLE_ENDORSE",
       message:
         "Double endorsement for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at block some_hash",
-      type: "BAKER",
+      type: "BAKER_NODE",
     });
   });
   it("Does not fetch block when there are no accusations", async () => {
@@ -248,7 +248,7 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       kind: "DOUBLE_BAKE",
       message:
         "Double bake for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1299013 with hash opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
-      type: "BAKER",
+      type: "BAKER_NODE",
     });
   });
   it("Does not fetch baking rights when there are no accusations", async () => {
@@ -283,7 +283,7 @@ describe("checkFutureBlockBakingRights", () => {
       message: expect.stringContaining(
         "Future bake opportunity for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1299013 in 10 blocks on "
       ),
-      type: "BAKER",
+      type: "FUTURE_BAKING",
     });
   });
 
@@ -313,7 +313,7 @@ describe("checkFutureBlockEndorsingRights", () => {
       message: expect.stringContaining(
         "Future endorse opportunity for baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 at level 1318230 in 10 blocks on "
       ),
-      type: "BAKER",
+      type: "FUTURE_BAKING",
     });
   });
 
@@ -372,7 +372,7 @@ describe("checkForDeactivations", () => {
       kind: "BAKER_DEACTIVATED",
       message:
         "Baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 is deactivated (on or before cycle 1000)",
-      type: "BAKER",
+      type: "BAKER_DEACTIVATION",
     });
   });
 
@@ -394,7 +394,7 @@ describe("checkForDeactivations", () => {
       kind: "BAKER_PENDING_DEACTIVATION",
       message:
         "Baker tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1 is scheduled for deactivation in cycle 1001",
-      type: "BAKER",
+      type: "BAKER_DEACTIVATION",
     });
   });
 });

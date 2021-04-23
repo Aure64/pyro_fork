@@ -446,7 +446,7 @@ export const checkBlockBakingRights = ({
         const message = `Missed bake detected for baker ${baker}`;
         info(message);
         return {
-          type: "BAKER",
+          type: "BAKER_NODE",
           kind: "MISSED_BAKE",
           message,
           baker,
@@ -456,7 +456,7 @@ export const checkBlockBakingRights = ({
         const message = `Successful bake for block ${blockId} for baker ${baker}`;
         debug(message);
         return {
-          type: "BAKER",
+          type: "BAKER_NODE",
           kind: "SUCCESSFUL_BAKE",
           message,
           baker,
@@ -500,7 +500,7 @@ export const checkBlockEndorsingRights = ({
       const message = `Successful endorse for baker ${baker}`;
       debug(message);
       return {
-        type: "BAKER",
+        type: "BAKER_NODE",
         kind: "SUCCESSFUL_ENDORSE",
         message,
         baker,
@@ -510,7 +510,7 @@ export const checkBlockEndorsingRights = ({
       const message = `Missed endorse for baker ${baker} at level ${blockLevel}`;
       debug(message);
       return {
-        type: "BAKER",
+        type: "BAKER_NODE",
         kind: "MISSED_ENDORSE",
         message,
         baker,
@@ -573,7 +573,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
               const message = `Double endorsement for baker ${baker} at block ${blockResult.hash}`;
               info(message);
               return {
-                type: "BAKER",
+                type: "BAKER_NODE",
                 kind: "DOUBLE_ENDORSE",
                 message,
                 baker,
@@ -648,7 +648,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
             const message = `Double bake for baker ${baker} at level ${accusedLevel} with hash ${accusedHash}`;
             info(message);
             return {
-              type: "BAKER",
+              type: "BAKER_NODE",
               kind: "DOUBLE_BAKE",
               message,
               baker,
@@ -702,7 +702,7 @@ export const checkFutureBlockBakingRights = ({
         const message = `Future bake opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`;
         info(message);
         return {
-          type: "BAKER",
+          type: "FUTURE_BAKING",
           kind: "FUTURE_BAKING_OPPORTUNITY",
           message,
           baker,
@@ -750,7 +750,7 @@ export const checkFutureBlockEndorsingRights = ({
       const message = `Future endorse opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`;
       info(message);
       return {
-        type: "BAKER",
+        type: "FUTURE_BAKING",
         kind: "FUTURE_ENDORSING_OPPORTUNITY",
         message,
         baker,
@@ -812,7 +812,7 @@ export const checkForDeactivations = async ({
     const message = `Baker ${baker} is deactivated (on or before cycle ${cycle})`;
     debug(message);
     return {
-      type: "BAKER",
+      type: "BAKER_DEACTIVATION",
       kind: "BAKER_DEACTIVATED",
       baker,
       cycle,
@@ -822,7 +822,7 @@ export const checkForDeactivations = async ({
     const message = `Baker ${baker} is scheduled for deactivation in cycle ${delegatesResponse.grace_period}`;
     debug(message);
     return {
-      type: "BAKER",
+      type: "BAKER_DEACTIVATION",
       kind: "BAKER_PENDING_DEACTIVATION",
       baker,
       cycle: delegatesResponse.grace_period,
