@@ -8,8 +8,8 @@ import {
 import { debug } from "loglevel";
 
 type OfflineStatus = {
-  isBakerMonitorOffline: boolean;
-  isNodeMonitorOffline: boolean;
+  consecutiveBakerMonitorFailures: number;
+  consecutiveNodeMonitorFailures: number;
 };
 
 type OfflineFilter = {
@@ -29,8 +29,8 @@ export const create = async ({
   channelName,
 }: OfflineFilterConfig): Promise<NotificationChannelMiddleware> => {
   const status = {
-    isBakerMonitorOffline: false,
-    isNodeMonitorOffline: false,
+    consecutiveBakerMonitorFailures: 0,
+    consecutiveNodeMonitorFailures: 0,
   };
   const filter: OfflineFilter = { status, channelName };
   return (notifyFunction: NotifyEventFunction): NotifyEventFunction => {
@@ -62,27 +62,70 @@ export const create = async ({
   };
 };
 
-const getConnectionChangeEvent = (
+const OFFLINE_THRESHOLD = 5;
+
+const isBakerMonitorOffline = (status: OfflineStatus): boolean => {
+  return status.consecutiveBakerMonitorFailures >= OFFLINE_THRESHOLD;
+};
+
+const isNodeMonitorOffline = (status: OfflineStatus): boolean => {
+  return status.consecutiveNodeMonitorFailures >= OFFLINE_THRESHOLD;
+};
+
+export const getConnectionChangeEvent = (
   previousStatus: OfflineStatus,
   newStatus: OfflineStatus
 ): TezosNodeEvent | null => {
   if (
-    !previousStatus.isBakerMonitorOffline &&
-    newStatus.isBakerMonitorOffline
+    isBakerMonitorOffline(previousStatus) &&
+    !isBakerMonitorOffline(newStatus)
   ) {
     // baker monitor went online
+    const message = "Baker monitor is back online";
+    debug(message);
     return {
       type: "BAKER_DATA",
       kind: "RECONNECTED",
-      message: "Baker monitor is back online",
+      message,
     };
   }
-  if (previousStatus.isNodeMonitorOffline && !newStatus.isNodeMonitorOffline) {
+  if (
+    !isBakerMonitorOffline(previousStatus) &&
+    isBakerMonitorOffline(newStatus)
+  ) {
+    // baker monitor went offline
+    const message = "Baker monitor has gone offline";
+    debug(message);
+    return {
+      type: "BAKER_DATA",
+      kind: "ERROR",
+      message,
+    };
+  }
+  if (
+    isNodeMonitorOffline(previousStatus) &&
+    !isNodeMonitorOffline(newStatus)
+  ) {
     // node monitor went online
+    const message = "Node monitor is back online";
+    debug(message);
     return {
       type: "PEER_DATA",
       kind: "RECONNECTED",
-      message: "Node monitor is back online",
+      message,
+    };
+  }
+  if (
+    !isNodeMonitorOffline(previousStatus) &&
+    isNodeMonitorOffline(newStatus)
+  ) {
+    // node monitor went online
+    const message = "Node monitor has gone offline";
+    debug(message);
+    return {
+      type: "PEER_DATA",
+      kind: "RECONNECTED",
+      message,
     };
   }
   return null;
@@ -96,7 +139,7 @@ export const shouldNotify = (
   if (
     event.type === "BAKER_DATA" &&
     event.kind === "ERROR" &&
-    status.isBakerMonitorOffline
+    isBakerMonitorOffline(status)
   ) {
     debug(`Baking error event excluded because baker monitor is offline`);
     return false;
@@ -104,7 +147,7 @@ export const shouldNotify = (
   if (
     event.type === "PEER_DATA" &&
     event.kind === "ERROR" &&
-    status.isNodeMonitorOffline
+    isNodeMonitorOffline(status)
   ) {
     debug(`Node error event excluded because node monitor is offline`);
     return false;
@@ -120,24 +163,33 @@ export const updateStatus = (
   history: OfflineStatus,
   event: TezosNodeEvent | NotifierEvent
 ): OfflineStatus => {
-  let { isBakerMonitorOffline, isNodeMonitorOffline } = history;
-  // update isBakerMonitorOffline
+  let {
+    consecutiveBakerMonitorFailures,
+    consecutiveNodeMonitorFailures,
+  } = history;
+  // update consecutiveBakerMonitorFailures
   if (event.type === "BAKER_DATA" && event.kind === "ERROR") {
-    isBakerMonitorOffline = true;
-  } else if (event.type.includes("BAKER")) {
+    consecutiveBakerMonitorFailures++;
+    debug(
+      `Baker monitor has had ${consecutiveBakerMonitorFailures} consecutive failures`
+    );
+  } else if (event.type.includes("BAKER") || event.type.includes("BAKING")) {
     // any other baking event means the monitor is back online
-    isBakerMonitorOffline = false;
+    consecutiveBakerMonitorFailures = 0;
   }
-  // update isNodeMonitorOffline
+  // update consecutiveNodeMonitorFailures
   if (event.type === "PEER_DATA" && event.kind === "ERROR") {
-    isNodeMonitorOffline = true;
+    consecutiveNodeMonitorFailures++;
+    debug(
+      `Node monitor has had ${consecutiveNodeMonitorFailures} consecutive failures`
+    );
   } else if (event.type === "PEER") {
     // any other peer event means the monitor is back online
-    isNodeMonitorOffline = false;
+    consecutiveNodeMonitorFailures = 0;
   }
 
   return {
-    isBakerMonitorOffline,
-    isNodeMonitorOffline,
+    consecutiveBakerMonitorFailures,
+    consecutiveNodeMonitorFailures,
   };
 };

@@ -1,4 +1,8 @@
-import { shouldNotify, updateStatus } from "./offlineFilter";
+import {
+  getConnectionChangeEvent,
+  shouldNotify,
+  updateStatus,
+} from "./offlineFilter";
 import { PeerEvent, PeerNodeEvent, TezosNodeEvent } from "../types";
 
 describe("shouldNotify", () => {
@@ -7,8 +11,8 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         status: {
-          isNodeMonitorOffline: false,
-          isBakerMonitorOffline: true,
+          consecutiveNodeMonitorFailures: 5,
+          consecutiveBakerMonitorFailures: 5,
         },
       },
       { type: "BAKER_DATA", kind: "ERROR", message: "some error" }
@@ -21,8 +25,8 @@ describe("shouldNotify", () => {
       {
         channelName: "desktop",
         status: {
-          isNodeMonitorOffline: true,
-          isBakerMonitorOffline: false,
+          consecutiveNodeMonitorFailures: 5,
+          consecutiveBakerMonitorFailures: 5,
         },
       },
       { type: "PEER_DATA", kind: "ERROR", message: "some error" }
@@ -32,10 +36,10 @@ describe("shouldNotify", () => {
 });
 
 describe("updateStatus", () => {
-  it("updates isBakerMonitorOffline to true for baker errors", () => {
+  it("increments consecutiveBakerMonitorFailures for baker errors", () => {
     const status = {
-      isNodeMonitorOffline: false,
-      isBakerMonitorOffline: false,
+      consecutiveNodeMonitorFailures: 0,
+      consecutiveBakerMonitorFailures: 0,
     };
     const bakeEvent: TezosNodeEvent = {
       type: "BAKER_DATA",
@@ -45,20 +49,20 @@ describe("updateStatus", () => {
     const result = updateStatus(status, bakeEvent);
 
     expect(result).toEqual({
-      isNodeMonitorOffline: false,
-      isBakerMonitorOffline: true,
+      consecutiveNodeMonitorFailures: 0,
+      consecutiveBakerMonitorFailures: 1,
     });
   });
 
-  it("updates isBakerMonitorOffline to false for baker success", () => {
+  it("resets consecutiveBakerMonitorFailures to 0 for baker success", () => {
     const status = {
-      isNodeMonitorOffline: false,
-      isBakerMonitorOffline: false,
+      consecutiveNodeMonitorFailures: 1,
+      consecutiveBakerMonitorFailures: 1,
     };
     const bakeEvent: TezosNodeEvent = {
       type: "FUTURE_BAKING",
       kind: "FUTURE_BAKING_OPPORTUNITY",
-      message: "some error",
+      message: "some message",
       level: 900,
       baker: "some baker",
       date: new Date(),
@@ -66,15 +70,15 @@ describe("updateStatus", () => {
     const result = updateStatus(status, bakeEvent);
 
     expect(result).toEqual({
-      isNodeMonitorOffline: false,
-      isBakerMonitorOffline: false,
+      consecutiveNodeMonitorFailures: 1,
+      consecutiveBakerMonitorFailures: 0,
     });
   });
 
-  it("updates isNodeMonitorOffline to true for node errors", () => {
+  it("increments consecutiveNodeMonitorFailures for node errors", () => {
     const status = {
-      isNodeMonitorOffline: false,
-      isBakerMonitorOffline: false,
+      consecutiveNodeMonitorFailures: 0,
+      consecutiveBakerMonitorFailures: 0,
     };
     const peerEvent: PeerEvent = {
       type: "PEER_DATA",
@@ -84,15 +88,15 @@ describe("updateStatus", () => {
     const result = updateStatus(status, peerEvent);
 
     expect(result).toEqual({
-      isBakerMonitorOffline: false,
-      isNodeMonitorOffline: true,
+      consecutiveNodeMonitorFailures: 1,
+      consecutiveBakerMonitorFailures: 0,
     });
   });
 
-  it("updates isNodeMonitorOffline to false for node success", () => {
+  it("resets consecutiveNodeMonitorFailures to 0 for node success", () => {
     const status = {
-      isNodeMonitorOffline: true,
-      isBakerMonitorOffline: false,
+      consecutiveNodeMonitorFailures: 1,
+      consecutiveBakerMonitorFailures: 1,
     };
     const peerEvent: PeerNodeEvent = {
       type: "PEER",
@@ -103,8 +107,51 @@ describe("updateStatus", () => {
     const result = updateStatus(status, peerEvent);
 
     expect(result).toEqual({
-      isBakerMonitorOffline: false,
-      isNodeMonitorOffline: false,
+      consecutiveNodeMonitorFailures: 0,
+      consecutiveBakerMonitorFailures: 1,
     });
+  });
+});
+
+describe("getConnectionChangeEvent", () => {
+  const offlineNode = {
+    consecutiveBakerMonitorFailures: 0,
+    consecutiveNodeMonitorFailures: 5,
+  };
+  const offlineBaker = {
+    consecutiveBakerMonitorFailures: 5,
+    consecutiveNodeMonitorFailures: 0,
+  };
+  const onlineNode = {
+    consecutiveBakerMonitorFailures: 5,
+    consecutiveNodeMonitorFailures: 0,
+  };
+  const onlineBaker = {
+    consecutiveBakerMonitorFailures: 0,
+    consecutiveNodeMonitorFailures: 5,
+  };
+  it("returns event when baker monitor goes offline", () => {
+    getConnectionChangeEvent(onlineBaker, offlineBaker);
+  });
+  it("returns event when baker monitor comes back online", () => {
+    getConnectionChangeEvent(offlineBaker, onlineBaker);
+  });
+  it("returns null when baker monitor is still offline", () => {
+    getConnectionChangeEvent(offlineBaker, offlineBaker);
+  });
+  it("returns null when baker monitor is still online", () => {
+    getConnectionChangeEvent(onlineBaker, onlineBaker);
+  });
+  it("returns event when node monitor goes offline", () => {
+    getConnectionChangeEvent(onlineNode, offlineNode);
+  });
+  it("returns event when node monitor comes back online", () => {
+    getConnectionChangeEvent(offlineNode, onlineNode);
+  });
+  it("returns null when node monitor is still offline", () => {
+    getConnectionChangeEvent(offlineNode, offlineNode);
+  });
+  it("returns null when node monitor is still online", () => {
+    getConnectionChangeEvent(onlineNode, onlineNode);
   });
 });
