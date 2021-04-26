@@ -1,6 +1,6 @@
 # Backend Overview
 
-Backend runs the Kiln monitor and serves the API for the frontend.
+Backend runs the Pyrometer monitor and serves the API for the frontend.
 
 ## Installation
 
@@ -8,9 +8,9 @@ Backend runs the Kiln monitor and serves the API for the frontend.
 
 ```
 # HTTPS
-git clone https://gitlab.com/tezos-kiln/kiln-next.git
+git clone https://gitlab.com/tezos-kiln/pyrometer.git
 # or via SSH
-git@gitlab.com:tezos-kiln/kiln-next.git
+git@gitlab.com:tezos-kiln/pyrometer.git
 ```
 
 ## Scripts
@@ -85,9 +85,9 @@ try {
 
 ## Notifications
 
-Notifications can be sent via Desktop, Email, Slack, and Telegram channels.
+Notifications can be sent via Desktop, Email, Slack, Telegram, and Endpoint channels.
 
-Notification Channels are simple functions that take a string message and return a result promise. Middleware are used to wrap channels and add additional functionality, such as job queues and filtering.
+Notification Channels are simple functions that take an event and return a result promise. Middleware are used to wrap channels and add additional functionality, such as job queues and filtering.
 
 ## Folder Structure
 

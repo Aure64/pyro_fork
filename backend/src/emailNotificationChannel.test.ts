@@ -26,7 +26,7 @@ describe("notify", () => {
       text: "some error message",
       subject: "some title",
       to: "admin@example.com",
-      from: "Kiln admin@example.com",
+      from: "Pyrometer admin@example.com",
     });
   });
 

@@ -526,7 +526,7 @@ export type Config = {
  */
 export const load = async (): Promise<Config> => {
   const { data: dataDirectory, config: configDirectory } = envPaths(
-    "kiln-next"
+    "pyrometer"
   );
   // ensure system directories exist
   createDirectory(dataDirectory);
@@ -587,7 +587,7 @@ export const load = async (): Promise<Config> => {
   const loadedConfig = nconf.get();
   const validation = new Validator(loadedConfig, makeConfigValidations());
   if (validation.fails()) {
-    console.log("Your config is invalid. Kiln cannot start.");
+    console.log("Your config is invalid. Pyrometer cannot start.");
     const errors = validation.errors.all();
     console.log(Yaml.dump(errors));
     process.exit(1);
@@ -622,7 +622,7 @@ export const load = async (): Promise<Config> => {
 };
 
 const save = (systemConfigPath: string): void => {
-  // read in system config.  Kiln currently doesn't update user settings
+  // read in system config.  Pyrometer currently doesn't update user settings
   const { [SYSTEM_PREFIX]: systemSettings } = nconf.get();
   debug("Saving config to disk.");
   // save system config

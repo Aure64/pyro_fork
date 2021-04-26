@@ -1,5 +1,5 @@
 {
-  "name": "@tezos-kiln/kiln-next",
+  "name": "@tezos-kiln/pyrometer",
   "version": "0.0.1",
   "license": "MIT",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "prepublishOnly": "yarn build"
   },
   "bin": {
-    "kiln-next": "./bin/kiln-next.js"
+    "pyrometer": "./bin/pyrometer.js"
   },
   "devDependencies": {
     "@types/better-queue": "3.8.2",

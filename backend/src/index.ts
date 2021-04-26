@@ -84,7 +84,7 @@ const main = async () => {
     Server.halt(server);
     process.exit(0);
   });
-  info("Kiln started");
+  info("Pyrometer started");
 };
 
 main();

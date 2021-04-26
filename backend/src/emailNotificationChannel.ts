@@ -41,7 +41,7 @@ export const notify: Notify<EmailNotificationChannel> = async (
   const { transporter, config } = notifier;
   const [error] = await to(
     transporter.sendMail({
-      from: `Kiln ${config.email}`,
+      from: `Pyrometer ${config.email}`,
       to: config.email,
       subject: title,
       text: message,
