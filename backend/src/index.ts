@@ -64,7 +64,7 @@ const main = async () => {
 
   const bakerMonitor =
     bakers.length > 0
-      ? BakerMonitor.start({
+      ? await BakerMonitor.start({
           bakers,
           config,
           onEvent,

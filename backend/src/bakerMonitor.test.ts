@@ -80,13 +80,11 @@ describe("loadBlockData", () => {
     const getBlockMetadata = jest.fn().mockResolvedValue({ level: {} });
     const getEndorsingRights = jest.fn().mockResolvedValue({});
     const getBlock = jest.fn().mockResolvedValue({});
-    const getConstants = jest.fn().mockResolvedValue({});
     const rpc = ({
       getBakingRights,
       getBlock,
       getBlockMetadata,
       getEndorsingRights,
-      getConstants,
     } as unknown) as RpcClient;
 
     await loadBlockData({
@@ -99,7 +97,6 @@ describe("loadBlockData", () => {
     expect(getBlock.mock.calls.length).toEqual(1);
     expect(getBlockMetadata.mock.calls.length).toEqual(1);
     expect(getEndorsingRights.mock.calls.length).toEqual(1);
-    expect(getConstants.mock.calls.length).toEqual(1);
   });
 
   it("returns error for failed metadata fetch", async () => {

@@ -172,7 +172,7 @@ const updateNodeInfo = async ({
 
   if (fetchBootstrappedStatus) {
     [bootstrappedError, bootstrappedStatus] = await to(
-      isBootstrapped(node, CHAIN)
+      getBootstrappedStatus(node, CHAIN)
     );
 
     if (bootstrappedError) {
@@ -271,7 +271,7 @@ export const checkBlockInfo = ({
     }
     if (
       referenceNodeBlockHistory &&
-      nodeInfo.bootstrappedStatus.sync_state == "synced"
+      nodeInfo.bootstrappedStatus.sync_state === "synced"
     ) {
       const ancestorDistance = findSharedAncestor(
         nodeInfo.history,
@@ -314,11 +314,14 @@ const findSharedAncestor = (
   nodeHistory: BlockHeaderResponse[],
   referenceNodeHistory: BlockHeaderResponse[]
 ): number => {
+  // walk back through a node's blocks
   for (let i = 0; i < nodeHistory.length; i++) {
     const nodeHeader = nodeHistory[i];
+    // look for the same block in our reference node
     const referenceIndex = referenceNodeHistory.findIndex(
       (header) => header.hash === nodeHeader.hash
     );
+    // if one was found, that index is the distance our node is from the assumed main branch
     if (referenceIndex !== -1) return referenceIndex;
   }
 
@@ -330,7 +333,7 @@ export type BootstrappedStatus = {
   sync_state: "synced" | "unsynced" | "stuck";
 };
 
-const isBootstrapped = async (
+const getBootstrappedStatus = async (
   node: string,
   chain: string
 ): Promise<BootstrappedStatus> => {
@@ -363,7 +366,7 @@ type FetchBlockHeadersArgs = {
   rpc: RpcClient;
 };
 
-const branchHistoryLength = 5;
+const BRANCH_HISTORY_LENGTH = 5;
 
 const fetchBlockHeaders = async ({
   blockHash,
@@ -372,7 +375,7 @@ const fetchBlockHeaders = async ({
   const history: BlockHeaderResponse[] = [];
   let nextHash = blockHash;
   // very primitive approach: we simply iterate up our chain to find the most recent blocks
-  while (history.length < branchHistoryLength) {
+  while (history.length < BRANCH_HISTORY_LENGTH) {
     const [headerError, headerResult] = await to(
       rpc.getBlockHeader({ block: nextHash })
     );

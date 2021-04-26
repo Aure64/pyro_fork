@@ -1,5 +1,5 @@
 import { BakerEvent, Result, TezosNodeEvent } from "./types";
-import { debug, warn, info, trace } from "loglevel";
+import { debug, error, warn, info, trace } from "loglevel";
 import {
   Context,
   PollingSubscribeProvider,
@@ -38,7 +38,11 @@ type StartArgs = {
   config: Config;
 };
 
-export const start = ({ bakers, onEvent, config }: StartArgs): Monitor => {
+export const start = async ({
+  bakers,
+  onEvent,
+  config,
+}: StartArgs): Promise<Monitor> => {
   const rpcNode = config.getRpc();
   const storageDirectory = config.storageDirectory;
   const toolkit = new TezosToolkit(rpcNode);
@@ -59,6 +63,26 @@ export const start = ({ bakers, onEvent, config }: StartArgs): Monitor => {
     10
   );
 
+  const [constantsError, constants] = await to(rpc.getConstants());
+  if (constantsError) {
+    error(`Error fetching chain constants: ${constantsError.message}`);
+    onEvent({
+      type: "BAKER_DATA",
+      kind: "ERROR",
+      message: constantsError.message,
+    });
+    throw constantsError;
+  } else if (!constants) {
+    const message = "Error fetching chain constants: no constants";
+    error();
+    onEvent({
+      type: "BAKER_DATA",
+      kind: "ERROR",
+      message,
+    });
+    throw new Error(message);
+  }
+
   const store = new SqlLiteStore<string>({
     path: normalize(`${storageDirectory}/bakerMonitor.db`),
   });
@@ -71,6 +95,7 @@ export const start = ({ bakers, onEvent, config }: StartArgs): Monitor => {
         rpc,
         blockId,
         lastCycle: lastBlockCycle,
+        constants,
       });
 
       if (result.type === "ERROR") {
@@ -100,7 +125,7 @@ export const start = ({ bakers, onEvent, config }: StartArgs): Monitor => {
           config.setLastBlockLevel(blockLevel);
         }
         if (!lastBlockCycle || blockCycle > lastBlockCycle) {
-          debug(`Saving previous block level: ${blockLevel}`);
+          debug(`Saving previous block cycle: ${blockCycle}`);
           // only update last block cycle if it's bigger.  it could be smaller if this was a catch up event
           config.setLastBlockCycle(blockCycle);
         }
@@ -171,6 +196,7 @@ type CheckBlockArgs = {
   blockId: string;
   rpc: RpcClient;
   lastCycle: number | undefined;
+  constants: ConstantsResponse;
 };
 
 type CheckBlockResult = {
@@ -187,6 +213,7 @@ const checkBlock = async ({
   blockId,
   rpc,
   lastCycle,
+  constants,
 }: CheckBlockArgs): Promise<Result<CheckBlockResult>> => {
   trace(`Fetching baker data for block ${blockId}`);
   const blockResult = await loadBlockData({
@@ -204,13 +231,7 @@ const checkBlock = async ({
     trace(`Successfully retrieved baker data for block ${blockId}`);
     const events: TezosNodeEvent[] = [];
 
-    const {
-      metadata,
-      block,
-      bakingRights,
-      endorsingRights,
-      constants,
-    } = blockResult.data;
+    const { metadata, block, bakingRights, endorsingRights } = blockResult.data;
 
     if (!metadata.level) {
       return {
@@ -303,7 +324,6 @@ type BlockData = {
   bakingRights: BakingRightsResponse;
   endorsingRights: EndorsingRightsResponse;
   block: BlockResponse;
-  constants: ConstantsResponse;
 };
 
 /**
@@ -348,24 +368,12 @@ export const loadBlockData = async ({
   );
   const blockPromise = to(rpc.getBlock({ block: blockId }));
 
-  const constantsPromise = to(rpc.getConstants({ block: blockId }));
-
   // run all promises in parallel
   await Promise.all([
     bakingRightsPromise,
     endorsingRightsPromise,
     blockPromise,
-    constantsPromise,
   ]);
-
-  const [constantsError, constants] = await constantsPromise;
-  if (constantsError) {
-    warn(`Error fetching block constants: ${constantsError.message}`);
-    return { type: "ERROR", message: "Error loading block constants" };
-  } else if (!constants) {
-    warn("Error fetching block constants: no constants");
-    return { type: "ERROR", message: "Error loading block constants" };
-  }
 
   const [bakingRightsError, bakingRights] = await bakingRightsPromise;
 
@@ -414,7 +422,7 @@ export const loadBlockData = async ({
 
   return {
     type: "SUCCESS",
-    data: { metadata, bakingRights, endorsingRights, block, constants },
+    data: { metadata, bakingRights, endorsingRights, block },
   };
 };
 
