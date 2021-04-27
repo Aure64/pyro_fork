@@ -8,7 +8,7 @@ import {
 } from "@taquito/taquito";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
-import to from "await-to-js";
+import { wrap } from "./networkWrapper";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
 const CHAIN = "main";
@@ -168,23 +168,20 @@ const updateNodeInfo = async ({
   fetchBootstrappedStatus,
 }: UpdateNodeInfoArgs): Promise<Result<NodeInfo>> => {
   debug(`Node monitor received block ${blockHash} for node ${node}`);
-  let bootstrappedStatus, bootstrappedError;
+  let bootstrappedStatus;
 
   if (fetchBootstrappedStatus) {
-    [bootstrappedError, bootstrappedStatus] = await to(
+    const bootstrappedResult = await wrap(() =>
       getBootstrappedStatus(node, CHAIN)
     );
 
-    if (bootstrappedError) {
+    if (bootstrappedResult.type === "ERROR") {
       warn(
-        `isBoostrapped failed for node ${node} because of ${bootstrappedError.message}`
+        `isBoostrapped failed for node ${node} because of ${bootstrappedResult.error.message}`
       );
-      return { type: "ERROR", message: bootstrappedError.message };
-    } else if (!bootstrappedStatus) {
-      const message = `Get bootstrapped status returned empty result for ${node}`;
-      warn(message);
+      return { type: "ERROR", message: bootstrappedResult.error.message };
     } else {
-      const { bootstrapped, sync_state } = bootstrappedStatus;
+      const { bootstrapped, sync_state } = bootstrappedResult.data;
       debug(
         `Node ${node} is bootstrapped: ${bootstrapped} with sync_state: ${sync_state}`
       );
@@ -200,22 +197,16 @@ const updateNodeInfo = async ({
   }
   const history = historyResult.data;
 
-  const [connectionsError, connectionsResult] = await to(
-    getNetworkConnections(node)
-  );
-  if (connectionsError) {
+  const connectionResult = await wrap(() => getNetworkConnections(node));
+  if (connectionResult.type === "ERROR") {
     warn(
-      `getNetworkConnections failed for node ${node} because of ${connectionsError.message}`
+      `getNetworkConnections failed for node ${node} because of ${connectionResult.error.message}`
     );
-    return { type: "ERROR", message: connectionsError.message };
-  } else if (!connectionsResult) {
-    const message = `Get connections status returned empty result for ${node}`;
-    warn(message);
-    return { type: "ERROR", message };
+    return { type: "ERROR", message: connectionResult.error.message };
   } else {
-    debug(`Node ${node} has ${connectionsResult.length} peers`);
+    debug(`Node ${node} has ${connectionResult.data.length} peers`);
   }
-  const peerCount = connectionsResult.length;
+  const peerCount = connectionResult.data.length;
 
   return {
     type: "SUCCESS",
@@ -376,14 +367,14 @@ const fetchBlockHeaders = async ({
   let nextHash = blockHash;
   // very primitive approach: we simply iterate up our chain to find the most recent blocks
   while (history.length < BRANCH_HISTORY_LENGTH) {
-    const [headerError, headerResult] = await to(
+    const headerResult = await wrap(() =>
       rpc.getBlockHeader({ block: nextHash })
     );
-    if (headerResult) {
-      nextHash = headerResult.predecessor;
-      history.push(headerResult);
+    if (headerResult.type === "SUCCESS") {
+      nextHash = headerResult.data.predecessor;
+      history.push(headerResult.data);
     } else {
-      debug(headerError);
+      debug(headerResult.error);
       return {
         type: "ERROR",
         message: `Error fetching header for block ${blockHash}`,

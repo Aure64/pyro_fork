@@ -19,7 +19,7 @@ import {
   RpcClient,
   DelegatesResponse,
 } from "@taquito/rpc";
-import to from "await-to-js";
+import { wrap } from "./networkWrapper";
 import { Config } from "./config";
 import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
@@ -63,25 +63,17 @@ export const start = async ({
     10
   );
 
-  const [constantsError, constants] = await to(rpc.getConstants());
-  if (constantsError) {
-    error(`Error fetching chain constants: ${constantsError.message}`);
+  const constantsResult = await wrap(() => rpc.getConstants());
+  if (constantsResult.type === "ERROR") {
+    error(`Error fetching chain constants: ${constantsResult.error.message}`);
     onEvent({
       type: "BAKER_DATA",
       kind: "ERROR",
-      message: constantsError.message,
+      message: constantsResult.error.message,
     });
-    throw constantsError;
-  } else if (!constants) {
-    const message = "Error fetching chain constants: no constants";
-    error();
-    onEvent({
-      type: "BAKER_DATA",
-      kind: "ERROR",
-      message,
-    });
-    throw new Error(message);
+    throw constantsResult.error;
   }
+  const constants = constantsResult.data;
 
   const store = new SqlLiteStore<string>({
     path: normalize(`${storageDirectory}/bakerMonitor.db`),
@@ -335,18 +327,20 @@ export const loadBlockData = async ({
   rpc,
 }: LoadBlockDataArgs): Promise<Result<BlockData>> => {
   debug(`Fetching block metadata for ${blockId}`);
-  const [metadataError, metadata] = await to(
+  const metadataResult = await wrap(() =>
     rpc.getBlockMetadata({ block: blockId })
   );
-  if (metadataError) {
-    warn(`Error fetching block metadata: ${metadataError.message}`);
+  if (metadataResult.type === "ERROR") {
+    warn(`Error fetching block metadata: ${metadataResult.error.message}`);
     return { type: "ERROR", message: "Error loading block metadata" };
-  } else if (!metadata?.level) {
+  }
+  const metadata = metadataResult.data;
+  if (!metadata.level) {
     warn("Error fetching block metadata: no metadata");
     return { type: "ERROR", message: "Error loading block metadata" };
   }
 
-  const bakingRightsPromise = to(
+  const bakingRightsPromise = wrap(() =>
     rpc.getBakingRights(
       {
         max_priority: 0,
@@ -357,16 +351,16 @@ export const loadBlockData = async ({
     )
   );
 
-  const endorsingRightsPromise = to(
+  const endorsingRightsPromise = wrap(() =>
     rpc.getEndorsingRights(
       {
-        cycle: metadata.level.cycle,
+        cycle: metadata.level?.cycle,
         delegate: bakers,
       },
       { block: blockId }
     )
   );
-  const blockPromise = to(rpc.getBlock({ block: blockId }));
+  const blockPromise = wrap(() => rpc.getBlock({ block: blockId }));
 
   // run all promises in parallel
   await Promise.all([
@@ -375,50 +369,36 @@ export const loadBlockData = async ({
     blockPromise,
   ]);
 
-  const [bakingRightsError, bakingRights] = await bakingRightsPromise;
+  const bakingRightsResult = await bakingRightsPromise;
 
-  if (bakingRightsError) {
-    warn(`Baking rights error: ${bakingRightsError.message}`);
-    return { type: "ERROR", message: "Error loading baking rights" };
-  } else if (!bakingRights) {
-    warn("Baking rights undefined");
+  if (bakingRightsResult.type === "ERROR") {
+    warn(`Baking rights error: ${bakingRightsResult.error.message}`);
     return { type: "ERROR", message: "Error loading baking rights" };
   }
+  const bakingRights = bakingRightsResult.data;
 
-  const [endorsingRightsError, endorsingRights] = await endorsingRightsPromise;
-  if (endorsingRightsError) {
-    warn(`Endorsing rights error: ${endorsingRightsError.message}`);
-    return {
-      type: "ERROR",
-      message: "Error fetching endorsing rights",
-    };
-  } else if (!endorsingRights) {
-    const message = "Undefined endorsing rights";
-    warn(message);
+  const endorsingRightsResult = await endorsingRightsPromise;
+  if (endorsingRightsResult.type === "ERROR") {
+    warn(`Endorsing rights error: ${endorsingRightsResult.error.message}`);
     return {
       type: "ERROR",
       message: "Error fetching endorsing rights",
     };
   }
+  const endorsingRights = endorsingRightsResult.data;
 
   // taquito currently doesn't expose getBlockOperations
-  const [blockError, block] = await blockPromise;
+  const blockResult = await blockPromise;
 
-  if (blockError) {
+  if (blockResult.type === "ERROR") {
     const message = `Error loading block operations for ${blockId}`;
-    warn(`${message} because of ${blockError.message}`);
-    return {
-      type: "ERROR",
-      message,
-    };
-  } else if (!block) {
-    const message = `Error loading block operations for ${blockId}`;
-    warn(message);
+    warn(`${message} because of ${blockResult.error.message}`);
     return {
       type: "ERROR",
       message,
     };
   }
+  const block = blockResult.data;
 
   return {
     type: "SUCCESS",
@@ -567,18 +547,19 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
         const accusedLevel = contentsItem.op1.operations.level;
         const accusedSignature = contentsItem.op1.signature;
-        const [blockError, blockResult] = await to(
+        const blockResult = await wrap(() =>
           rpc.getBlock({ block: `${accusedLevel}` })
         );
-        if (blockResult) {
-          const endorsementOperations = blockResult.operations[0];
+        if (blockResult.type === "SUCCESS") {
+          const block = blockResult.data;
+          const endorsementOperations = block.operations[0];
           const operation = endorsementOperations.find(
             (operation) => operation.signature === accusedSignature
           );
           const endorser = operation && findEndorserForOperation(operation);
           if (endorser) {
             if (endorser === baker) {
-              const message = `Double endorsement for baker ${baker} at block ${blockResult.hash}`;
+              const message = `Double endorsement for baker ${baker} at block ${block.hash}`;
               info(message);
               return {
                 type: "BAKER_NODE",
@@ -590,16 +571,12 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
             }
           } else {
             warn(
-              `Unable to find endorser for double endorsed block ${blockResult.hash}`
+              `Unable to find endorser for double endorsed block ${block.hash}`
             );
           }
-        } else if (blockError) {
-          warn(
-            `Error fetching block info to determine double endorsement violator because of ${blockError.message}`
-          );
         } else {
           warn(
-            "Error fetching block info to determine double endorsement violator"
+            `Error fetching block info to determine double endorsement violator because of ${blockResult.error.message}`
           );
         }
       }
@@ -640,13 +617,14 @@ export const checkBlockAccusationsForDoubleBake = async ({
         const accusedHash = operation.hash;
         const accusedLevel = contentsItem.bh1.level;
         const accusedPriority = contentsItem.bh1.priority;
-        const [bakingRightsError, bakingRights] = await to(
+        const bakingRightsResult = await wrap(() =>
           rpc.getBakingRights(
             { delegate: baker, level: accusedLevel },
             { block: `${accusedLevel}` }
           )
         );
-        if (bakingRights) {
+        if (bakingRightsResult.type === "SUCCESS") {
+          const bakingRights = bakingRightsResult.data;
           const hadBakingRights =
             bakingRights.find(
               (right) =>
@@ -663,13 +641,9 @@ export const checkBlockAccusationsForDoubleBake = async ({
               blockLevel,
             };
           }
-        } else if (bakingRightsError) {
-          warn(
-            `Error fetching baking rights to determine double bake violator because of ${bakingRightsError.message}`
-          );
         } else {
           warn(
-            "Error fetching baking rights to determine double bake violator"
+            `Error fetching baking rights to determine double bake violator because of ${bakingRightsResult.error.message}`
           );
         }
       }
@@ -783,24 +757,17 @@ const getDeactivationEvent = async ({
   cycle,
   rpc,
 }: GetDeactivationEventsArgs): Promise<TezosNodeEvent | null> => {
-  const [delegatesError, delegatesResponse] = await to(rpc.getDelegates(baker));
-  if (delegatesError) {
+  const delegatesResult = await wrap(() => rpc.getDelegates(baker));
+  if (delegatesResult.type === "ERROR") {
     const message = `Error loading delegate info for delegate ${baker}`;
-    warn(`${message} because of ${delegatesError.message}`);
-    return {
-      type: "BAKER_DATA",
-      kind: "ERROR",
-      message,
-    };
-  } else if (!delegatesResponse) {
-    const message = `Empty delegate info for delegate ${baker}`;
-    warn(message);
+    warn(`${message} because of ${delegatesResult.error.message}`);
     return {
       type: "BAKER_DATA",
       kind: "ERROR",
       message,
     };
   } else {
+    const delegatesResponse = delegatesResult.data;
     return checkForDeactivations({ baker, cycle, delegatesResponse });
   }
 };
