@@ -10,6 +10,7 @@ import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import { wrap } from "./networkWrapper";
 import { makeMemoizedAsyncFunction } from "./memoization";
+import { delay, retryWhen, tap } from "rxjs/operators";
 
 const CHAIN = "main";
 
@@ -128,7 +129,15 @@ const subscribeToNode = (
   chain: string
 ): { subscription: Subscription<string>; rpc: RpcClient } => {
   const toolkit = new TezosToolkit(new RpcClient(node, chain));
-  const context = new Context(toolkit.rpc);
+  const context = new Context(toolkit.rpc, undefined, undefined, {
+    shouldObservableSubscriptionRetry: true,
+    observableSubscriptionRetryFunction: retryWhen((error) =>
+      error.pipe(
+        delay(60000),
+        tap(() => debug("Retrying RPC subscription..."))
+      )
+    ),
+  });
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
   const rpc = toolkit.rpc;

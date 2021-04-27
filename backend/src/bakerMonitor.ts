@@ -25,6 +25,7 @@ import * as BetterQueue from "better-queue";
 import * as SqlLiteStore from "better-queue-sqlite";
 import { normalize } from "path";
 import { makeMemoizedAsyncFunction } from "./memoization";
+import { delay, retryWhen, tap } from "rxjs/operators";
 
 type Monitor = {
   subscription: Subscription<string>;
@@ -48,6 +49,12 @@ export const start = async ({
   const toolkit = new TezosToolkit(rpcNode);
   const context = new Context(toolkit.rpc, undefined, undefined, {
     shouldObservableSubscriptionRetry: true,
+    observableSubscriptionRetryFunction: retryWhen((error) =>
+      error.pipe(
+        delay(60000),
+        tap(() => debug("Retrying RPC subscription..."))
+      )
+    ),
   });
   const provider = new PollingSubscribeProvider(context);
   const subscription = provider.subscribe("head");
