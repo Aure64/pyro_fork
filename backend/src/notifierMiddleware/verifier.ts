@@ -18,7 +18,7 @@ export const create = (
     const verified = config.getBoolean(verifiedKey);
     if (!verified) {
       info(`${channelName} is not verified. Sending test notification`);
-      const message = `Test Pyrometer notificatation of ${channelName}`;
+      const message = `Test Pyrometer notification of ${channelName}`;
       const verificationEvent: NotifierEvent = {
         type: "NOTIFIER",
         channelName,
