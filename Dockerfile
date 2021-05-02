@@ -1,4 +1,4 @@
-FROM node:14-alpine as builder
+FROM node:16-alpine as builder
 WORKDIR /usr/src/app
 COPY backend/package.json backend/yarn.lock ./
 #install runtime dependencies and populate yarn cache
@@ -9,7 +9,7 @@ RUN yarn install --frozen-lockfile
 COPY --chown=node:node backend/ ./
 RUN yarn build
 
-FROM node:14-alpine
+FROM node:16-alpine
 ENV NODE_ENV production
 WORKDIR /app
 COPY --from=builder /usr/src/app/node_modules node_modules
