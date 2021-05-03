@@ -10,7 +10,7 @@ import {
   PeerDataEvent,
   TezosNodeEvent,
 } from "../types";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 /**
  * Convert a notify channel from one that takes message and title strings to one that takes an event. This
@@ -159,6 +159,7 @@ const peerEventToString = (event: PeerNodeEvent): string => {
   }
 };
 
-const dateToString = (date: Date): string => {
-  return format(date, "MM/dd/yyyy, H:mm:ss");
+const dateToString = (date: Date | string): string => {
+  const parsedDate = typeof date === "string" ? parseISO(date) : date;
+  return format(parsedDate, "MM/dd/yyyy, H:mm:ss");
 };
