@@ -333,68 +333,8 @@ export const loadBlockData = async ({
   blockId,
   rpc,
 }: LoadBlockDataArgs): Promise<Result<BlockData>> => {
-  debug(`Fetching block metadata for ${blockId}`);
-  const metadataResult = await wrap(() =>
-    rpc.getBlockMetadata({ block: blockId })
-  );
-  if (metadataResult.type === "ERROR") {
-    warn(`Error fetching block metadata: ${metadataResult.error.message}`);
-    return { type: "ERROR", message: "Error loading block metadata" };
-  }
-  const metadata = metadataResult.data;
-  if (!metadata.level) {
-    warn("Error fetching block metadata: no metadata");
-    return { type: "ERROR", message: "Error loading block metadata" };
-  }
-
-  const bakingRightsPromise = wrap(() =>
-    rpc.getBakingRights(
-      {
-        max_priority: 0,
-        cycle: metadata.level?.cycle,
-        delegate: bakers,
-      },
-      { block: blockId }
-    )
-  );
-
-  const endorsingRightsPromise = wrap(() =>
-    rpc.getEndorsingRights(
-      {
-        cycle: metadata.level?.cycle,
-        delegate: bakers,
-      },
-      { block: blockId }
-    )
-  );
+  debug(`Fetching block ${blockId}`);
   const blockPromise = wrap(() => rpc.getBlock({ block: blockId }));
-
-  // run all promises in parallel
-  await Promise.all([
-    bakingRightsPromise,
-    endorsingRightsPromise,
-    blockPromise,
-  ]);
-
-  const bakingRightsResult = await bakingRightsPromise;
-
-  if (bakingRightsResult.type === "ERROR") {
-    warn(`Baking rights error: ${bakingRightsResult.error.message}`);
-    return { type: "ERROR", message: "Error loading baking rights" };
-  }
-  const bakingRights = bakingRightsResult.data;
-
-  const endorsingRightsResult = await endorsingRightsPromise;
-  if (endorsingRightsResult.type === "ERROR") {
-    warn(`Endorsing rights error: ${endorsingRightsResult.error.message}`);
-    return {
-      type: "ERROR",
-      message: "Error fetching endorsing rights",
-    };
-  }
-  const endorsingRights = endorsingRightsResult.data;
-
-  // taquito currently doesn't expose getBlockOperations
   const blockResult = await blockPromise;
 
   if (blockResult.type === "ERROR") {
@@ -407,9 +347,58 @@ export const loadBlockData = async ({
   }
   const block = blockResult.data;
 
+  debug(`Block ${blockId} is at level`, block.metadata.level);
+  const cycle = block.metadata.level?.cycle;
+
+  const bakingRightsPromise = wrap(() =>
+    rpc.getBakingRights(
+      {
+        max_priority: 0,
+        cycle,
+        delegate: bakers,
+      },
+      { block: blockId }
+    )
+  );
+
+  const endorsingRightsPromise = wrap(() =>
+    rpc.getEndorsingRights(
+      {
+        cycle,
+        delegate: bakers,
+      },
+      { block: blockId }
+    )
+  );
+
+  // run all promises in parallel
+  await Promise.all([bakingRightsPromise, endorsingRightsPromise]);
+
+  const bakingRightsResult = await bakingRightsPromise;
+
+  if (bakingRightsResult.type === "ERROR") {
+    warn(`Baking rights error: ${bakingRightsResult.error.message}`);
+    return { type: "ERROR", message: "Error loading baking rights" };
+  }
+  const bakingRights = bakingRightsResult.data;
+
+  debug(`Baking rights for block ${blockId}`, bakingRights);
+
+  const endorsingRightsResult = await endorsingRightsPromise;
+  if (endorsingRightsResult.type === "ERROR") {
+    warn(`Endorsing rights error: ${endorsingRightsResult.error.message}`);
+    return {
+      type: "ERROR",
+      message: "Error fetching endorsing rights",
+    };
+  }
+  const endorsingRights = endorsingRightsResult.data;
+
+  debug(`Endorsing rights for block ${blockId}`, endorsingRights);
+
   return {
     type: "SUCCESS",
-    data: { metadata, bakingRights, endorsingRights, block },
+    data: { metadata: block.metadata, bakingRights, endorsingRights, block },
   };
 };
 
