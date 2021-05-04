@@ -594,8 +594,44 @@ export const load = async (): Promise<Config> => {
     process.exit(1);
   }
 
+  const saveConfig = () => save(systemConfigPath);
+
+  const setAndSave = (key: string, value: any) => {
+    debug("setting", key, value);
+    nconf.set(key, value);
+    saveConfig();
+  };
+
+  /**
+   * Sets an arbitrary number to the system config at `key`.  Do not use this for values that need to be
+   * configured via the CLI, as they won't be reported in the CLI help.
+   */
+  const setNumber: SetNumber = (key, value) => {
+    setAndSave(`${SYSTEM_PREFIX}:${key}`, value);
+  };
+
+  /**
+   * Sets an arbitrary boolean to the system config at `key`.  Do not use this for values that need to be
+   * configured via the CLI, as they won't be reported in the CLI help.
+   */
+  const setBoolean: SetBoolean = (key, value) => {
+    setAndSave(`${SYSTEM_PREFIX}:${key}`, value);
+  };
+
+  const setLastBlockCycle: SetLastBlockCycle = (value) => {
+    setAndSave(LAST_BLOCK_CYCLE, value);
+  };
+
+  const setLastBlockLevel: SetLastBlockLevel = (value) => {
+    setAndSave(LAST_BLOCK_LEVEL, value);
+  };
+
+  const setTelegramChatId: SetTelegramChatId = (value) => {
+    setAndSave(TELEGRAM_CHAT_ID, value);
+  };
+
   const config: Config = {
-    save: () => save(systemConfigPath),
+    save: saveConfig,
     getBakers,
     getRpc,
     getNodes,
@@ -671,10 +707,6 @@ const getLastBlockLevel: GetLastBlockLevel = () => {
 
 type SetLastBlockLevel = (value: number) => void;
 
-const setLastBlockLevel: SetLastBlockLevel = (value) => {
-  nconf.set(LAST_BLOCK_LEVEL, value);
-};
-
 type GetLastBlockCycle = () => number | undefined;
 
 const getLastBlockCycle: GetLastBlockCycle = () => {
@@ -682,10 +714,6 @@ const getLastBlockCycle: GetLastBlockCycle = () => {
 };
 
 type SetLastBlockCycle = (value: number) => void;
-
-const setLastBlockCycle: SetLastBlockCycle = (value) => {
-  nconf.set(LAST_BLOCK_CYCLE, value);
-};
 
 type GetNumber = (key: string) => number | undefined;
 
@@ -698,13 +726,6 @@ const getNumber: GetNumber = (key) => {
 };
 
 type SetNumber = (key: string, value: number) => void;
-/**
- * Sets an arbitrary number to the system config at `key`.  Do not use this for values that need to be
- * configured via the CLI, as they won't be reported in the CLI help.
- */
-const setNumber: SetNumber = (key, value) => {
-  nconf.set(`${SYSTEM_PREFIX}:${key}`, value);
-};
 
 type GetBoolean = (key: string) => boolean | undefined;
 
@@ -717,13 +738,6 @@ const getBoolean: GetBoolean = (key) => {
 };
 
 type SetBoolean = (key: string, value: boolean) => void;
-/**
- * Sets an arbitrary boolean to the system config at `key`.  Do not use this for values that need to be
- * configured via the CLI, as they won't be reported in the CLI help.
- */
-const setBoolean: SetBoolean = (key, value) => {
-  nconf.set(`${SYSTEM_PREFIX}:${key}`, value);
-};
 
 type GetExcludedEvents = () => string[];
 
@@ -789,10 +803,6 @@ const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
 };
 
 type SetTelegramChatId = (value: number) => void;
-
-const setTelegramChatId: SetTelegramChatId = (value) => {
-  nconf.set(TELEGRAM_CHAT_ID, value);
-};
 
 const printConfig = () => {
   console.log(JSON.stringify(nconf.get(), null, 2));
