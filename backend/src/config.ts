@@ -630,7 +630,7 @@ const save = (systemConfigPath: string): void => {
   if (systemSettings) {
     FS.writeFileSync(
       systemConfigPath,
-      JSON.stringify({ system: systemSettings })
+      JSON.stringify({ system: systemSettings }, null, 2)
     );
   }
 };
