@@ -47,9 +47,8 @@ export const apply = (notifyFunction: NotifyFunction): NotifyEventFunction => {
         return n;
       }
     }
-    // just use message as title for now
-    const title = message;
-    return notifyFunction({ title, message });
+    const details = "";
+    return notifyFunction({ title: message, message: details });
   };
 };
 
