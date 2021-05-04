@@ -84,7 +84,7 @@ const main = async () => {
     Server.halt(server);
     process.exit(0);
   });
-  info("Pyrometer started");
+  info("Started");
 };
 
 main();
