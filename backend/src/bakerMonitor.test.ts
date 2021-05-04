@@ -75,11 +75,11 @@ describe("checkBlockBakingRights", () => {
 });
 
 describe("loadBlockData", () => {
-  it("fetches bakingRights, endorsingRights, metadata, and block from rpc", async () => {
+  it("fetches bakingRights, endorsingRights and block from rpc", async () => {
     const getBakingRights = jest.fn().mockResolvedValue({});
     const getBlockMetadata = jest.fn().mockResolvedValue({ level: {} });
     const getEndorsingRights = jest.fn().mockResolvedValue({});
-    const getBlock = jest.fn().mockResolvedValue({});
+    const getBlock = jest.fn().mockResolvedValue({ metadata: { level: {} } });
     const rpc = ({
       getBakingRights,
       getBlock,
@@ -95,33 +95,35 @@ describe("loadBlockData", () => {
 
     expect(getBakingRights.mock.calls.length).toEqual(1);
     expect(getBlock.mock.calls.length).toEqual(1);
-    expect(getBlockMetadata.mock.calls.length).toEqual(1);
+    //metadata included in block
+    expect(getBlockMetadata.mock.calls.length).toEqual(0);
     expect(getEndorsingRights.mock.calls.length).toEqual(1);
   });
 
-  it("returns error for failed metadata fetch", async () => {
+  it("returns error for failed block data fetch", async () => {
     const getBakingRights = jest.fn().mockResolvedValue({});
-    const getBlockMetadata = jest.fn().mockRejectedValue({});
+    // const getBlockMetadata = jest.fn().mockRejectedValue({});
     const getEndorsingRights = jest.fn().mockResolvedValue({});
-    const getBlock = jest.fn().mockResolvedValue({});
+    const getBlock = jest.fn().mockRejectedValue({});
     const getConstants = jest.fn().mockResolvedValue({});
     const rpc = ({
       getBakingRights,
       getBlock,
-      getBlockMetadata,
+      // getBlockMetadata,
       getEndorsingRights,
       getConstants,
     } as unknown) as RpcClient;
 
+    const blockId = "some_hash";
     const result = await loadBlockData({
       bakers: [delegate],
-      blockId: "some_hash",
+      blockId,
       rpc,
     });
 
     expect(result).toEqual({
       type: "ERROR",
-      message: "Error loading block metadata",
+      message: `Error loading block operations for ${blockId}`,
     });
   });
 });
