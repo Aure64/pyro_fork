@@ -55,17 +55,17 @@ export const apply = (notifyFunction: NotifyFunction): NotifyEventFunction => {
 const bakerNodeEventToString = (event: BakerNodeEvent): string => {
   switch (event.kind) {
     case "MISSED_BAKE":
-      return `Delegate ${event.baker} missed a bake at level ${event.blockLevel}`;
+      return `${event.baker} missed a bake at level ${event.blockLevel}`;
     case "SUCCESSFUL_BAKE":
-      return `Delegate ${event.baker} baked a block at level ${event.blockLevel}`;
+      return `${event.baker} baked at level ${event.blockLevel}`;
     case "DOUBLE_BAKE":
-      return `Delegate ${event.baker} double baked at level ${event.blockLevel}`;
+      return `${event.baker} double baked at level ${event.blockLevel}`;
     case "MISSED_ENDORSE":
-      return `Delegate ${event.baker} missed an endorsement at level ${event.blockLevel}`;
+      return `${event.baker} missed an endorsement at level ${event.blockLevel}`;
     case "SUCCESSFUL_ENDORSE":
-      return `Delegate ${event.baker} endorsed a block at level ${event.blockLevel}`;
+      return `${event.baker} endorsed at level ${event.blockLevel}`;
     case "DOUBLE_ENDORSE":
-      return `Delegate ${event.baker} double endorsed at level ${event.blockLevel}`;
+      return `${event.baker} double endorsed at level ${event.blockLevel}`;
     default: {
       // this will only fail to typecheck if some kind isn't handled above
       const s: never = event.kind;
