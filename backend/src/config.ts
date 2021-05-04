@@ -526,7 +526,8 @@ export type Config = {
  */
 export const load = async (): Promise<Config> => {
   const { data: dataDirectory, config: configDirectory } = envPaths(
-    "pyrometer"
+    "pyrometer",
+    { suffix: "" }
   );
   // ensure system directories exist
   createDirectory(dataDirectory);
