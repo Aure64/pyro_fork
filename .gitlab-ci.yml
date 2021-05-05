@@ -68,7 +68,7 @@ publish_pre_release:
     - cd backend
     - npm set unsafe-perm true # https://docs.npmjs.com/cli/v6/using-npm/scripts#user
     - yarn
-    - npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
+    - npm config set @tezos-kiln:registry https://gitlab.com/api/v4/projects/22897259/packages/npm/
     - npm config set '//gitlab.com/api/v4/packages/npm/:_authToken' ${CI_JOB_TOKEN}
     - npm config set '//gitlab.com/api/v4/projects/22897259/packages/npm/:_authToken' ${CI_JOB_TOKEN}
     - npm version prerelease -preid $(git rev-parse --short HEAD) -no-git-tag-version
