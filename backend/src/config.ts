@@ -51,7 +51,7 @@ const BAKER: UserPref = {
 };
 const BAKER_CATCHUP_LIMIT: UserPref = {
   key: "baker_monitor:catchup_limit",
-  default: 12288,
+  default: 120,
   description:
     "The maximum number of blocks to catch up on after reconnecting.",
   alias: undefined,
