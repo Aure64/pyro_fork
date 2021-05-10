@@ -132,7 +132,7 @@ export const start = async ({
         callback(null, result);
       }
     },
-    { maxRetries: 10, afterProcessDelay: 3000, store, retryDelay: 3000 }
+    { maxRetries: 10, afterProcessDelay: 1000, store, retryDelay: 3000 }
   );
 
   subscription.on("data", async (blockHash) => {
