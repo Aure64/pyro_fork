@@ -2,6 +2,7 @@ import {
   EndorsingRightsResponse,
   OperationContentsDoubleBaking,
   OperationContentsDoubleEndorsement,
+  OperationContentsEndorsementWithSlot,
   OperationEntry,
   OpKind,
 } from "@taquito/rpc";
@@ -10,55 +11,74 @@ export const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
 export const level = 1318230;
 
 export const successfulEndorsement: OperationEntry = {
-  protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
-  chain_id: "NetXdQprcVkpaWU",
-  hash: "opEcYqxb9HYvdQE5jLvazmpdk93f8M7dcQMdh33mpqDQeC3rDdF",
-  branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+  protocol: "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i",
+  chain_id: "NetXxkAx4woPLyu",
+  hash: "op2Vjgfz5sESAgf9droANKQ35toL43ySFCmDzGWTb1nnaaQnSa8",
+  branch: "BKmivKSAnaRqEHZr7fZW9oGpYeXDKESfKJbqRXFp1iYLPjmJ4aZ",
   contents: [
     {
-      kind: OpKind.ENDORSEMENT,
-      level: 1318230,
+      kind: OpKind.ENDORSEMENT_WITH_SLOT,
+      endorsement: {
+        branch: "BKmivKSAnaRqEHZr7fZW9oGpYeXDKESfKJbqRXFp1iYLPjmJ4aZ",
+        operations: {
+          kind: OpKind.ENDORSEMENT,
+          level: level,
+        },
+        signature:
+          "siggw64btFC4MAMdpuN9vYUz7yQfEiFsyHxm152nnyvVh2gmhZuj3rmXdsBZy6bMCT479qaEf4CoLdj3cesHdcG8GANrWvC6",
+      },
+      slot: 17,
       metadata: {
         balance_updates: [
           {
             kind: "contract",
-            contract: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-            change: "-64000000",
+            contract: baker,
+            change: "-320000000",
+            origin: "block",
           },
           {
             kind: "freezer",
             category: "deposits",
-            delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-            cycle: 321,
-            change: "64000000",
+            delegate: baker,
+            cycle: 87,
+            change: "320000000",
+            origin: "block",
           },
           {
             kind: "freezer",
             category: "rewards",
-            delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-            cycle: 321,
-            change: "1250000",
+            delegate: baker,
+            cycle: 87,
+            change: "4166665",
+            origin: "block",
           },
         ],
-        delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+        delegate: baker,
         slots: [17],
       },
     },
   ],
-  signature:
-    "siggw64btFC4MAMdpuN9vYUz7yQfEiFsyHxm152nnyvVh2gmhZuj3rmXdsBZy6bMCT479qaEf4CoLdj3cesHdcG8GANrWvC6",
 };
 
 export const endorsementsWithMiss: OperationEntry[] = [
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i",
     chain_id: "NetXdQprcVkpaWU",
     hash: "oneKm4rbM1hC4k2UVhq1MrJPMq6RHJotKwKWt4oEdJm3VXmG7ub",
     branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
     contents: [
       {
-        kind: OpKind.ENDORSEMENT,
-        level: 1318230,
+        kind: OpKind.ENDORSEMENT_WITH_SLOT,
+        endorsement: {
+          branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+          operations: {
+            kind: OpKind.ENDORSEMENT,
+            level: level,
+          },
+          signature:
+            "sigbJwj4ZMkbd61qtSURkdmY3bSXT8Mx34KGZDZyXP5wz8eZMr475WyZrBTFe5dgSTmmTPqwr4C7qnPC1Jtf45dxtfs7HLWL",
+        },
+        slot: 0,
         metadata: {
           balance_updates: [
             {
@@ -86,18 +106,25 @@ export const endorsementsWithMiss: OperationEntry[] = [
         },
       },
     ],
-    signature:
-      "sigbJwj4ZMkbd61qtSURkdmY3bSXT8Mx34KGZDZyXP5wz8eZMr475WyZrBTFe5dgSTmmTPqwr4C7qnPC1Jtf45dxtfs7HLWL",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i",
     chain_id: "NetXdQprcVkpaWU",
     hash: "ooYqdUc8LWn4j6pKFc4wPFWLaGnuxCZEE9p4StZXXPoyxRAXf9a",
     branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
     contents: [
       {
-        kind: OpKind.ENDORSEMENT,
-        level: 1318230,
+        kind: OpKind.ENDORSEMENT_WITH_SLOT,
+        endorsement: {
+          branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+          operations: {
+            kind: OpKind.ENDORSEMENT,
+            level: level,
+          },
+          signature:
+            "sigbJwj4ZMkbd61qtSURkdmY3bSXT8Mx34KGZDZyXP5wz8eZMr475WyZrBTFe5dgSTmmTPqwr4C7qnPC1Jtf45dxtfs7HLWL",
+        },
+        slot: 16,
         metadata: {
           balance_updates: [
             {
@@ -125,18 +152,25 @@ export const endorsementsWithMiss: OperationEntry[] = [
         },
       },
     ],
-    signature:
-      "sigSXPVc3CH9ksE9cJW6YfKStyuLoZjTuYQYdwjMj1zFCawDu1WDvxHJbmTjfavcEFinthJJDpNjzoGBrA158F7jsauJ7XEP",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i",
     chain_id: "NetXdQprcVkpaWU",
     hash: "ooFeS9g5RNBfvmxMy69i26a5XTiGoeNaR1kuNBBtohF6CPKfWzF",
     branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
     contents: [
       {
-        kind: OpKind.ENDORSEMENT,
-        level: 1318230,
+        kind: OpKind.ENDORSEMENT_WITH_SLOT,
+        endorsement: {
+          branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+          operations: {
+            kind: OpKind.ENDORSEMENT,
+            level: level,
+          },
+          signature:
+            "sigYW8tzPYbSM5i5H2r8cUEvH7KawEqTyp2uXHNbyLdL8sv5D1tMXvZXhcq3GML9CQCdJGUxfB11Y8Xfhy8pBnTmRu95bGkk",
+        },
+        slot: 14,
         metadata: {
           balance_updates: [
             {
@@ -164,18 +198,25 @@ export const endorsementsWithMiss: OperationEntry[] = [
         },
       },
     ],
-    signature:
-      "sigYW8tzPYbSM5i5H2r8cUEvH7KawEqTyp2uXHNbyLdL8sv5D1tMXvZXhcq3GML9CQCdJGUxfB11Y8Xfhy8pBnTmRu95bGkk",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i",
     chain_id: "NetXdQprcVkpaWU",
     hash: "onzSwuu914ufW1WNNXy4KZm6bxaUgrP3AwNpNKK3Kh5argXZeDc",
     branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
     contents: [
       {
-        kind: OpKind.ENDORSEMENT,
-        level: 1318230,
+        kind: OpKind.ENDORSEMENT_WITH_SLOT,
+        endorsement: {
+          branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+          operations: {
+            kind: OpKind.ENDORSEMENT,
+            level: level,
+          },
+          signature:
+            "sigw2sVMQxJB2kGWAY3bES2KgVrA4FLDqDvNvuSPuPtu3b3jAzfdZDiJ7P7JLnNK6ZE6hUZXGytiin5sYakgf14SSvnf7mm2",
+        },
+        slot: 25,
         metadata: {
           balance_updates: [
             {
@@ -203,18 +244,25 @@ export const endorsementsWithMiss: OperationEntry[] = [
         },
       },
     ],
-    signature:
-      "sigw2sVMQxJB2kGWAY3bES2KgVrA4FLDqDvNvuSPuPtu3b3jAzfdZDiJ7P7JLnNK6ZE6hUZXGytiin5sYakgf14SSvnf7mm2",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i",
     chain_id: "NetXdQprcVkpaWU",
     hash: "opR15ca7Nne1kSn9J2yWNL3KFq3PqswUbGf3sjYXn5TNZGhPnrF",
     branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
     contents: [
       {
-        kind: OpKind.ENDORSEMENT,
-        level: 1318230,
+        kind: OpKind.ENDORSEMENT_WITH_SLOT,
+        endorsement: {
+          branch: "BLA3CjVsLUWzvf4GbfMKTqXStUB3Hon526hsdTFB6cF3AFRY4Hn",
+          operations: {
+            kind: OpKind.ENDORSEMENT,
+            level: level,
+          },
+          signature:
+            "sigR62M6wREB4RsFTcKxx8fLpDvae6s1PaWZ6dJW55XQGxAnxn9a1Jhugu72kbsfFQiySXDujm76Xtby4yswFjdsSt1uQHZz",
+        },
+        slot: 9,
         metadata: {
           balance_updates: [
             {
@@ -242,8 +290,6 @@ export const endorsementsWithMiss: OperationEntry[] = [
         },
       },
     ],
-    signature:
-      "sigR62M6wREB4RsFTcKxx8fLpDvae6s1PaWZ6dJW55XQGxAnxn9a1Jhugu72kbsfFQiySXDujm76Xtby4yswFjdsSt1uQHZz",
   },
 ];
 
@@ -351,7 +397,7 @@ export const endorsingRightsResponse: EndorsingRightsResponse = [
   },
   {
     level: 1318230,
-    delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+    delegate: baker,
     slots: [17],
     estimated_time: new Date("2021-01-26T15:27:34Z"),
   },
@@ -395,7 +441,9 @@ const operationContentsWithDoubleEndorsement: OperationContentsDoubleEndorsement
       kind: OpKind.ENDORSEMENT,
       level,
     },
-    signature: successfulEndorsement.signature,
+    signature: (successfulEndorsement
+      .contents[0] as OperationContentsEndorsementWithSlot).endorsement
+      .signature,
   },
   op2: {
     branch: "",

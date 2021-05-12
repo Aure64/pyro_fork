@@ -2,6 +2,7 @@ import { BakerEvent, Result, TezosNodeEvent } from "./types";
 import { debug, error, warn, info, trace } from "loglevel";
 import {
   Context,
+  OperationContent,
   PollingSubscribeProvider,
   Subscription,
   TezosToolkit,
@@ -513,7 +514,7 @@ const isEndorsementByDelegate = (
 ): boolean => {
   for (const contentsItem of operation.contents) {
     if (
-      contentsItem.kind === OpKind.ENDORSEMENT &&
+      contentsItem.kind === OpKind.ENDORSEMENT_WITH_SLOT &&
       "metadata" in contentsItem
     ) {
       if (contentsItem.metadata.delegate === delegate) {
@@ -549,9 +550,15 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
         if (blockResult.type === "SUCCESS") {
           const block = blockResult.data;
           const endorsementOperations = block.operations[0];
-          const operation = endorsementOperations.find(
-            (operation) => operation.signature === accusedSignature
-          );
+          const operation = endorsementOperations.find((operation) => {
+            for (const c of operation.contents) {
+              if (c.kind === OpKind.ENDORSEMENT_WITH_SLOT) {
+                if (c.endorsement.signature === accusedSignature) {
+                  return true;
+                }
+              }
+            }
+          });
           const endorser = operation && findEndorserForOperation(operation);
           if (endorser) {
             if (endorser === baker) {
@@ -587,7 +594,10 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
  */
 const findEndorserForOperation = (operation: OperationEntry) => {
   for (const contentsItem of operation.contents) {
-    if (contentsItem.kind === OpKind.ENDORSEMENT && "metadata" in contentsItem)
+    if (
+      contentsItem.kind === OpKind.ENDORSEMENT_WITH_SLOT &&
+      "metadata" in contentsItem
+    )
       return contentsItem.metadata.delegate;
   }
 
