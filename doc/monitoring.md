@@ -1,4 +1,4 @@
-# Kiln Monitoring System
+# Overview
 
 Anyone who runs Tezos baker is interested in monitoring baker's health
 to minimize lost reward opportuinities due to missed bakes and
@@ -19,7 +19,7 @@ necessary to be able to monitor health of Tezos nodes.
 
 ## Components
 
-Kiln monitoring system consists of the following main components:
+The monitoring system consists of the following main components:
 
 - Baker Monitor (BM)
 - Node Monitor (NM)
@@ -60,14 +60,14 @@ User notification channels are:
 
 ## Functional Requirements
 
-- Kiln Monitoring should run as a native daemon/service on the following operating
+- Monitoring should run as a native daemon/service on the following operating
   systems:
 
   - Linux (systemd)
   - MacOS (launchctl)
   - Windows (service)
 
-- Kiln Monitoring should be able to run as Docker container
+- Monitoring should be able to run as Docker container
 
 - BM should be able to work with any Tezos Node that exposes
   necessary RPC/streaming endpoints, public or local
@@ -78,7 +78,7 @@ User notification channels are:
 
 - Notification delivery should be retried on every channel until
   successfully sent or expired (notification should not be lost due to
-  Kiln restart, machine restart or intermittent/short network
+  service restart, machine restart or intermittent/short network
   connectivity loss)
 
 - BM should ignore stale events: do not register
@@ -89,10 +89,11 @@ User notification channels are:
 
 ## Implementation Considerations
 
-Primary installation target for initial Kiln Monitoring implementation is a
+Primary installation target for initial monitoring implementation is a
 personal computer. Consequently, implementation should prioritize
-simplicity when it comes to number of individual, isolated components, processes,
-their runtime dependencies, administration/configuration. For example, an
-embedded database or file would be preferable to a full RDBMS such as
+simplicity when it comes to number of individual, isolated components,
+processes, their runtime dependencies,
+administration/configuration. For example, an embedded database such
+as sqlite or file would be preferable to a full RDBMS such as
 Postgres, embedded queue or job manager would be preferable to a full
 message broker such as RabbitMQ etc.
