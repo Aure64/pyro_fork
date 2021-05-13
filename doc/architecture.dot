@@ -18,7 +18,7 @@ subgraph cluster_tezos_nodeN {
         label="Tezos Node N"
 }
 
-subgraph cluster_kiln {
+subgraph cluster_pyrometer {
         node[shape=rectangle];
         node_monitor[label="Node Monitor", style="filled"];
         baker_monitor[label="Baker Monitor", style="filled"]
@@ -28,7 +28,7 @@ subgraph cluster_kiln {
         tezos_node_rpc1 -> node_monitor [label="node stats", color="blue"];
         tezos_node_rpc2 -> node_monitor [label="node stats", color="blue"];
         tezos_node_rpcN -> node_monitor [label="node stats", color="blue"];
-        label = "Kiln";
+        label = "Pyrometer";
         subgraph cluster_notifier {
                 style=filled
                 node[shape=circle];
