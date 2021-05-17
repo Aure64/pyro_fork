@@ -1,5 +1,6 @@
 import { notify as desktopNotify } from "node-notifier";
 import { Notify } from "./types";
+import { error, debug } from "loglevel";
 
 export const channelName = "desktop";
 
@@ -20,13 +21,13 @@ export const notify: Notify<DesktopNotificationChannel> = async (
   new Promise((resolve) => {
     desktopNotify(
       {
-        title,
-        message,
+        message: title,
         sound: notifier.config.enableSound,
       },
-      (error) => {
-        if (error) {
-          resolve({ kind: "ERROR", error, channelName });
+      (err) => {
+        if (err) {
+          error(err);
+          resolve({ kind: "ERROR", error: err, channelName });
         } else {
           resolve({ kind: "SUCCESS" });
         }
