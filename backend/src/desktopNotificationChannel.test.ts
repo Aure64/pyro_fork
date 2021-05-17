@@ -17,8 +17,7 @@ describe("notify", () => {
     notify(notifier, { title: "some title", message: "some error message" });
     expect(mockedNotifier.mock.calls.length).toBe(1);
     expect(mockedNotifier.mock.calls[0][0]).toEqual({
-      message: "some error message",
-      title: "some title",
+      message: "some title",
       sound: false,
     });
   });
