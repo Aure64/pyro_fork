@@ -1,6 +1,6 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
-import { LogLevelDesc, debug } from "loglevel";
+import { LogLevelDesc, debug, trace } from "loglevel";
 import { SlackConfig } from "./slackNotificationChannel";
 import { TelegramConfig } from "./telegramNotificationChannel";
 import { EmailConfig } from "./emailNotificationChannel";
@@ -597,7 +597,7 @@ export const load = async (): Promise<Config> => {
   const saveConfig = () => save(systemConfigPath);
 
   const setAndSave = (key: string, value: any) => {
-    debug("setting", key, value);
+    trace("setting", key, value);
     nconf.set(key, value);
     saveConfig();
   };
@@ -661,7 +661,7 @@ export const load = async (): Promise<Config> => {
 const save = (systemConfigPath: string): void => {
   // read in system config.  Pyrometer currently doesn't update user settings
   const { [SYSTEM_PREFIX]: systemSettings } = nconf.get();
-  debug("Saving config to disk.");
+  trace("Saving config to disk.");
   // save system config
   if (systemSettings) {
     FS.writeFileSync(
