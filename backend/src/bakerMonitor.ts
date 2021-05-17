@@ -67,7 +67,7 @@ export const start = async ({
 
   debug(`Baker monitor started`);
 
-  const halted = false;
+  let halted = false;
 
   while (!halted) {
     try {
@@ -131,6 +131,7 @@ export const start = async ({
 
   const halt = () => {
     info("Halting baker monitor");
+    halted = true;
   };
 
   const monitor: Monitor = { bakers, halt };
