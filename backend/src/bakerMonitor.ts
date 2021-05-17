@@ -370,7 +370,11 @@ export const checkBlockBakingRights = ({
   blockId,
 }: CheckBlockBakingRightsArgs): BakerEvent | null => {
   for (const bakingRight of bakingRights) {
-    if (bakingRight.level === blockLevel && bakingRight.priority === priority) {
+    if (
+      bakingRight.delegate === baker &&
+      bakingRight.level === blockLevel &&
+      bakingRight.priority === priority
+    ) {
       debug(`found baking slot for priority ${priority} for baker ${baker}`);
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (blockBaker !== baker) {

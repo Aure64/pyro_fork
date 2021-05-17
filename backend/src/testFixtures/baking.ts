@@ -1,5 +1,7 @@
 import { BakingRightsResponseItem, BakingRightsResponse } from "@taquito/rpc";
 
+export const levelWithMultipleBakers = 1298498;
+
 export const responseWithLowerPriorities: BakingRightsResponse = [
   {
     level: 1298433,
@@ -47,7 +49,7 @@ export const responseWithLowerPriorities: BakingRightsResponse = [
     priority: 25,
   },
   {
-    level: 1298498,
+    level: levelWithMultipleBakers,
     delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
     priority: 46,
   },
@@ -59,7 +61,14 @@ export const priorityZero: BakingRightsResponseItem = {
   priority: 0,
 };
 
+export const priorityZeroOtherBaker: BakingRightsResponseItem = {
+  level: levelWithMultipleBakers,
+  delegate: "other_baker",
+  priority: 0,
+};
+
 export const responseWithPriorityZero: BakingRightsResponse = [
   ...responseWithLowerPriorities,
+  priorityZeroOtherBaker,
   priorityZero,
 ];

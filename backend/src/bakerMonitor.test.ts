@@ -9,7 +9,11 @@ import {
   loadBlockData,
 } from "./bakerMonitor";
 import { setLevel } from "loglevel";
-import { responseWithPriorityZero, priorityZero } from "./testFixtures/baking";
+import {
+  responseWithPriorityZero,
+  priorityZero,
+  levelWithMultipleBakers,
+} from "./testFixtures/baking";
 import {
   endorsementsWithMiss,
   endorsementsWithSuccess,
@@ -66,7 +70,7 @@ describe("checkBlockBakingRights", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: "other_baker",
-      blockLevel: level + 1,
+      blockLevel: levelWithMultipleBakers,
       blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
