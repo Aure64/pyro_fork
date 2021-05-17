@@ -15,8 +15,9 @@ import { delay, retryWhen, tap } from "rxjs/operators";
 const CHAIN = "main";
 
 type Monitor = {
-  subscriptions: Subscription<string>[];
+  //subscriptions: Subscription<string>[];
   nodes: string[];
+  halt: () => void;
 };
 
 type StartArgs = {
@@ -114,9 +115,17 @@ export const start = ({
     return subscription;
   });
 
+  const halt = () => {
+    info("Halting node monitor");
+    referenceSubscription.close();
+    for (const subscription of subscriptions) {
+      subscription.close();
+    }
+  };
+
   const monitor: Monitor = {
-    subscriptions: [referenceSubscription, ...subscriptions],
     nodes,
+    halt,
   };
 
   debug(`Node monitor started`);
@@ -147,13 +156,6 @@ const subscribeToNode = (
   );
 
   return { subscription, rpc };
-};
-
-export const halt = (monitor: Monitor): void => {
-  info("Halting node monitor");
-  for (const subscription of monitor.subscriptions) {
-    subscription.close();
-  }
 };
 
 export type NodeInfo = {

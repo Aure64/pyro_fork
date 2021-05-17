@@ -80,7 +80,7 @@ const main = async () => {
     debug("Shutting down");
     config.save();
     if (bakerMonitor) bakerMonitor.halt();
-    if (nodeMonitor) NodeMonitor.halt(nodeMonitor);
+    if (nodeMonitor) nodeMonitor.halt();
     Server.halt(server);
     process.exit(0);
   });
