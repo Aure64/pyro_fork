@@ -192,10 +192,8 @@ const updateNodeInfo = async ({
       );
       return { type: "ERROR", message: bootstrappedResult.error.message };
     } else {
-      const { bootstrapped, sync_state } = bootstrappedResult.data;
-      debug(
-        `Node ${node} is bootstrapped: ${bootstrapped} with sync_state: ${sync_state}`
-      );
+      bootstrappedStatus = bootstrappedResult.data;
+      debug(`Node ${node} bootstrap status: `, bootstrappedStatus);
     }
   }
 
