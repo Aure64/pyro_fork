@@ -57,15 +57,15 @@ const bakerNodeEventToString = (event: BakerNodeEvent): string => {
     case "MISSED_BAKE":
       return `${event.baker} missed a bake at level ${event.blockLevel}`;
     case "SUCCESSFUL_BAKE":
-      return `${event.baker} baked at level ${event.blockLevel}`;
+      return `${event.baker} baked block ${event.blockLevel}`;
     case "DOUBLE_BAKE":
-      return `${event.baker} double baked at level ${event.blockLevel}`;
+      return `${event.baker} double baked block ${event.blockLevel}`;
     case "MISSED_ENDORSE":
-      return `${event.baker} missed an endorsement at level ${event.blockLevel}`;
+      return `${event.baker} missed endorsement of block ${event.blockLevel}`;
     case "SUCCESSFUL_ENDORSE":
-      return `${event.baker} endorsed at level ${event.blockLevel}`;
+      return `${event.baker} endorsed block ${event.blockLevel}`;
     case "DOUBLE_ENDORSE":
-      return `${event.baker} double endorsed at level ${event.blockLevel}`;
+      return `${event.baker} double endorsed block ${event.blockLevel}`;
     default: {
       // this will only fail to typecheck if some kind isn't handled above
       const s: never = event.kind;
