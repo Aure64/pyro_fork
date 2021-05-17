@@ -1,17 +1,11 @@
 import { BakerEvent, Result, TezosNodeEvent } from "./types";
 import { debug, error, warn, info, trace } from "loglevel";
 import {
-  Context,
-  OperationContent,
-  PollingSubscribeProvider,
-  Subscription,
-  TezosToolkit,
-} from "@taquito/taquito";
-import {
   BakingRightsQueryArguments,
   BakingRightsResponse,
   BlockMetadata,
   BlockResponse,
+  // BlockHeaderResponse,
   ConstantsResponse,
   EndorsingRightsQueryArguments,
   EndorsingRightsResponse,
@@ -22,16 +16,15 @@ import {
 } from "@taquito/rpc";
 import { wrap } from "./networkWrapper";
 import { Config } from "./config";
-import * as BetterQueue from "better-queue";
-import * as SqlLiteStore from "better-queue-sqlite";
-import { normalize } from "path";
 import { makeMemoizedAsyncFunction } from "./memoization";
-import { delay, retryWhen, tap } from "rxjs/operators";
+
+const sleep = (milliseconds: number) => {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
 
 type Monitor = {
-  subscription: Subscription<string>;
+  halt: () => void;
   bakers: string[];
-  queue: BetterQueue<string>;
 };
 
 type StartArgs = {
@@ -46,20 +39,9 @@ export const start = async ({
   config,
 }: StartArgs): Promise<Monitor> => {
   const rpcNode = config.getRpc();
-  const storageDirectory = config.storageDirectory;
-  const toolkit = new TezosToolkit(rpcNode);
-  const context = new Context(toolkit.rpc, undefined, undefined, {
-    shouldObservableSubscriptionRetry: true,
-    observableSubscriptionRetryFunction: retryWhen((error) =>
-      error.pipe(
-        delay(60000),
-        tap(() => debug("Retrying RPC subscription..."))
-      )
-    ),
-  });
-  const provider = new PollingSubscribeProvider(context);
-  const subscription = provider.subscribe("head");
-  const rpc = toolkit.rpc;
+
+  const rpc = new RpcClient(rpcNode);
+
   rpc.getBakingRights = makeMemoizedAsyncFunction(
     rpc.getBakingRights.bind(rpc),
     (args: BakingRightsQueryArguments) => `${args.cycle}`,
@@ -83,112 +65,76 @@ export const start = async ({
   }
   const constants = constantsResult.data;
 
-  const store = new SqlLiteStore<string>({
-    path: normalize(`${storageDirectory}/bakerMonitor.db`),
-  });
-  const queue = new BetterQueue<string>(
-    async (blockId, callback) => {
-      const lastBlockCycle = config.getLastBlockCycle();
-      const lastBlockLevel = config.getLastBlockLevel();
-      const result = await checkBlock({
-        bakers,
-        rpc,
-        blockId,
-        lastCycle: lastBlockCycle,
-        constants,
-      });
-
-      if (result.type === "ERROR") {
-        onEvent({
-          type: "BAKER_DATA",
-          kind: "ERROR",
-          message: result.message,
-        });
-        callback(result, null);
-      } else {
-        const { events, blockLevel, blockCycle } = result.data;
-        events.map(onEvent);
-
-        debug(`Previous block level from config: ${lastBlockLevel}`);
-        if (lastBlockLevel && blockLevel - lastBlockLevel > 1) {
-          const catchupLimit = config.getBakerCatchupLimit();
-          queueMissedBlocks({
-            lastBlockLevel,
-            blockLevel,
-            catchupLimit,
-            queue,
-          });
-        }
-        if (!lastBlockLevel || blockLevel > lastBlockLevel) {
-          debug(`Saving previous block level: ${blockLevel}`);
-          // only update last block level if it's bigger.  it could be smaller if this was a catch up event
-          config.setLastBlockLevel(blockLevel);
-        }
-        if (!lastBlockCycle || blockCycle > lastBlockCycle) {
-          debug(`Saving previous block cycle: ${blockCycle}`);
-          // only update last block cycle if it's bigger.  it could be smaller if this was a catch up event
-          config.setLastBlockCycle(blockCycle);
-        }
-
-        callback(null, result);
-      }
-    },
-    { maxRetries: 10, afterProcessDelay: 1000, store, retryDelay: 3000 }
-  );
-
-  subscription.on("data", async (blockHash) => {
-    debug(`Subscription received block: ${blockHash}`);
-    queue.push(blockHash);
-  });
-  subscription.on("error", (error) => {
-    warn(`Baking subscription error: ${error.message}`);
-    onEvent({
-      type: "BAKER_DATA",
-      kind: "ERROR",
-      message: error.message,
-    });
-  });
-
   debug(`Baker monitor started`);
 
-  const monitor: Monitor = { queue, subscription, bakers };
+  const halted = false;
+
+  while (!halted) {
+    try {
+      const lastBlockLevel = config.getLastBlockLevel();
+      const catchupLimit = config.getBakerCatchupLimit();
+      const lastBlockCycle = config.getLastBlockCycle();
+      const headHeader = await rpc.getBlockHeader();
+      const { level, hash } = headHeader;
+      debug(
+        `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
+      );
+
+      const minLevel = catchupLimit ? level - catchupLimit : level;
+      const startLevel = lastBlockLevel
+        ? Math.max(lastBlockLevel + 1, minLevel)
+        : minLevel;
+
+      debug(`Processing blocks starting at level ${startLevel}`);
+
+      let currentLevel = startLevel;
+
+      while (currentLevel <= level) {
+        debug(`Processing block at level ${currentLevel}`);
+        const result = await checkBlock({
+          bakers,
+          rpc,
+          blockId: currentLevel.toString(),
+          lastCycle: lastBlockCycle,
+          constants,
+        });
+        if (result.type === "ERROR") {
+          onEvent({
+            type: "BAKER_DATA",
+            kind: "ERROR",
+            message: result.message,
+          });
+          break;
+        }
+        const { events, blockLevel, blockCycle } = result.data;
+        if (blockLevel !== currentLevel) {
+          throw new Error(
+            `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
+          );
+        }
+        events.map(onEvent);
+        config.setLastBlockLevel(currentLevel);
+        config.setLastBlockCycle(blockCycle);
+        currentLevel++;
+        await sleep(1000);
+      }
+    } catch (err) {
+      warn("RPC Error:", err);
+      onEvent({
+        type: "BAKER_DATA",
+        kind: "ERROR",
+        message: err.message,
+      });
+    }
+    await sleep(1000 * constants.time_between_blocks[0].toNumber());
+  }
+
+  const halt = () => {
+    info("Halting baker monitor");
+  };
+
+  const monitor: Monitor = { bakers, halt };
   return monitor;
-};
-
-export const halt = (monitor: Monitor): void => {
-  info("Halting baker monitor");
-  monitor.subscription.close();
-};
-
-type QueueMissedBlocksArgs = {
-  queue: BetterQueue<string>;
-  lastBlockLevel: number;
-  blockLevel: number;
-  catchupLimit: number | undefined;
-};
-
-/**
- * Adds any missing blocks between lastBlockLevel and blockLevel to the job queue.  If catchupLimit is present,
- * it will limit the maximum number of previous blocks to queue.
- */
-const queueMissedBlocks = ({
-  queue,
-  lastBlockLevel,
-  blockLevel,
-  catchupLimit,
-}: QueueMissedBlocksArgs) => {
-  let startingBlock = lastBlockLevel + 1;
-  trace({ lastBlockLevel, blockLevel, catchupLimit });
-  if (catchupLimit !== undefined && blockLevel - startingBlock > catchupLimit) {
-    startingBlock = blockLevel - catchupLimit;
-    debug(
-      `Block level ${lastBlockLevel} exceeds limit of ${catchupLimit}.  Catching up from ${startingBlock} instead`
-    );
-  }
-  for (let i = startingBlock; i < blockLevel; i++) {
-    debug(`Queue'ing block level ${i} to check for previous baking events`);
-    queue.push(i.toString());
-  }
 };
 
 type CheckBlockArgs = {
@@ -383,7 +329,7 @@ export const loadBlockData = async ({
   }
   const bakingRights = bakingRightsResult.data;
 
-  debug(`Baking rights for block ${blockId}`, bakingRights);
+  // debug(`Baking rights for block ${blockId}`, bakingRights);
 
   const endorsingRightsResult = await endorsingRightsPromise;
   if (endorsingRightsResult.type === "ERROR") {
@@ -395,7 +341,7 @@ export const loadBlockData = async ({
   }
   const endorsingRights = endorsingRightsResult.data;
 
-  debug(`Endorsing rights for block ${blockId}`, endorsingRights);
+  // debug(`Endorsing rights for block ${blockId}`, endorsingRights);
 
   return {
     type: "SUCCESS",

@@ -79,7 +79,7 @@ const main = async () => {
   process.on("SIGINT", () => {
     debug("Shutting down");
     config.save();
-    if (bakerMonitor) BakerMonitor.halt(bakerMonitor);
+    if (bakerMonitor) bakerMonitor.halt();
     if (nodeMonitor) NodeMonitor.halt(nodeMonitor);
     Server.halt(server);
     process.exit(0);
