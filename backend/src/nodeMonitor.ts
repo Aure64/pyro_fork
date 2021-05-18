@@ -1,21 +1,13 @@
 import { Result, PeerDataEvent, TezosNodeEvent } from "./types";
 import { debug, warn, info } from "loglevel";
-import {
-  Context,
-  PollingSubscribeProvider,
-  Subscription,
-  TezosToolkit,
-} from "@taquito/taquito";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import { wrap } from "./networkWrapper";
 import { makeMemoizedAsyncFunction } from "./memoization";
-import { delay, retryWhen, tap } from "rxjs/operators";
 
 const CHAIN = "main";
 
 type Monitor = {
-  //subscriptions: Subscription<string>[];
   nodes: string[];
   halt: () => void;
 };
@@ -26,94 +18,24 @@ type StartArgs = {
   referenceNode: string;
 };
 
+const sleep = (milliseconds: number) => {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
 export const start = ({
   nodes,
   onEvent,
   referenceNode,
 }: StartArgs): Monitor => {
-  let referenceNodeBlockHistory: BlockHeaderResponse[];
-
-  const { rpc, subscription: referenceSubscription } = subscribeToNode(
+  const referenceSubscription = subscribeToNode(
     referenceNode,
-    CHAIN
+    onEvent,
+    () => undefined
   );
-  referenceSubscription.on("data", async (blockHash) => {
-    debug(`Reference node subscription received block: ${blockHash}`);
 
-    const historyResult = await fetchBlockHeaders({ blockHash, rpc });
-    if (historyResult.type === "ERROR") {
-      warn(
-        `fetchBlockheaders failed for reference node ${referenceNode} because of ${historyResult.message}`
-      );
-      onEvent({
-        type: "PEER_DATA",
-        kind: "ERROR",
-        message: historyResult.message,
-      });
-    } else {
-      referenceNodeBlockHistory = historyResult.data;
-    }
-  });
-  referenceSubscription.on("error", (error) => {
-    warn(`Reference node subscription error: ${error.message}`);
-    onEvent({
-      type: "PEER_DATA",
-      kind: "ERROR",
-      message: error.message,
-    });
-  });
-
-  // watch all other nodes
-  const subscriptions = nodes.map((node) => {
-    const { rpc, subscription } = subscribeToNode(node, CHAIN);
-    const nodeData: Record<string, NodeInfo> = {};
-
-    subscription.on("data", async (blockHash) => {
-      debug(`Subscription received block: ${blockHash}`);
-
-      const previousNodeInfo = nodeData[node];
-      // skip checking boostrapped status if previous check failed
-      const fetchBootstrappedStatus =
-        previousNodeInfo === undefined ||
-        previousNodeInfo.bootstrappedStatus !== undefined;
-      const nodeInfoResult = await updateNodeInfo({
-        node,
-        blockHash,
-        rpc,
-        fetchBootstrappedStatus,
-      });
-      if (nodeInfoResult.type === "ERROR") {
-        const errorEvent: PeerDataEvent = {
-          type: "PEER_DATA",
-          kind: "ERROR",
-          message: `Error updating info for node ${node}`,
-        };
-        onEvent(errorEvent);
-      } else {
-        const nodeInfo = nodeInfoResult.data;
-        const events = checkBlockInfo({
-          node,
-          nodeInfo,
-          previousNodeInfo,
-          referenceNodeBlockHistory,
-        });
-        events.map(onEvent);
-        // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
-        // with other data (eg current block)
-        nodeData[node] = nodeInfo;
-      }
-    });
-    subscription.on("error", (error) => {
-      warn(`Node subscription error: ${error.message}`);
-      onEvent({
-        type: "PEER_DATA",
-        kind: "ERROR",
-        message: error.message,
-      });
-    });
-
-    return subscription;
-  });
+  const subscriptions = nodes.map((node) =>
+    subscribeToNode(node, onEvent, referenceSubscription.nodeInfo)
+  );
 
   const halt = () => {
     info("Halting node monitor");
@@ -133,36 +55,87 @@ export const start = ({
   return monitor;
 };
 
+type Sub = {
+  close: () => void;
+  nodeInfo: () => NodeInfo | undefined;
+};
+
 const subscribeToNode = (
   node: string,
-  chain: string
-): { subscription: Subscription<string>; rpc: RpcClient } => {
-  const toolkit = new TezosToolkit(new RpcClient(node, chain));
-  const context = new Context(toolkit.rpc, undefined, undefined, {
-    shouldObservableSubscriptionRetry: true,
-    observableSubscriptionRetryFunction: retryWhen((error) =>
-      error.pipe(
-        delay(60000),
-        tap(() => debug("Retrying RPC subscription..."))
-      )
-    ),
-  });
-  const provider = new PollingSubscribeProvider(context);
-  const subscription = provider.subscribe("head");
-  const rpc = toolkit.rpc;
+  onEvent: (event: TezosNodeEvent) => void,
+  getReference: () => NodeInfo | undefined
+): Sub => {
+  const rpc = new RpcClient(node);
   rpc.getBlockHeader = makeMemoizedAsyncFunction(
     rpc.getBlockHeader.bind(rpc),
     ({ block }: { block: string }) => `${block}`
   );
 
-  return { subscription, rpc };
+  let nodeData: NodeInfo | undefined;
+
+  let halted = false;
+
+  (async () => {
+    while (!halted) {
+      try {
+        const headHash = await rpc.getBlockHash();
+
+        const previousNodeInfo = nodeData;
+        // skip checking boostrapped status if previous check failed
+        const fetchBootstrappedStatus =
+          previousNodeInfo === undefined ||
+          previousNodeInfo.bootstrappedStatus !== undefined;
+        const nodeInfoResult = await updateNodeInfo({
+          node,
+          blockHash: headHash,
+          rpc,
+          fetchBootstrappedStatus,
+        });
+        if (nodeInfoResult.type === "ERROR") {
+          const errorEvent: PeerDataEvent = {
+            type: "PEER_DATA",
+            kind: "ERROR",
+            message: `Error updating info for node ${node}`,
+          };
+          onEvent(errorEvent);
+        } else {
+          const nodeInfo = nodeInfoResult.data;
+          const events = checkBlockInfo({
+            node,
+            nodeInfo,
+            previousNodeInfo,
+            referenceNodeBlockHistory: getReference()?.history,
+          });
+          events.map(onEvent);
+          // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
+          // with other data (eg current block)
+          nodeData = nodeInfo;
+        }
+      } catch (err) {
+        warn(`Node subscription error: ${err.message}`);
+        onEvent({
+          type: "PEER_DATA",
+          kind: "ERROR",
+          message: err.message,
+        });
+      }
+      await sleep(30 * 1e3);
+    }
+  })();
+
+  return {
+    close: () => {
+      halted = true;
+    },
+    nodeInfo: () => nodeData,
+  };
 };
 
 export type NodeInfo = {
   head: string;
   bootstrappedStatus: BootstrappedStatus | undefined;
   history: BlockHeaderResponse[];
-  peerCount: number;
+  peerCount: number | undefined;
 };
 
 type UpdateNodeInfoArgs = {
@@ -190,7 +163,7 @@ const updateNodeInfo = async ({
       warn(
         `isBoostrapped failed for node ${node} because of ${bootstrappedResult.error.message}`
       );
-      return { type: "ERROR", message: bootstrappedResult.error.message };
+      //return { type: "ERROR", message: bootstrappedResult.error.message };
     } else {
       bootstrappedStatus = bootstrappedResult.data;
       debug(`Node ${node} bootstrap status: `, bootstrappedStatus);
@@ -207,15 +180,16 @@ const updateNodeInfo = async ({
   const history = historyResult.data;
 
   const connectionResult = await wrap(() => getNetworkConnections(node));
+  let peerCount;
   if (connectionResult.type === "ERROR") {
     warn(
       `getNetworkConnections failed for node ${node} because of ${connectionResult.error.message}`
     );
-    return { type: "ERROR", message: connectionResult.error.message };
+    //return { type: "ERROR", message: connectionResult.error.message };
   } else {
-    debug(`Node ${node} has ${connectionResult.data.length} peers`);
+    peerCount = connectionResult.data.length;
+    debug(`Node ${node} has ${peerCount} peers`);
   }
-  const peerCount = connectionResult.data.length;
 
   return {
     type: "SUCCESS",
@@ -294,7 +268,7 @@ export const checkBlockInfo = ({
   } else {
     warn(`Unable to check bootstrapped status for ${node}`);
   }
-  if (nodeInfo.peerCount < minimumPeers) {
+  if (nodeInfo.peerCount !== undefined && nodeInfo.peerCount < minimumPeers) {
     const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
     debug(message);
     events.push({
