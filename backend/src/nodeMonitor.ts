@@ -85,11 +85,17 @@ const subscribeToNode = (
         const fetchBootstrappedStatus =
           previousNodeInfo === undefined ||
           previousNodeInfo.bootstrappedStatus !== undefined;
+        // skip checking  network connections if previous check failed
+        const fetchNetworkConnections =
+          previousNodeInfo === undefined ||
+          previousNodeInfo.peerCount !== undefined;
+
         const nodeInfoResult = await updateNodeInfo({
           node,
           blockHash: headHash,
           rpc,
           fetchBootstrappedStatus,
+          fetchNetworkConnections,
         });
         if (nodeInfoResult.type === "ERROR") {
           const errorEvent: PeerDataEvent = {
@@ -138,19 +144,19 @@ export type NodeInfo = {
   peerCount: number | undefined;
 };
 
-type UpdateNodeInfoArgs = {
-  node: string;
-  blockHash: string;
-  rpc: RpcClient;
-  fetchBootstrappedStatus: boolean;
-};
-
 const updateNodeInfo = async ({
   node,
   blockHash,
   rpc,
   fetchBootstrappedStatus,
-}: UpdateNodeInfoArgs): Promise<Result<NodeInfo>> => {
+  fetchNetworkConnections,
+}: {
+  node: string;
+  blockHash: string;
+  rpc: RpcClient;
+  fetchBootstrappedStatus: boolean;
+  fetchNetworkConnections: boolean;
+}): Promise<Result<NodeInfo>> => {
   debug(`Node monitor received block ${blockHash} for node ${node}`);
   let bootstrappedStatus;
 
@@ -179,16 +185,19 @@ const updateNodeInfo = async ({
   }
   const history = historyResult.data;
 
-  const connectionResult = await wrap(() => getNetworkConnections(node));
   let peerCount;
-  if (connectionResult.type === "ERROR") {
-    warn(
-      `getNetworkConnections failed for node ${node} because of ${connectionResult.error.message}`
-    );
-    //return { type: "ERROR", message: connectionResult.error.message };
-  } else {
-    peerCount = connectionResult.data.length;
-    debug(`Node ${node} has ${peerCount} peers`);
+  if (fetchNetworkConnections) {
+    const connectionResult = await wrap(() => getNetworkConnections(node));
+
+    if (connectionResult.type === "ERROR") {
+      warn(
+        `getNetworkConnections failed for node ${node} because of ${connectionResult.error.message}`
+      );
+      //return { type: "ERROR", message: connectionResult.error.message };
+    } else {
+      peerCount = connectionResult.data.length;
+      debug(`Node ${node} has ${peerCount} peers`);
+    }
   }
 
   return {
