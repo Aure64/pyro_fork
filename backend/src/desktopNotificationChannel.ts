@@ -21,6 +21,7 @@ export const notify: Notify<DesktopNotificationChannel> = async (
   new Promise((resolve) => {
     desktopNotify(
       {
+        title: "Pyrometer",
         message: title,
         sound: notifier.config.enableSound,
       },
