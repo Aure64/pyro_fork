@@ -29,6 +29,31 @@ describe("checkBlockInfo", () => {
     ]);
   });
 
+  test("returns empty events when node behind was previously detected", async () => {
+    const bootstrappedStatus: BootstrappedStatus = {
+      bootstrapped: true,
+      sync_state: "unsynced",
+    };
+    const node = "http://somenode";
+    const head = "some_block";
+    const peerCount = 20;
+    const nodeInfo = { head, bootstrappedStatus, history, peerCount };
+    const previousNodeInfo = {
+      head: "some other block",
+      bootstrappedStatus,
+      history,
+      peerCount: 3,
+    };
+    const referenceNodeBlockHistory = undefined;
+    const events = checkBlockInfo({
+      node,
+      nodeInfo,
+      previousNodeInfo,
+      referenceNodeBlockHistory,
+    });
+    expect(events).toEqual([]);
+  });
+
   test("returns empty events when node is synced", async () => {
     const bootstrappedStatus: BootstrappedStatus = {
       bootstrapped: true,
