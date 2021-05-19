@@ -231,4 +231,24 @@ describe("checkBlockInfo", () => {
       },
     ]);
   });
+
+  test("returns no events when node has less than 10 peers but previously had low peers", async () => {
+    const bootstrappedStatus: BootstrappedStatus = {
+      bootstrapped: true,
+      sync_state: "synced",
+    };
+    const node = "http://somenode";
+    const head = "some_block";
+    const peerCount = 9;
+    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const previousNodeInfo = nodeInfo;
+    const referenceNodeBlockHistory = undefined;
+    const events = checkBlockInfo({
+      node,
+      nodeInfo,
+      previousNodeInfo,
+      referenceNodeBlockHistory,
+    });
+    expect(events).toEqual([]);
+  });
 });

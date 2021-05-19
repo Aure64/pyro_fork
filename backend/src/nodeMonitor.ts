@@ -285,14 +285,21 @@ export const checkBlockInfo = ({
     warn(`Unable to check bootstrapped status for ${node}`);
   }
   if (nodeInfo.peerCount !== undefined && nodeInfo.peerCount < minimumPeers) {
-    const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
-    debug(message);
-    events.push({
-      type: "PEER",
-      kind: "NODE_LOW_PEERS",
-      node,
-      message,
-    });
+    if (
+      previousNodeInfo?.peerCount !== undefined &&
+      previousNodeInfo.peerCount < minimumPeers
+    ) {
+      debug("Node previously had too few peers, not generating event");
+    } else {
+      const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
+      debug(message);
+      events.push({
+        type: "PEER",
+        kind: "NODE_LOW_PEERS",
+        node,
+        message,
+      });
+    }
   }
 
   return events;
