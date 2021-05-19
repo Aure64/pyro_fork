@@ -232,7 +232,10 @@ export const checkBlockInfo = ({
       nodeInfo.bootstrappedStatus.sync_state !== "synced"
     ) {
       debug(`Node ${node} is behind`);
-      if (previousNodeInfo?.bootstrappedStatus?.sync_state !== "synced") {
+      if (
+        previousNodeInfo &&
+        previousNodeInfo.bootstrappedStatus?.sync_state !== "synced"
+      ) {
         debug("Node was not synced already, not generating event");
       } else {
         events.push({
