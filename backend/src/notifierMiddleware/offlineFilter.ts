@@ -119,12 +119,12 @@ export const getConnectionChangeEvent = (
     !isNodeMonitorOffline(previousStatus) &&
     isNodeMonitorOffline(newStatus)
   ) {
-    // node monitor went online
-    const message = "Node monitor has gone offline";
+    // node monitor went offline
+    const message = "Unable to reach node";
     debug(message);
     return {
       type: "PEER_DATA",
-      kind: "RECONNECTED",
+      kind: "ERROR",
       message,
     };
   }
