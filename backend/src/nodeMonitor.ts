@@ -1,4 +1,4 @@
-import { Result, PeerDataEvent, TezosNodeEvent } from "./types";
+import { Result, PeerDataEvent, PeerEvent, TezosNodeEvent } from "./types";
 import { debug, warn, info } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
@@ -60,6 +60,11 @@ type Sub = {
   nodeInfo: () => NodeInfo | undefined;
 };
 
+const eventKey = (event: PeerEvent): string => {
+  const { kind, type, message } = event;
+  return `${kind}:${type}:${message}`;
+};
+
 const subscribeToNode = (
   node: string,
   onEvent: (event: TezosNodeEvent) => void,
@@ -72,11 +77,12 @@ const subscribeToNode = (
   );
 
   let nodeData: NodeInfo | undefined;
-
+  let previousEvents: Set<string> = new Set();
   let halted = false;
 
   (async () => {
     while (!halted) {
+      let events: PeerEvent[] = [];
       try {
         const headHash = await rpc.getBlockHash();
 
@@ -103,28 +109,41 @@ const subscribeToNode = (
             kind: "ERROR",
             message: `Error updating info for node ${node}`,
           };
-          onEvent(errorEvent);
+          events.push(errorEvent);
         } else {
           const nodeInfo = nodeInfoResult.data;
-          const events = checkBlockInfo({
+          events = checkBlockInfo({
             node,
             nodeInfo,
             previousNodeInfo,
             referenceNodeBlockHistory: getReference()?.history,
           });
-          events.map(onEvent);
           // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
           // with other data (eg current block)
           nodeData = nodeInfo;
         }
       } catch (err) {
         warn(`Node subscription error: ${err.message}`);
-        onEvent({
+        events.push({
           type: "PEER_DATA",
           kind: "ERROR",
-          message: err.message,
+          message: err.status
+            ? `${node} returned ${err.status} ${err.statusText ?? ""}`
+            : err.message,
         });
       }
+      const publishedEvents = new Set<string>();
+      for (const event of events) {
+        const key = eventKey(event);
+        if (previousEvents.has(key)) {
+          debug(`Event ${key} is already reported, not publishing`);
+        } else {
+          debug(`Event ${key} is new, publishing`);
+          onEvent(event);
+        }
+        publishedEvents.add(key);
+      }
+      previousEvents = publishedEvents;
       await sleep(30 * 1e3);
     }
   })();
@@ -223,8 +242,8 @@ export const checkBlockInfo = ({
   nodeInfo,
   previousNodeInfo,
   referenceNodeBlockHistory,
-}: CheckBlockInfoArgs): TezosNodeEvent[] => {
-  const events: TezosNodeEvent[] = [];
+}: CheckBlockInfoArgs): PeerEvent[] => {
+  const events: PeerEvent[] = [];
 
   if (nodeInfo.bootstrappedStatus) {
     if (
