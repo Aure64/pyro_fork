@@ -2,6 +2,8 @@ import { ApiResult } from "./types";
 import to from "await-to-js";
 import { debug } from "loglevel";
 
+import { HttpResponseError } from "@taquito/http-utils";
+
 type Wrap = <T>(apiCall: () => Promise<T>) => Promise<ApiResult<T>>;
 
 /**
@@ -29,6 +31,28 @@ export const wrap: Wrap = async (apiCall) => {
     const message = `API call failed by returning no data`;
     const error = new Error(message);
     return { type: "ERROR", error };
+  }
+};
+
+type Wrap2 = <T>(apiCall: () => Promise<T>) => Promise<T>;
+
+export const wrap2: Wrap2 = async (apiCall) => {
+  let attempts = 0;
+  while (true) {
+    attempts++;
+    try {
+      return await apiCall();
+    } catch (err) {
+      if (attempts > 2) {
+        throw err;
+      }
+      if (err instanceof HttpResponseError && err.status === 404) {
+        debug(`Got ${err.status} from ${err.url}, retrying [${attempts}]`);
+        await wait(1000);
+      } else {
+        throw err;
+      }
+    }
   }
 };
 

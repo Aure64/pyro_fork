@@ -1,11 +1,11 @@
-import { Result, PeerDataEvent, PeerEvent, TezosNodeEvent } from "./types";
+import { PeerEvent, TezosNodeEvent } from "./types";
 import { debug, warn, info } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
-import { wrap } from "./networkWrapper";
+import { wrap2 } from "./networkWrapper";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
-const CHAIN = "main";
+import { HttpResponseError } from "@taquito/http-utils";
 
 type Monitor = {
   nodes: string[];
@@ -79,6 +79,7 @@ const subscribeToNode = (
   let nodeData: NodeInfo | undefined;
   let previousEvents: Set<string> = new Set();
   let halted = false;
+  let unableToReach: boolean | undefined;
 
   (async () => {
     while (!halted) {
@@ -96,34 +97,36 @@ const subscribeToNode = (
           previousNodeInfo === undefined ||
           previousNodeInfo.peerCount !== undefined;
 
-        const nodeInfoResult = await updateNodeInfo({
+        const nodeInfo = await updateNodeInfo({
           node,
           blockHash: headHash,
           rpc,
           fetchBootstrappedStatus,
           fetchNetworkConnections,
         });
-        if (nodeInfoResult.type === "ERROR") {
-          const errorEvent: PeerDataEvent = {
+        events = checkBlockInfo({
+          node,
+          nodeInfo,
+          previousNodeInfo,
+          referenceNodeBlockHistory: getReference()?.history,
+        });
+        // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
+        // with other data (eg current block)
+        nodeData = nodeInfo;
+        debug("Unable to reach?", unableToReach);
+        if (unableToReach) {
+          debug("Adding reconnected event");
+          events.push({
             type: "PEER_DATA",
-            kind: "ERROR",
-            message: `Error updating info for node ${node}`,
-          };
-          events.push(errorEvent);
-        } else {
-          const nodeInfo = nodeInfoResult.data;
-          events = checkBlockInfo({
-            node,
-            nodeInfo,
-            previousNodeInfo,
-            referenceNodeBlockHistory: getReference()?.history,
+            kind: "RECONNECTED",
+            message: `Connectivity to ${node} restored`,
           });
-          // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
-          // with other data (eg current block)
-          nodeData = nodeInfo;
         }
+        unableToReach = false;
       } catch (err) {
+        unableToReach = true;
         warn(`Node subscription error: ${err.message}`);
+        debug("Unable to reach?", unableToReach);
         events.push({
           type: "PEER_DATA",
           kind: "ERROR",
@@ -175,53 +178,37 @@ const updateNodeInfo = async ({
   rpc: RpcClient;
   fetchBootstrappedStatus: boolean;
   fetchNetworkConnections: boolean;
-}): Promise<Result<NodeInfo>> => {
+}): Promise<NodeInfo> => {
   debug(`Node monitor received block ${blockHash} for node ${node}`);
   let bootstrappedStatus;
 
   if (fetchBootstrappedStatus) {
-    const bootstrappedResult = await wrap(() =>
-      getBootstrappedStatus(node, CHAIN)
-    );
-
-    if (bootstrappedResult.type === "ERROR") {
-      warn(
-        `isBoostrapped failed for node ${node} because of ${bootstrappedResult.error.message}`
-      );
-      //return { type: "ERROR", message: bootstrappedResult.error.message };
-    } else {
-      bootstrappedStatus = bootstrappedResult.data;
+    try {
+      bootstrappedStatus = await wrap2(() => getBootstrappedStatus(node));
       debug(`Node ${node} bootstrap status: `, bootstrappedStatus);
+    } catch (err) {
+      warn(`Unable to get bootsrap status for node ${node}`, err);
     }
   }
 
-  const historyResult = await fetchBlockHeaders({ blockHash, rpc });
-  if (historyResult.type === "ERROR") {
-    warn(
-      `fetchBlockheaders failed for ${node} because of ${historyResult.message}`
-    );
-    return historyResult;
-  }
-  const history = historyResult.data;
+  const history = await fetchBlockHeaders({ blockHash, rpc });
 
   let peerCount;
   if (fetchNetworkConnections) {
-    const connectionResult = await wrap(() => getNetworkConnections(node));
-
-    if (connectionResult.type === "ERROR") {
-      warn(
-        `getNetworkConnections failed for node ${node} because of ${connectionResult.error.message}`
-      );
-      //return { type: "ERROR", message: connectionResult.error.message };
-    } else {
-      peerCount = connectionResult.data.length;
+    try {
+      const connections = await wrap2(() => getNetworkConnections(node));
+      peerCount = connections.length;
       debug(`Node ${node} has ${peerCount} peers`);
+    } catch (err) {
+      warn(`Unable to get network connections info for node ${node}`, err);
     }
   }
 
   return {
-    type: "SUCCESS",
-    data: { head: blockHash, bootstrappedStatus, history, peerCount },
+    head: blockHash,
+    bootstrappedStatus,
+    history,
+    peerCount,
   };
 };
 
@@ -344,18 +331,29 @@ const findSharedAncestor = (
   return NO_ANCESTOR;
 };
 
+const rpcFetch = async (url: string) => {
+  const response = await fetch(url);
+  if (response.ok) {
+    return response.json();
+  }
+  throw new HttpResponseError(
+    `Http error response: (${response.status})`,
+    response.status,
+    response.statusText,
+    await response.text(),
+    url
+  );
+};
+
 export type BootstrappedStatus = {
   bootstrapped: boolean;
   sync_state: "synced" | "unsynced" | "stuck";
 };
 
 const getBootstrappedStatus = async (
-  node: string,
-  chain: string
+  node: string
 ): Promise<BootstrappedStatus> => {
-  const url = `${node}/chains/${chain}/is_bootstrapped`;
-  const response = await fetch(url);
-  return response.json();
+  return await rpcFetch(`${node}/chains/main/is_bootstrapped`);
 };
 
 const catchUpOccurred = (
@@ -387,27 +385,16 @@ const BRANCH_HISTORY_LENGTH = 5;
 const fetchBlockHeaders = async ({
   blockHash,
   rpc,
-}: FetchBlockHeadersArgs): Promise<Result<BlockHeaderResponse[]>> => {
+}: FetchBlockHeadersArgs): Promise<BlockHeaderResponse[]> => {
   const history: BlockHeaderResponse[] = [];
   let nextHash = blockHash;
   // very primitive approach: we simply iterate up our chain to find the most recent blocks
   while (history.length < BRANCH_HISTORY_LENGTH) {
-    const headerResult = await wrap(() =>
-      rpc.getBlockHeader({ block: nextHash })
-    );
-    if (headerResult.type === "SUCCESS") {
-      nextHash = headerResult.data.predecessor;
-      history.push(headerResult.data);
-    } else {
-      debug(headerResult.error);
-      return {
-        type: "ERROR",
-        message: `Error fetching header for block ${blockHash}`,
-      };
-    }
+    const header = await wrap2(() => rpc.getBlockHeader({ block: nextHash }));
+    nextHash = header.predecessor;
+    history.push(header);
   }
-
-  return { type: "SUCCESS", data: history };
+  return history;
 };
 
 export type NetworkConnection = {
@@ -428,7 +415,5 @@ export type NetworkConnection = {
 const getNetworkConnections = async (
   node: string
 ): Promise<NetworkConnection[]> => {
-  const url = `${node}/network/connections`;
-  const response = await fetch(url);
-  return response.json();
+  return await rpcFetch(`${node}/network/connections`);
 };
