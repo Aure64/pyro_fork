@@ -129,9 +129,9 @@ const notifierEventToString = (event: NotifierEvent): string => {
 const peerDataEventToString = (event: PeerDataEvent): string => {
   switch (event.kind) {
     case "ERROR":
-      return `Node monitor encountered error: ${event.message}`;
+      return `Unable to reach ${event.node}: ${event.message}`;
     case "RECONNECTED":
-      return `Node monitor has reconnected`;
+      return `Resolved: ${event.node} is reachable again`;
     default: {
       // this will only fail to typecheck if some kind isn't handled above
       const s: never = event.kind;

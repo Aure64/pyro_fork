@@ -120,6 +120,7 @@ const subscribeToNode = (
             type: "PEER_DATA",
             kind: "RECONNECTED",
             message: `Connectivity to ${node} restored`,
+            node,
           });
         }
         unableToReach = false;
@@ -133,6 +134,7 @@ const subscribeToNode = (
           message: err.status
             ? `${node} returned ${err.status} ${err.statusText ?? ""}`
             : err.message,
+          node,
         });
       }
       const publishedEvents = new Set<string>();

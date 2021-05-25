@@ -68,6 +68,7 @@ export type PeerDataEvent = {
   type: "PEER_DATA";
   kind: DataEventKind;
   message: string;
+  node: string;
 };
 
 const PeerNodeEventKind_RT = Union(
