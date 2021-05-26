@@ -73,7 +73,7 @@ export const start = async ({
       const minLevel = catchupLimit ? level - catchupLimit : level;
       const startLevel = lastBlockLevel
         ? Math.max(lastBlockLevel + 1, minLevel)
-        : minLevel;
+        : level;
 
       debug(`Processing blocks starting at level ${startLevel}`);
 
