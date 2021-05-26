@@ -55,55 +55,59 @@ export const start = async ({
 
   const constants = await wrap2(() => rpc.getConstants());
 
-  debug(`Baker monitor started`);
-
   let halted = false;
 
-  while (!halted) {
-    try {
-      const lastBlockLevel = config.getLastBlockLevel();
-      const catchupLimit = config.getBakerCatchupLimit();
-      const lastBlockCycle = config.getLastBlockCycle();
-      const headHeader = await rpc.getBlockHeader();
-      const { level, hash } = headHeader;
-      debug(
-        `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
-      );
+  const loop = async () => {
+    while (!halted) {
+      try {
+        const lastBlockLevel = config.getLastBlockLevel();
+        const catchupLimit = config.getBakerCatchupLimit();
+        const lastBlockCycle = config.getLastBlockCycle();
+        const headHeader = await rpc.getBlockHeader();
+        const { level, hash } = headHeader;
+        debug(
+          `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
+        );
 
-      const minLevel = catchupLimit ? level - catchupLimit : level;
-      const startLevel = lastBlockLevel
-        ? Math.max(lastBlockLevel + 1, minLevel)
-        : level;
+        const minLevel = catchupLimit ? level - catchupLimit : level;
+        const startLevel = lastBlockLevel
+          ? Math.max(lastBlockLevel + 1, minLevel)
+          : level;
 
-      debug(`Processing blocks starting at level ${startLevel}`);
+        debug(`Processing blocks starting at level ${startLevel}`);
 
-      let currentLevel = startLevel;
+        let currentLevel = startLevel;
 
-      while (currentLevel <= level) {
-        debug(`Processing block at level ${currentLevel}`);
-        const { events, blockLevel, blockCycle } = await checkBlock({
-          bakers,
-          rpc,
-          blockId: currentLevel.toString(),
-          lastCycle: lastBlockCycle,
-          constants,
-        });
-        if (blockLevel !== currentLevel) {
-          throw new Error(
-            `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
-          );
+        while (currentLevel <= level) {
+          debug(`Processing block at level ${currentLevel}`);
+          const { events, blockLevel, blockCycle } = await checkBlock({
+            bakers,
+            rpc,
+            blockId: currentLevel.toString(),
+            lastCycle: lastBlockCycle,
+            constants,
+          });
+          if (blockLevel !== currentLevel) {
+            throw new Error(
+              `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
+            );
+          }
+          events.map(onEvent);
+          config.setLastBlockLevel(currentLevel);
+          config.setLastBlockCycle(blockCycle);
+          currentLevel++;
+          await sleep(1000);
         }
-        events.map(onEvent);
-        config.setLastBlockLevel(currentLevel);
-        config.setLastBlockCycle(blockCycle);
-        currentLevel++;
-        await sleep(1000);
+      } catch (err) {
+        warn("RPC Error", err);
       }
-    } catch (err) {
-      warn("RPC Error", err);
+      await sleep(1000 * constants.time_between_blocks[0].toNumber());
     }
-    await sleep(1000 * constants.time_between_blocks[0].toNumber());
-  }
+  };
+
+  loop();
+
+  debug(`Baker monitor started`);
 
   const halt = () => {
     info("Halting baker monitor");
