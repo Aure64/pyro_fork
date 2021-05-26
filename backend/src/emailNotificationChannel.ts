@@ -1,6 +1,5 @@
 import { createTransport, Transporter } from "nodemailer";
 import { Notify } from "./types";
-import to from "await-to-js";
 
 export const channelName = "email";
 
@@ -39,17 +38,15 @@ export const notify: Notify<EmailNotificationChannel> = async (
   { message, title }
 ) => {
   const { transporter, config } = notifier;
-  const [error] = await to(
+  try {
     transporter.sendMail({
       from: `Pyrometer ${config.email}`,
       to: config.email,
       subject: title,
       text: message,
-    })
-  );
-  if (error) {
-    return { kind: "ERROR", error, channelName };
-  } else {
+    });
     return { kind: "SUCCESS" };
+  } catch (error) {
+    return { kind: "ERROR", error, channelName };
   }
 };

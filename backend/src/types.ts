@@ -118,14 +118,6 @@ export type NotificationChannelMiddleware = (
   notifyFunction: NotifyEventFunction
 ) => NotifyEventFunction;
 
-export type Result<T> =
-  | { type: "SUCCESS"; data: T }
-  | { type: "ERROR"; message: string };
-
-export type ApiResult<T> =
-  | { type: "SUCCESS"; data: T }
-  | { type: "ERROR"; error: Error };
-
 // iterate through the various event kinds that we want to expose in docs
 const generateEventKinds = () => {
   const bakerEventKinds = BakerNodeEventKind_RT.alternatives.map(

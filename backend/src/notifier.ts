@@ -187,7 +187,7 @@ const configureTelegramChannel = async (
   if (telegramConfig?.enabled) {
     const channelName = TelegramChannel.channelName;
     const telegramNotify = bindNotifier(
-      TelegramChannel.create(telegramConfig, config.setTelegramChatId),
+      await TelegramChannel.create(telegramConfig, config.setTelegramChatId),
       TelegramChannel.notify
     );
     const applyQueue = createQueue({

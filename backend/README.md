@@ -64,24 +64,6 @@ fetch().then(result => {
   // handle result
 });
 ```
-- use [await-to-js](https://github.com/scopsy/await-to-js) instead of try/catch.  Try/catch can lead to catching more greedily than intended, making debugging difficult.
-```typescript
-// do this:
-const [error, result] = await to(asyncFunctionThatCanFail());
-if (error) {
-  // handle error
-} else {
-  // handle success
-}
-
-// not this:
-try {
-  const result = await asyncFunctionThatCanFail();
-  // handle success
-} catch(error) {
-  // handle error
-}
-```
 
 ## Notifications
 

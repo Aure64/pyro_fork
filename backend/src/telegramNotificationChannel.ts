@@ -1,4 +1,3 @@
-import { Result } from "./types";
 import * as TelegramBot from "node-telegram-bot-api";
 import { Notify } from "./types";
 import { debug } from "loglevel";
@@ -16,24 +15,22 @@ export type TelegramNotificationChannel = {
   chatId: number | undefined;
 };
 
-export const create = (
+export const create = async (
   config: TelegramConfig,
   saveChatId: (chatId: number) => void
-): TelegramNotificationChannel => {
+): Promise<TelegramNotificationChannel> => {
   const bot = new TelegramBot(config.token);
   const channel = { bot, chatId: config.chatId };
   if (!config.chatId) {
     debug(`No Telegram chatId found in config, attempting to fetch...`);
-    listenForChatId(config.token).then((result) => {
-      if (result.type === "SUCCESS") {
-        const chatId = result.data;
-        saveChatId(chatId);
-        debug(`Telegram chatId loaded and saved to system: ${chatId}`);
-        channel.chatId = chatId;
-      } else {
-        debug(`Unable to fetch Telegram chatId for token ${config.token}`);
-      }
-    });
+    try {
+      const chatId = await listenForChatId(config.token);
+      saveChatId(chatId);
+      channel.chatId = chatId;
+      debug(`Telegram chatId loaded and saved to system: ${chatId}`);
+    } catch (err) {
+      debug(`Unable to fetch Telegram chatId for token ${config.token}`);
+    }
   }
   return channel;
 };
@@ -59,26 +56,21 @@ export const notify: Notify<TelegramNotificationChannel> = async (
  * have had activity during this time to succeed.
  * Times out with a failkure after 20 seconds.
  */
-export const listenForChatId = async (
-  token: string
-): Promise<Result<number>> => {
-  return new Promise((resolve) => {
+export const listenForChatId = async (token: string): Promise<number> => {
+  return new Promise((resolve, reject) => {
     const bot = new TelegramBot(token, { polling: true });
 
     // if polling doesn't find a chatId within 5 seconds, fail
     const timeout = setTimeout(() => {
       bot.stopPolling();
-      resolve({
-        type: "ERROR",
-        message: "No telegram messages received for provided token.",
-      });
+      reject(new Error("No telegram messages received for provided token."));
     }, 20000);
 
     bot.on("message", (message) => {
       bot.stopPolling();
       const chatId = message.chat.id;
       clearTimeout(timeout);
-      resolve({ type: "SUCCESS", data: chatId });
+      resolve(chatId);
     });
   });
 };

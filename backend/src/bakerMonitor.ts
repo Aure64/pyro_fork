@@ -1,5 +1,5 @@
-import { BakerEvent, Result, TezosNodeEvent } from "./types";
-import { debug, error, warn, info, trace } from "loglevel";
+import { BakerEvent, TezosNodeEvent } from "./types";
+import { debug, warn, info, trace } from "loglevel";
 import {
   BakingRightsQueryArguments,
   BakingRightsResponse,
@@ -14,7 +14,7 @@ import {
   RpcClient,
   DelegatesResponse,
 } from "@taquito/rpc";
-import { wrap } from "./networkWrapper";
+import { wrap2 } from "./networkWrapper";
 import { Config } from "./config";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
@@ -53,17 +53,7 @@ export const start = async ({
     10
   );
 
-  const constantsResult = await wrap(() => rpc.getConstants());
-  if (constantsResult.type === "ERROR") {
-    error(`Error fetching chain constants: ${constantsResult.error.message}`);
-    onEvent({
-      type: "BAKER_DATA",
-      kind: "ERROR",
-      message: constantsResult.error.message,
-    });
-    throw constantsResult.error;
-  }
-  const constants = constantsResult.data;
+  const constants = await wrap2(() => rpc.getConstants());
 
   debug(`Baker monitor started`);
 
@@ -91,22 +81,13 @@ export const start = async ({
 
       while (currentLevel <= level) {
         debug(`Processing block at level ${currentLevel}`);
-        const result = await checkBlock({
+        const { events, blockLevel, blockCycle } = await checkBlock({
           bakers,
           rpc,
           blockId: currentLevel.toString(),
           lastCycle: lastBlockCycle,
           constants,
         });
-        if (result.type === "ERROR") {
-          onEvent({
-            type: "BAKER_DATA",
-            kind: "ERROR",
-            message: result.message,
-          });
-          break;
-        }
-        const { events, blockLevel, blockCycle } = result.data;
         if (blockLevel !== currentLevel) {
           throw new Error(
             `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
@@ -161,103 +142,96 @@ const checkBlock = async ({
   rpc,
   lastCycle,
   constants,
-}: CheckBlockArgs): Promise<Result<CheckBlockResult>> => {
+}: CheckBlockArgs): Promise<CheckBlockResult> => {
   trace(`Fetching baker data for block ${blockId}`);
-  const blockResult = await loadBlockData({
+  const events: TezosNodeEvent[] = [];
+
+  const {
+    metadata,
+    block,
+    bakingRights,
+    endorsingRights,
+  } = await loadBlockData({
     bakers,
     blockId,
     rpc,
   });
-  if (blockResult.type === "ERROR") {
-    debug(`Error fetching baker data for block ${blockId}`);
-    return {
-      type: "ERROR",
-      message: `Error loading data for block ${blockId}`,
-    };
-  } else {
-    trace(`Successfully retrieved baker data for block ${blockId}`);
-    const events: TezosNodeEvent[] = [];
 
-    const { metadata, block, bakingRights, endorsingRights } = blockResult.data;
+  trace(`Successfully retrieved baker data for block ${blockId}`);
 
-    if (!metadata.level) {
-      return {
-        type: "ERROR",
-        message: `Missing block metadata level`,
-      };
-    }
-    const blockLevel = metadata.level.level;
-    const blockCycle = metadata.level.cycle;
+  if (!metadata.level) {
+    throw new Error(`Missing block metadata level`);
+  }
 
-    for (const baker of bakers) {
-      const endorsementOperations = block.operations[0];
-      const anonymousOperations = block.operations[2];
-      const bakingEvent = checkBlockBakingRights({
+  const blockLevel = metadata.level.level;
+  const blockCycle = metadata.level.cycle;
+
+  for (const baker of bakers) {
+    const endorsementOperations = block.operations[0];
+    const anonymousOperations = block.operations[2];
+    const bakingEvent = checkBlockBakingRights({
+      baker,
+      bakingRights,
+      blockBaker: metadata.baker,
+      blockId,
+      blockLevel: metadata.level.level,
+    });
+    if (bakingEvent) events.push(bakingEvent);
+    const endorsingEvent = checkBlockEndorsingRights({
+      baker,
+      blockLevel: metadata.level.level - 1,
+      endorsementOperations,
+      endorsingRights,
+    });
+    if (endorsingEvent) events.push(endorsingEvent);
+    // only check future rights once per block
+    if (!lastCycle || blockCycle > lastCycle) {
+      const futureBakingEvent = checkFutureBlockBakingRights({
         baker,
         bakingRights,
         blockBaker: metadata.baker,
-        blockId,
         blockLevel: metadata.level.level,
+        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
       });
-      if (bakingEvent) events.push(bakingEvent);
-      const endorsingEvent = checkBlockEndorsingRights({
+      if (futureBakingEvent) events.push(futureBakingEvent);
+      const futureEndorsingEvent = checkFutureBlockEndorsingRights({
         baker,
-        blockLevel: metadata.level.level - 1,
-        endorsementOperations,
         endorsingRights,
-      });
-      if (endorsingEvent) events.push(endorsingEvent);
-      // only check future rights once per block
-      if (!lastCycle || blockCycle > lastCycle) {
-        const futureBakingEvent = checkFutureBlockBakingRights({
-          baker,
-          bakingRights,
-          blockBaker: metadata.baker,
-          blockLevel: metadata.level.level,
-          timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
-        });
-        if (futureBakingEvent) events.push(futureBakingEvent);
-        const futureEndorsingEvent = checkFutureBlockEndorsingRights({
-          baker,
-          endorsingRights,
-          blockLevel: metadata.level.level,
-          timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
-        });
-        const deactivationEvent = await getDeactivationEvent({
-          baker,
-          rpc,
-          cycle: metadata.level.cycle,
-        });
-        if (deactivationEvent) events.push(deactivationEvent);
-        if (futureEndorsingEvent) events.push(futureEndorsingEvent);
-      } else {
-        debug(
-          `Not checking for future rights or deactivations as this cycle (${blockCycle}) was already checked`
-        );
-      }
-      const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
-        baker,
-        operations: anonymousOperations,
-        rpc,
         blockLevel: metadata.level.level,
+        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
       });
-      if (doubleBakeEvent) {
-        events.push(doubleBakeEvent);
-      }
-      const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement(
-        {
-          baker,
-          operations: anonymousOperations,
-          rpc,
-          blockLevel: metadata.level.level,
-        }
+      const deactivationEvent = await getDeactivationEvent({
+        baker,
+        rpc,
+        cycle: metadata.level.cycle,
+      });
+      if (deactivationEvent) events.push(deactivationEvent);
+      if (futureEndorsingEvent) events.push(futureEndorsingEvent);
+    } else {
+      debug(
+        `Not checking for future rights or deactivations as this cycle (${blockCycle}) was already checked`
       );
-      if (doubleEndorseEvent) {
-        events.push(doubleEndorseEvent);
-      }
     }
-    return { type: "SUCCESS", data: { events, blockLevel, blockCycle } };
+    const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
+      baker,
+      operations: anonymousOperations,
+      rpc,
+      blockLevel: metadata.level.level,
+    });
+    if (doubleBakeEvent) {
+      events.push(doubleBakeEvent);
+    }
+    const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement({
+      baker,
+      operations: anonymousOperations,
+      rpc,
+      blockLevel: metadata.level.level,
+    });
+    if (doubleEndorseEvent) {
+      events.push(doubleEndorseEvent);
+    }
   }
+  return { events, blockLevel, blockCycle };
 };
 
 type LoadBlockDataArgs = {
@@ -280,25 +254,15 @@ export const loadBlockData = async ({
   bakers,
   blockId,
   rpc,
-}: LoadBlockDataArgs): Promise<Result<BlockData>> => {
+}: LoadBlockDataArgs): Promise<BlockData> => {
   debug(`Fetching block ${blockId}`);
-  const blockPromise = wrap(() => rpc.getBlock({ block: blockId }));
-  const blockResult = await blockPromise;
-
-  if (blockResult.type === "ERROR") {
-    const message = `Error loading block operations for ${blockId}`;
-    warn(`${message} because of ${blockResult.error.message}`);
-    return {
-      type: "ERROR",
-      message,
-    };
-  }
-  const block = blockResult.data;
+  const blockPromise = wrap2(() => rpc.getBlock({ block: blockId }));
+  const block = await blockPromise;
 
   debug(`Block ${blockId} is at level`, block.metadata.level);
   const cycle = block.metadata.level?.cycle;
 
-  const bakingRightsPromise = wrap(() =>
+  const bakingRightsPromise = wrap2(() =>
     rpc.getBakingRights(
       {
         max_priority: 0,
@@ -309,7 +273,7 @@ export const loadBlockData = async ({
     )
   );
 
-  const endorsingRightsPromise = wrap(() =>
+  const endorsingRightsPromise = wrap2(() =>
     rpc.getEndorsingRights(
       {
         cycle,
@@ -319,35 +283,12 @@ export const loadBlockData = async ({
     )
   );
 
-  // run all promises in parallel
-  await Promise.all([bakingRightsPromise, endorsingRightsPromise]);
+  const [bakingRights, endorsingRights] = await Promise.all([
+    bakingRightsPromise,
+    endorsingRightsPromise,
+  ]);
 
-  const bakingRightsResult = await bakingRightsPromise;
-
-  if (bakingRightsResult.type === "ERROR") {
-    warn(`Baking rights error: ${bakingRightsResult.error.message}`);
-    return { type: "ERROR", message: "Error loading baking rights" };
-  }
-  const bakingRights = bakingRightsResult.data;
-
-  // debug(`Baking rights for block ${blockId}`, bakingRights);
-
-  const endorsingRightsResult = await endorsingRightsPromise;
-  if (endorsingRightsResult.type === "ERROR") {
-    warn(`Endorsing rights error: ${endorsingRightsResult.error.message}`);
-    return {
-      type: "ERROR",
-      message: "Error fetching endorsing rights",
-    };
-  }
-  const endorsingRights = endorsingRightsResult.data;
-
-  // debug(`Endorsing rights for block ${blockId}`, endorsingRights);
-
-  return {
-    type: "SUCCESS",
-    data: { metadata: block.metadata, bakingRights, endorsingRights, block },
-  };
+  return { metadata: block.metadata, bakingRights, endorsingRights, block };
 };
 
 type CheckBlockBakingRightsArgs = {
@@ -495,11 +436,10 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
         const accusedLevel = contentsItem.op1.operations.level;
         const accusedSignature = contentsItem.op1.signature;
-        const blockResult = await wrap(() =>
-          rpc.getBlock({ block: `${accusedLevel}` })
-        );
-        if (blockResult.type === "SUCCESS") {
-          const block = blockResult.data;
+        try {
+          const block = await wrap2(() =>
+            rpc.getBlock({ block: `${accusedLevel}` })
+          );
           const endorsementOperations = block.operations[0];
           const operation = endorsementOperations.find((operation) => {
             for (const c of operation.contents) {
@@ -528,9 +468,10 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
               `Unable to find endorser for double endorsed block ${block.hash}`
             );
           }
-        } else {
+        } catch (err) {
           warn(
-            `Error fetching block info to determine double endorsement violator because of ${blockResult.error.message}`
+            `Error fetching block info to determine double endorsement violator because of `,
+            err
           );
         }
       }
@@ -574,14 +515,13 @@ export const checkBlockAccusationsForDoubleBake = async ({
         const accusedHash = operation.hash;
         const accusedLevel = contentsItem.bh1.level;
         const accusedPriority = contentsItem.bh1.priority;
-        const bakingRightsResult = await wrap(() =>
-          rpc.getBakingRights(
-            { delegate: baker, level: accusedLevel },
-            { block: `${accusedLevel}` }
-          )
-        );
-        if (bakingRightsResult.type === "SUCCESS") {
-          const bakingRights = bakingRightsResult.data;
+        try {
+          const bakingRights = await wrap2(() =>
+            rpc.getBakingRights(
+              { delegate: baker, level: accusedLevel },
+              { block: `${accusedLevel}` }
+            )
+          );
           const hadBakingRights =
             bakingRights.find(
               (right) =>
@@ -598,9 +538,10 @@ export const checkBlockAccusationsForDoubleBake = async ({
               blockLevel,
             };
           }
-        } else {
+        } catch (err) {
           warn(
-            `Error fetching baking rights to determine double bake violator because of ${bakingRightsResult.error.message}`
+            `Error fetching baking rights to determine double bake violator because of `,
+            err
           );
         }
       }
@@ -714,19 +655,8 @@ const getDeactivationEvent = async ({
   cycle,
   rpc,
 }: GetDeactivationEventsArgs): Promise<TezosNodeEvent | null> => {
-  const delegatesResult = await wrap(() => rpc.getDelegates(baker));
-  if (delegatesResult.type === "ERROR") {
-    const message = `Error loading delegate info for delegate ${baker}`;
-    warn(`${message} because of ${delegatesResult.error.message}`);
-    return {
-      type: "BAKER_DATA",
-      kind: "ERROR",
-      message,
-    };
-  } else {
-    const delegatesResponse = delegatesResult.data;
-    return checkForDeactivations({ baker, cycle, delegatesResponse });
-  }
+  const delegatesResponse = await wrap2(() => rpc.getDelegates(baker));
+  return checkForDeactivations({ baker, cycle, delegatesResponse });
 };
 
 type CheckForDeactivationsArgs = {
