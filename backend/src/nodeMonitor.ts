@@ -15,7 +15,7 @@ type Monitor = {
 type StartArgs = {
   nodes: string[];
   onEvent: (event: TezosNodeEvent) => void;
-  referenceNode: string;
+  referenceNode?: string;
 };
 
 const sleep = (milliseconds: number) => {
@@ -27,11 +27,9 @@ export const start = ({
   onEvent,
   referenceNode,
 }: StartArgs): Monitor => {
-  const referenceSubscription = subscribeToNode(
-    referenceNode,
-    onEvent,
-    () => undefined
-  );
+  const referenceSubscription = referenceNode
+    ? subscribeToNode(referenceNode, onEvent, () => undefined)
+    : { close: () => {}, nodeInfo: () => undefined };
 
   const subscriptions = nodes.map((node) =>
     subscribeToNode(node, onEvent, referenceSubscription.nodeInfo)

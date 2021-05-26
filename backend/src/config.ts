@@ -92,6 +92,18 @@ const RPC: UserPref = {
   isArray: false,
   validationRule: "link",
 };
+const REFERENCE_NODE: UserPref = {
+  key: "reference-node",
+  default: undefined,
+  description:
+    "Node to compare to when detecting if monitored node is on a branch",
+  alias: "R",
+  type: "string",
+  group: undefined,
+  isArray: false,
+  validationRule: "link",
+};
+
 const EXCLUDED_EVENTS: UserPref = {
   key: "filter:omit",
   default: [
@@ -498,6 +510,7 @@ export type Config = {
   save: () => void;
   getBakers: GetBakers;
   getRpc: GetRpc;
+  getReferenceNode: GetReferenceNode;
   getNodes: GetNodes;
   getLogLevel: GetLogLevel;
   getLastBlockLevel: GetLastBlockLevel;
@@ -634,6 +647,7 @@ export const load = async (): Promise<Config> => {
     save: saveConfig,
     getBakers,
     getRpc,
+    getReferenceNode,
     getNodes,
     getLogLevel,
     getLastBlockLevel,
@@ -681,6 +695,12 @@ type GetRpc = () => string;
 
 const getRpc: GetRpc = () => {
   return nconf.get(RPC.key);
+};
+
+type GetReferenceNode = () => string | undefined;
+
+const getReferenceNode: GetReferenceNode = () => {
+  return nconf.get(REFERENCE_NODE.key);
 };
 
 type GetNodes = () => string[];

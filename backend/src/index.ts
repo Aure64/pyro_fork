@@ -3,7 +3,7 @@ import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
 import * as Server from "./server";
 import * as Notifier from "./notifier";
-import { debug, info, setLevel } from "loglevel";
+import { debug, info, warn, setLevel } from "loglevel";
 import log, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import * as Config from "./config";
@@ -54,9 +54,10 @@ const main = async () => {
     Notifier.notify(notifier, event);
   };
 
-  const nodes = config.getNodes();
   const bakers = config.getBakers();
   const rpcNode = config.getRpc();
+  const referenceNode = config.getReferenceNode();
+
   //always monitor rpc node
   const nodes = [...new Set([...config.getNodes(), rpcNode])];
 
@@ -73,9 +74,14 @@ const main = async () => {
           onEvent,
         })
       : null;
+
+  if (!referenceNode) {
+    warn("Reference node is not set, node-on-a-branch detection is off");
+  }
+
   const nodeMonitor =
     nodes.length > 0
-      ? NodeMonitor.start({ onEvent, nodes, referenceNode: rpcNode })
+      ? NodeMonitor.start({ onEvent, nodes, referenceNode })
       : null;
   const server = Server.start();
 
