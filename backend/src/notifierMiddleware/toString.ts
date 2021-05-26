@@ -1,5 +1,4 @@
 import {
-  BakerDataEvent,
   BakerNodeEvent,
   FutureBakingEvent,
   BakerDeactivationEvent,
@@ -22,9 +21,6 @@ export const apply = (notifyFunction: NotifyFunction): NotifyEventFunction => {
     switch (event.type) {
       case "BAKER_NODE":
         message = bakerNodeEventToString(event);
-        break;
-      case "BAKER_DATA":
-        message = bakerDataEventToString(event);
         break;
       case "FUTURE_BAKING":
         message = futureBakingEventToString(event);

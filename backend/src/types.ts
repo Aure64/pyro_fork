@@ -52,16 +52,9 @@ const DataEventKind_RT = Union(Literal("ERROR"), Literal("RECONNECTED"));
 
 type DataEventKind = Static<typeof DataEventKind_RT>;
 
-export type BakerDataEvent = {
-  type: "BAKER_DATA";
-  kind: DataEventKind;
-  message: string;
-};
-
 export type BakerEvent =
   | FutureBakingEvent
   | BakerNodeEvent
-  | BakerDataEvent
   | BakerDeactivationEvent;
 
 export type PeerDataEvent = {
