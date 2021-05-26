@@ -7,7 +7,6 @@ import * as EndpointChannel from "./endpointNotificationChannel";
 import { apply as applyToString } from "./notifierMiddleware/toString";
 import { apply as bindNotifier } from "./notifierMiddleware/bindNotifier";
 import { create as createFilter } from "./notifierMiddleware/filter";
-import { create as createOfflineFilter } from "./notifierMiddleware/offlineFilter";
 import { create as createQueue } from "./notifierMiddleware/queue";
 import { create as createFailureHandler } from "./notifierMiddleware/failureHandler";
 import { create as createVerifier } from "./notifierMiddleware/verifier";
@@ -73,15 +72,11 @@ const configureEmailChannel = async (
       channelName,
       config,
     });
-    const applyOfflineFilter = await createOfflineFilter({
-      channelName,
-    });
     const applyVerifier = createVerifier(channelName, config);
     const apply = compose(
       applyQueue,
       applyFailureHandler,
       applyFilter,
-      applyOfflineFilter,
       applyVerifier,
       applyToString
     );
@@ -114,16 +109,12 @@ const configureDesktopChannel = async (
       channelName,
       config,
     });
-    const applyOfflineFilter = await createOfflineFilter({
-      channelName,
-    });
     const applyVerifier = createVerifier(channelName, config);
 
     const apply = compose(
       applyQueue,
       applyFailureHandler,
       applyFilter,
-      applyOfflineFilter,
       applyVerifier,
       applyToString
     );
@@ -157,16 +148,12 @@ const configureSlackChannel = async (
       channelName,
       config,
     });
-    const applyOfflineFilter = await createOfflineFilter({
-      channelName,
-    });
     const applyVerifier = createVerifier(channelName, config);
 
     const apply = compose(
       applyQueue,
       applyFailureHandler,
       applyFilter,
-      applyOfflineFilter,
       applyVerifier,
       applyToString
     );
@@ -200,16 +187,12 @@ const configureTelegramChannel = async (
       channelName,
       config,
     });
-    const applyOfflineFilter = await createOfflineFilter({
-      channelName,
-    });
     const applyVerifier = createVerifier(channelName, config);
 
     const apply = compose(
       applyQueue,
       applyFailureHandler,
       applyFilter,
-      applyOfflineFilter,
       applyVerifier,
       applyToString
     );
@@ -244,16 +227,12 @@ const configureEndpointChannel = async (
       channelName,
       config,
     });
-    const applyOfflineFilter = await createOfflineFilter({
-      channelName,
-    });
     const applyVerifier = createVerifier(channelName, config);
 
     const apply = compose(
       applyQueue,
       applyFailureHandler,
       applyFilter,
-      applyOfflineFilter,
       applyVerifier
     );
     return apply(endpointNotify);
