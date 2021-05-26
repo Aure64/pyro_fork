@@ -1,6 +1,6 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
-import { LogLevelDesc, debug, trace } from "loglevel";
+import { LogLevelDesc, trace } from "loglevel";
 import { SlackConfig } from "./slackNotificationChannel";
 import { TelegramConfig } from "./telegramNotificationChannel";
 import { EmailConfig } from "./emailNotificationChannel";

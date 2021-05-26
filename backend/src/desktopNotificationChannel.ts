@@ -1,6 +1,6 @@
 import { notify as desktopNotify } from "node-notifier";
 import { Notify } from "./types";
-import { error, debug } from "loglevel";
+import { error } from "loglevel";
 
 export const channelName = "desktop";
 
