@@ -100,12 +100,7 @@ export const start = async ({
         await sleep(1000);
       }
     } catch (err) {
-      warn("RPC Error:", err);
-      onEvent({
-        type: "BAKER_DATA",
-        kind: "ERROR",
-        message: err.message,
-      });
+      warn("RPC Error", err);
     }
     await sleep(1000 * constants.time_between_blocks[0].toNumber());
   }

@@ -57,6 +57,9 @@ const main = async () => {
   const nodes = config.getNodes();
   const bakers = config.getBakers();
   const rpcNode = config.getRpc();
+  //always monitor rpc node
+  const nodes = [...new Set([...config.getNodes(), rpcNode])];
+
   if (bakers.length === 0 && nodes.length === 0) {
     console.error("You must specify nodes or bakers to watch.");
     process.exit(1);
