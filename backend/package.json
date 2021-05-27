@@ -4,6 +4,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
+    "preinstall": "git config core.hooksPath githooks",
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
     "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only --exit-child src/index.ts",
