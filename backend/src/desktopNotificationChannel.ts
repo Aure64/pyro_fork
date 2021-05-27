@@ -16,7 +16,7 @@ export const create = (config: DesktopConfig): DesktopNotificationChannel => {
 
 export const notify: Notify<DesktopNotificationChannel> = async (
   notifier,
-  { message, title }
+  { title }
 ) =>
   new Promise((resolve) => {
     desktopNotify(

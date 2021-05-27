@@ -22,6 +22,14 @@ const sleep = (milliseconds: number) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
+type Sub = {
+  close: () => void;
+  nodeInfo: () => NodeInfo | undefined;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const NoSub: Sub = { close: () => {}, nodeInfo: () => undefined };
+
 export const start = ({
   nodes,
   onEvent,
@@ -29,7 +37,7 @@ export const start = ({
 }: StartArgs): Monitor => {
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)
-    : { close: () => {}, nodeInfo: () => undefined };
+    : NoSub;
 
   const subscriptions = nodes.map((node) =>
     subscribeToNode(node, onEvent, referenceSubscription.nodeInfo)
@@ -51,11 +59,6 @@ export const start = ({
   debug(`Node monitor started`);
 
   return monitor;
-};
-
-type Sub = {
-  close: () => void;
-  nodeInfo: () => NodeInfo | undefined;
 };
 
 const eventKey = (event: PeerEvent): string => {

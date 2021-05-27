@@ -12,6 +12,7 @@ type Wrap2 = <T>(apiCall: () => Promise<T>) => Promise<T>;
 
 export const wrap2: Wrap2 = async (apiCall) => {
   let attempts = 0;
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     attempts++;
     try {

@@ -70,20 +70,6 @@ const bakerNodeEventToString = (event: BakerNodeEvent): string => {
   }
 };
 
-const bakerDataEventToString = (event: BakerDataEvent): string => {
-  switch (event.kind) {
-    case "ERROR":
-      return `Baker monitor encountered error: ${event.message}`;
-    case "RECONNECTED":
-      return `Baker monitor has reconnected`;
-    default: {
-      // this will only fail to typecheck if some kind isn't handled above
-      const s: never = event.kind;
-      return s;
-    }
-  }
-};
-
 const futureBakingEventToString = (event: FutureBakingEvent): string => {
   switch (event.kind) {
     case "FUTURE_BAKING_OPPORTUNITY":
