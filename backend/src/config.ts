@@ -607,7 +607,7 @@ export const load = async (): Promise<Config> => {
     process.exit(1);
   }
 
-  const saveConfig = () => save(systemConfig);
+  const saveConfig = () => save(systemConfigPath);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setAndSave = (key: string, value: any) => {
