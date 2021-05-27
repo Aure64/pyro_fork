@@ -433,27 +433,29 @@ export const endorsingRightsResponse: EndorsingRightsResponse = [
   },
 ];
 
-const operationContentsWithDoubleEndorsement: OperationContentsDoubleEndorsement = {
-  kind: OpKind.DOUBLE_ENDORSEMENT_EVIDENCE,
-  op1: {
-    branch: "",
-    operations: {
-      kind: OpKind.ENDORSEMENT,
-      level,
+const operationContentsWithDoubleEndorsement: OperationContentsDoubleEndorsement =
+  {
+    kind: OpKind.DOUBLE_ENDORSEMENT_EVIDENCE,
+    op1: {
+      branch: "",
+      operations: {
+        kind: OpKind.ENDORSEMENT,
+        level,
+      },
+      signature: (
+        successfulEndorsement
+          .contents[0] as OperationContentsEndorsementWithSlot
+      ).endorsement.signature,
     },
-    signature: (successfulEndorsement
-      .contents[0] as OperationContentsEndorsementWithSlot).endorsement
-      .signature,
-  },
-  op2: {
-    branch: "",
-    operations: {
-      kind: OpKind.ENDORSEMENT,
-      level,
+    op2: {
+      branch: "",
+      operations: {
+        kind: OpKind.ENDORSEMENT,
+        level,
+      },
+      signature: "",
     },
-    signature: "",
-  },
-};
+  };
 
 export const operationsWithDoubleEndorsementAccusation: OperationEntry[] = [
   {

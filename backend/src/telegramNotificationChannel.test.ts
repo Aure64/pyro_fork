@@ -7,7 +7,7 @@ import {
 const sendMessage = jest.fn();
 
 const notifier: TelegramNotificationChannel = {
-  bot: ({ sendMessage } as unknown) as TelegramBot,
+  bot: { sendMessage } as unknown as TelegramBot,
   chatId: 12,
 };
 

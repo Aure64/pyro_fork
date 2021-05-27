@@ -84,12 +84,12 @@ describe("loadBlockData", () => {
     const getBlockMetadata = jest.fn().mockResolvedValue({ level: {} });
     const getEndorsingRights = jest.fn().mockResolvedValue({});
     const getBlock = jest.fn().mockResolvedValue({ metadata: { level: {} } });
-    const rpc = ({
+    const rpc = {
       getBakingRights,
       getBlock,
       getBlockMetadata,
       getEndorsingRights,
-    } as unknown) as RpcClient;
+    } as unknown as RpcClient;
 
     await loadBlockData({
       bakers: [delegate],
@@ -110,13 +110,13 @@ describe("loadBlockData", () => {
     const getEndorsingRights = jest.fn().mockResolvedValue({});
     const getBlock = jest.fn().mockRejectedValue(new Error());
     const getConstants = jest.fn().mockResolvedValue({});
-    const rpc = ({
+    const rpc = {
       getBakingRights,
       getBlock,
       // getBlockMetadata,
       getEndorsingRights,
       getConstants,
-    } as unknown) as RpcClient;
+    } as unknown as RpcClient;
 
     const blockId = "some_hash";
 
@@ -192,9 +192,9 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       hash: "some_hash",
       operations: [endorsementsWithSuccess],
     });
-    const rpc = ({
+    const rpc = {
       getBlock,
-    } as unknown) as RpcClient;
+    } as unknown as RpcClient;
 
     const result = await checkBlockAccusationsForDoubleEndorsement({
       baker: endorsementBaker,
@@ -213,9 +213,9 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
   });
   it("Does not fetch block when there are no accusations", async () => {
     const getBlock = jest.fn();
-    const rpc = ({
+    const rpc = {
       getBlock,
-    } as unknown) as RpcClient;
+    } as unknown as RpcClient;
 
     const result = await checkBlockAccusationsForDoubleEndorsement({
       baker: endorsementBaker,
@@ -233,9 +233,9 @@ describe("checkBlockAccusationsForDoubleBake", () => {
     const getBakingRights = jest
       .fn()
       .mockResolvedValue(responseWithPriorityZero);
-    const rpc = ({
+    const rpc = {
       getBakingRights,
-    } as unknown) as RpcClient;
+    } as unknown as RpcClient;
 
     const result = await checkBlockAccusationsForDoubleBake({
       baker: delegate,
@@ -254,9 +254,9 @@ describe("checkBlockAccusationsForDoubleBake", () => {
   });
   it("Does not fetch baking rights when there are no accusations", async () => {
     const getBlock = jest.fn();
-    const rpc = ({
+    const rpc = {
       getBlock,
-    } as unknown) as RpcClient;
+    } as unknown as RpcClient;
 
     const result = await checkBlockAccusationsForDoubleBake({
       baker: delegate,

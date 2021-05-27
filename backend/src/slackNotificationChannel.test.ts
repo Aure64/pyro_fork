@@ -4,7 +4,7 @@ import { notify } from "./slackNotificationChannel";
 const send = jest.fn();
 
 const notifier = {
-  webhook: ({ send } as unknown) as IncomingWebhook,
+  webhook: { send } as unknown as IncomingWebhook,
 };
 
 describe("notify", () => {

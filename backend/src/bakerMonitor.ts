@@ -145,16 +145,12 @@ const checkBlock = async ({
   trace(`Fetching baker data for block ${blockId}`);
   const events: TezosNodeEvent[] = [];
 
-  const {
-    metadata,
-    block,
-    bakingRights,
-    endorsingRights,
-  } = await loadBlockData({
-    bakers,
-    blockId,
-    rpc,
-  });
+  const { metadata, block, bakingRights, endorsingRights } =
+    await loadBlockData({
+      bakers,
+      blockId,
+      rpc,
+    });
 
   trace(`Successfully retrieved baker data for block ${blockId}`);
 

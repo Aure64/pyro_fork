@@ -14,9 +14,9 @@ const config: EmailConfig = {
 
 describe("notify", () => {
   test("sends email notification", () => {
-    const transporter: Transporter = ({
+    const transporter: Transporter = {
       sendMail: jest.fn().mockResolvedValue({ messageId: 12 }),
-    } as unknown) as Transporter;
+    } as unknown as Transporter;
     const notifier = { config, transporter };
     const mockedTransporter = mocked(transporter);
 
@@ -31,9 +31,9 @@ describe("notify", () => {
   });
 
   test("resolves to success string when successful", () => {
-    const transporter: Transporter = ({
+    const transporter: Transporter = {
       sendMail: jest.fn().mockResolvedValue({ messageId: 12 }),
-    } as unknown) as Transporter;
+    } as unknown as Transporter;
     const notifier = { config, transporter };
 
     const result = notify(notifier, {
@@ -45,9 +45,9 @@ describe("notify", () => {
 
   test("resolves to error object when unsuccessful", () => {
     const error = new Error("error showing notification");
-    const transporter: Transporter = ({
+    const transporter: Transporter = {
       sendMail: jest.fn().mockRejectedValue(error),
-    } as unknown) as Transporter;
+    } as unknown as Transporter;
     const notifier = { config, transporter };
 
     const result = notify(notifier, {
