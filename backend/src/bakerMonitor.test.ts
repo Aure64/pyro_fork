@@ -104,11 +104,11 @@ describe("loadBlockData", () => {
     expect(getEndorsingRights.mock.calls.length).toEqual(1);
   });
 
-  it("returns error for failed block data fetch", async () => {
+  it("throws error for failed block data fetch", async () => {
     const getBakingRights = jest.fn().mockResolvedValue({});
     // const getBlockMetadata = jest.fn().mockRejectedValue({});
     const getEndorsingRights = jest.fn().mockResolvedValue({});
-    const getBlock = jest.fn().mockRejectedValue({});
+    const getBlock = jest.fn().mockRejectedValue(new Error());
     const getConstants = jest.fn().mockResolvedValue({});
     const rpc = ({
       getBakingRights,
@@ -119,16 +119,14 @@ describe("loadBlockData", () => {
     } as unknown) as RpcClient;
 
     const blockId = "some_hash";
-    const result = await loadBlockData({
-      bakers: [delegate],
-      blockId,
-      rpc,
-    });
 
-    expect(result).toEqual({
-      type: "ERROR",
-      message: `Error loading block operations for ${blockId}`,
-    });
+    await expect(
+      loadBlockData({
+        bakers: [delegate],
+        blockId,
+        rpc,
+      })
+    ).rejects.toThrow();
   });
 });
 

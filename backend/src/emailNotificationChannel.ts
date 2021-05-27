@@ -39,7 +39,7 @@ export const notify: Notify<EmailNotificationChannel> = async (
 ) => {
   const { transporter, config } = notifier;
   try {
-    transporter.sendMail({
+    await transporter.sendMail({
       from: `Pyrometer ${config.email}`,
       to: config.email,
       subject: title,
