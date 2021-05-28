@@ -12,7 +12,6 @@ import envPaths from "env-paths";
 import * as yargs from "yargs";
 import * as R from "ramda";
 import * as Validator from "validatorjs";
-import * as Yaml from "js-yaml";
 import { eventKinds } from "./types";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
@@ -533,6 +532,16 @@ export type Config = {
   getQueueConfig: GetQueueConfig;
 };
 
+const formatValidationErrors = (errors: Validator.ValidationErrors): string => {
+  const formatted = Object.entries(errors)
+    .map(
+      ([field, messages]) =>
+        `${field}:\n${messages.map((m) => "  * " + m).join("\n")}`
+    )
+    .join("\n");
+  return formatted;
+};
+
 /**
  * Load config settings from argv and the file system.  File system will use the path from envPaths
  * unless overriden by argv.
@@ -603,7 +612,7 @@ export const load = async (): Promise<Config> => {
   if (validation.fails()) {
     console.log("Your config is invalid. Pyrometer cannot start.");
     const errors = validation.errors.all();
-    console.log(Yaml.dump(errors));
+    console.log(formatValidationErrors(errors));
     process.exit(1);
   }
 
