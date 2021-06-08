@@ -2,7 +2,10 @@ import { TezosNodeEvent } from "./types";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
 import * as Server from "./server";
-import * as Notifier from "./notifier";
+//import * as Notifier from "./notifier";
+import * as Notifier2 from "./notifier2";
+import { create as EmailSender } from "./senders/email";
+import * as EventLog from "./eventlog";
 import { debug, info, warn, setLevel } from "loglevel";
 import log, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
@@ -48,10 +51,26 @@ const main = async () => {
   const config = await Config.load();
   setupLogging(config.getLogLevel());
 
-  const notifier = await Notifier.create(config);
+  const eventLog = await EventLog.open(config.storageDirectory);
 
-  const onEvent = (event: TezosNodeEvent) => {
-    Notifier.notify(notifier, event);
+  const channels: Notifier2.Channel[] = [];
+  const emailConfig = config.getEmailConfig();
+  if (emailConfig?.enabled) {
+    const emailChannel = Notifier2.createChannel(
+      "email",
+      EmailSender(emailConfig),
+      config.storageDirectory,
+      eventLog
+    );
+    channels.push(emailChannel);
+  }
+
+  for (const ch of channels) {
+    ch.start();
+  }
+
+  const onEvent = async (event: TezosNodeEvent) => {
+    await eventLog.add(event);
   };
 
   const bakers = config.getBakers();

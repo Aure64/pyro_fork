@@ -16,12 +16,8 @@ type Monitor = {
 
 type StartArgs = {
   nodes: string[];
-  onEvent: (event: TezosNodeEvent) => void;
+  onEvent: (event: TezosNodeEvent) => Promise<void>;
   referenceNode?: string;
-};
-
-const sleep = (milliseconds: number) => {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
 type Sub = {
@@ -70,7 +66,7 @@ const eventKey = (event: PeerEvent): string => {
 
 const subscribeToNode = (
   node: string,
-  onEvent: (event: TezosNodeEvent) => void,
+  onEvent: (event: TezosNodeEvent) => Promise<void>,
   getReference: () => NodeInfo | undefined
 ): Sub => {
   const rpc = new RpcClient(node);
@@ -147,7 +143,7 @@ const subscribeToNode = (
           debug(`Event ${key} is already reported, not publishing`);
         } else {
           debug(`Event ${key} is new, publishing`);
-          onEvent(event);
+          await onEvent(event);
         }
         publishedEvents.add(key);
       }

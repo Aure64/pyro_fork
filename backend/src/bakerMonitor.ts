@@ -27,7 +27,7 @@ type Monitor = {
 
 type StartArgs = {
   bakers: string[];
-  onEvent: (event: TezosNodeEvent) => void;
+  onEvent: (event: TezosNodeEvent) => Promise<void>;
   config: Config;
 };
 
@@ -90,7 +90,9 @@ export const start = async ({
               `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
             );
           }
-          events.map(onEvent);
+          for (const event of events) {
+            await onEvent(event);
+          }
           config.setLastBlockLevel(currentLevel);
           config.setLastBlockCycle(blockCycle);
           currentLevel++;

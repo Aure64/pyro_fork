@@ -84,6 +84,8 @@ export type PeerEvent = PeerNodeEvent | PeerDataEvent;
 
 export type TezosNodeEvent = BakerEvent | PeerEvent;
 
+export type Sender = (events: TezosNodeEvent[]) => Promise<void>;
+
 export type Message = {
   title: string;
   message: string;
