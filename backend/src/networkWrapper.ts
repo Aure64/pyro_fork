@@ -1,6 +1,6 @@
 import { debug } from "loglevel";
-
 import { HttpResponseError } from "@taquito/http-utils";
+import { delay } from "./delay";
 
 /**
  * Wraps provided API function so that it is retried on 404.
@@ -23,16 +23,10 @@ export const wrap2: Wrap2 = async (apiCall) => {
       }
       if (err instanceof HttpResponseError && err.status === 404) {
         debug(`Got ${err.status} from ${err.url}, retrying [${attempts}]`);
-        await wait(1000);
+        await delay(1000);
       } else {
         throw err;
       }
     }
   }
-};
-
-const wait = async (milliseconds: number): Promise<void> => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
 };

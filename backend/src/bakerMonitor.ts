@@ -18,9 +18,7 @@ import { wrap2 } from "./networkWrapper";
 import { Config } from "./config";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
-const sleep = (milliseconds: number) => {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-};
+import { delay } from "./delay";
 
 type Monitor = {
   halt: () => void;
@@ -96,12 +94,12 @@ export const start = async ({
           config.setLastBlockLevel(currentLevel);
           config.setLastBlockCycle(blockCycle);
           currentLevel++;
-          await sleep(1000);
+          await delay(1000);
         }
       } catch (err) {
         warn("RPC Error", err);
       }
-      await sleep(1000 * constants.time_between_blocks[0].toNumber());
+      await delay(1000 * constants.time_between_blocks[0].toNumber());
     }
   };
 

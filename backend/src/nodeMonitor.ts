@@ -7,6 +7,8 @@ import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { HttpResponseError } from "@taquito/http-utils";
 
+import { delay } from "./delay";
+
 type Monitor = {
   nodes: string[];
   halt: () => void;
@@ -150,7 +152,7 @@ const subscribeToNode = (
         publishedEvents.add(key);
       }
       previousEvents = publishedEvents;
-      await sleep(30 * 1e3);
+      await delay(30 * 1e3);
     }
   })();
 
