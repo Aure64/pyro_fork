@@ -5,6 +5,7 @@ import * as Server from "./server";
 //import * as Notifier from "./notifier";
 import * as Notifier2 from "./notifier2";
 import { create as EmailSender } from "./senders/email";
+import { create as DesktopSender } from "./senders/desktop";
 import * as EventLog from "./eventlog";
 import { debug, info, warn, setLevel } from "loglevel";
 import log, { LogLevelDesc } from "loglevel";
@@ -54,6 +55,7 @@ const main = async () => {
   const eventLog = await EventLog.open(config.storageDirectory);
 
   const channels: Notifier2.Channel[] = [];
+
   const emailConfig = config.getEmailConfig();
   if (emailConfig?.enabled) {
     const emailChannel = Notifier2.createChannel(
@@ -63,6 +65,17 @@ const main = async () => {
       eventLog
     );
     channels.push(emailChannel);
+  }
+
+  const desktopConfig = config.getDesktopConfig();
+  if (desktopConfig?.enabled) {
+    const desktopChannel = Notifier2.createChannel(
+      "desktop",
+      DesktopSender(desktopConfig),
+      config.storageDirectory,
+      eventLog
+    );
+    channels.push(desktopChannel);
   }
 
   for (const ch of channels) {

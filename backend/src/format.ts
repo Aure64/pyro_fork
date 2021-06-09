@@ -97,5 +97,5 @@ const TezosNodeEventFormatters: {
   PEER_DATA: peerDataEventToString,
 };
 
-const toString = (e: TezosNodeEvent) =>
+export const toString = (e: TezosNodeEvent) =>
   (TezosNodeEventFormatters[e.type] as (v: TezosNodeEvent) => string)(e);
