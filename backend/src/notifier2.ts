@@ -13,10 +13,6 @@ export type Channel = {
   start: () => Promise<void>;
 };
 
-// export type Notifier = {
-//   post: (event: TezosNodeEvent) => Promise<void>;
-// };
-
 export const createChannel = (
   name: string,
   send: Sender,
