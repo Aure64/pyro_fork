@@ -38,12 +38,14 @@ export const createChannel = (
         offset++;
         batch.push(event);
       }
-      debug(`Read batch of ${batch.length}, last position ${offset}`);
-      try {
-        await send(batch);
-        await writeOffset(offset);
-      } catch (err) {
-        error("Could not send", err);
+      debug(`[${name}] Read batch of ${batch.length}, last position ${offset}`);
+      if (batch.length > 0) {
+        try {
+          await send(batch);
+          await writeOffset(offset);
+        } catch (err) {
+          error(`[${name}] could not send`, err);
+        }
       }
       await delay(60000);
     }
