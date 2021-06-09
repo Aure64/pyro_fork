@@ -30,9 +30,6 @@ export const create = (config: EmailConfig): Sender => {
 
   return async (events: TezosNodeEvent[]) => {
     debug(`About to send email for ${events.length} events`, events);
-    if (events.length === 0) {
-      return Promise.resolve();
-    }
 
     let subject = `${events.length} events`;
     let text = format(events);
