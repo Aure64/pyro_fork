@@ -27,7 +27,7 @@ export const createChannel = (
 
     await ensureExists(path, 0);
 
-    debug("[${name}] starting...");
+    debug(`[${name}] starting...`);
     while (true) {
       const batch: TezosNodeEvent[] = [];
       let offset = await readOffset();
