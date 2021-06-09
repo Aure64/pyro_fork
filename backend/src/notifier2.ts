@@ -29,7 +29,7 @@ export const createChannel = (
 
     debug("[${name}] starting...");
     while (true) {
-      let batch: TezosNodeEvent[] = [];
+      const batch: TezosNodeEvent[] = [];
       let offset = await readOffset();
       debug(`[${name}] reading from position ${offset}`);
       while (true) {
