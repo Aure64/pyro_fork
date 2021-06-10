@@ -1,3 +1,26 @@
+import { debug } from "loglevel";
+
 export const delay = (milliseconds: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
+export type CancellableDelay = {
+  cancel: () => void;
+  promise: Promise<void>;
+};
+
+export const delay2 = (milliseconds: number): CancellableDelay => {
+  let cancel = () => {
+    debug("dummy delay cancel invoked, no op");
+  };
+  const promise = new Promise<void>((resolve, reject) => {
+    //https://github.com/Microsoft/TypeScript/issues/30128
+    const timeoutHandle = +setTimeout(resolve, milliseconds);
+    cancel = () => {
+      clearTimeout(timeoutHandle);
+      reject(new Error("cancelled"));
+    };
+  });
+
+  return { promise, cancel };
 };
