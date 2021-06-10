@@ -1,7 +1,7 @@
 import { TezosNodeEvent } from "./types";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
-import * as Server from "./server";
+// import * as Server from "./server";
 //import * as Notifier from "./notifier";
 import * as Notifier2 from "./notifier2";
 import { create as EmailSender } from "./senders/email";
@@ -78,10 +78,6 @@ const main = async () => {
     channels.push(desktopChannel);
   }
 
-  for (const ch of channels) {
-    ch.start();
-  }
-
   const onEvent = async (event: TezosNodeEvent) => {
     await eventLog.add(event);
   };
@@ -115,17 +111,23 @@ const main = async () => {
     nodes.length > 0
       ? NodeMonitor.start({ onEvent, nodes, referenceNode })
       : null;
-  const server = Server.start();
 
-  process.on("SIGINT", () => {
-    debug("Shutting down");
-    config.save();
-    if (bakerMonitor) bakerMonitor.halt();
-    if (nodeMonitor) nodeMonitor.halt();
-    Server.halt(server);
-    process.exit(0);
-  });
+  const stop = () => {
+    bakerMonitor?.halt();
+    nodeMonitor?.halt();
+    for (const ch of channels) {
+      ch.stop();
+    }
+  };
+
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
+
+  const channelTasks = channels.map((ch) => ch.start());
+
   info("Started");
+  await Promise.all(channelTasks);
+  info("Done.");
 };
 
 main();
