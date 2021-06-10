@@ -1,16 +1,17 @@
 import { TezosNodeEvent, Sender } from "./types";
-import { debug, error } from "loglevel";
+import { debug, info, error } from "loglevel";
 import { EventLog } from "./eventlog";
 
 import { normalize } from "path";
 
-import { delay } from "./delay";
+import { delay2, CancellableDelay } from "./delay";
 
 import { writeJson, readJson, ensureExists } from "./fs-utils";
 
 export type Channel = {
   name: string;
   start: () => Promise<void>;
+  stop: () => void;
 };
 
 export const createChannel = (
@@ -21,38 +22,55 @@ export const createChannel = (
 ): Channel => {
   const path = normalize(`${storageDirectory}/consumers/${name}`);
 
-  const start = async () => {
-    const readOffset = async () => (await readJson(path)) as number;
-    const writeOffset = async (value: number) => await writeJson(path, value);
+  let shouldRun = true;
+  let currentDelay: CancellableDelay | undefined;
 
+  const readPosition = async () => (await readJson(path)) as number;
+  const writePosition = async (value: number) => await writeJson(path, value);
+
+  const start = async () => {
     await ensureExists(path, 0);
 
-    debug(`[${name}] starting...`);
-    while (true) {
-      const batch: TezosNodeEvent[] = [];
-      let offset = await readOffset();
-      debug(`[${name}] reading from position ${offset}`);
-      while (true) {
-        const event = (await eventLog.get(offset + 1)) as TezosNodeEvent;
-        if (!event) break;
-        offset++;
-        batch.push(event);
-      }
-      debug(`[${name}] Read batch of ${batch.length}, last position ${offset}`);
-      if (batch.length > 0) {
-        try {
-          await send(batch);
-          await writeOffset(offset);
-        } catch (err) {
-          error(`[${name}] could not send`, err);
+    info(`[${name}] starting...`);
+    try {
+      while (shouldRun) {
+        const batch: TezosNodeEvent[] = [];
+        let position = await readPosition();
+        debug(`[${name}] reading from position ${position}`);
+        for await (const record of eventLog.readAfter(position)) {
+          batch.push(record.value);
+          position = record.position;
         }
+        debug(
+          `[${name}] Read batch of ${batch.length}, last position ${position}`
+        );
+        if (batch.length > 0) {
+          try {
+            await send(batch);
+            await writePosition(position);
+          } catch (err) {
+            error(`[${name}] could not send`, err);
+          }
+        }
+        if (!shouldRun) break;
+        currentDelay = delay2(60000);
+        await currentDelay.promise;
       }
-      await delay(60000);
+    } catch (err) {
+      error(err);
     }
+    info(`[${name}] done`);
+  };
+
+  const stop = () => {
+    info(`[${name}] stopping...`);
+    shouldRun = false;
+    currentDelay?.cancel();
   };
 
   return {
     name,
     start,
+    stop,
   };
 };

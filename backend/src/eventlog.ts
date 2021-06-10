@@ -3,9 +3,15 @@ import { debug } from "loglevel";
 
 import { writeJson, readJson, ensureExists } from "./fs-utils";
 
+export type LogEntry = {
+  value: any;
+  position: number;
+  timestamp: Date;
+};
+
 export type EventLog = {
-  add: (event: any) => Promise<void>;
-  get: (eventId: number) => Promise<any>;
+  add: (event: any) => Promise<LogEntry>;
+  readAfter: (position: number) => AsyncIterableIterator<LogEntry>;
 };
 
 const mkParentDirName = (path: string) => `${path}/eventlog`;
@@ -33,24 +39,42 @@ export const open = async (path: string): Promise<EventLog> => {
 
   let sequence = (await readJson(sequenceFileName)) as number;
 
-  const add = async (event: any): Promise<void> => {
-    await writeJson(mkEventFileName(eventsDir, sequence), event);
-    await writeSeq(sequence + 1);
-    sequence++;
+  const add = async (event: any): Promise<LogEntry> => {
+    const eventPos = sequence;
+    await writeJson(mkEventFileName(eventsDir, eventPos), event);
+    const nextSequenceValue = sequence + 1;
+    await writeSeq(nextSequenceValue);
+    sequence = nextSequenceValue;
+    return { value: event, position: eventPos, timestamp: new Date() };
   };
 
-  const get = async (eventOffset: number): Promise<any> => {
-    const fileName = mkEventFileName(eventsDir, eventOffset);
+  const read = async (position: number): Promise<any> => {
+    const fileName = mkEventFileName(eventsDir, position);
     try {
-      return await readJson(fileName);
+      const value = await readJson(fileName);
+      const timestamp = (await fs.promises.stat(fileName)).ctime;
+      return { value, timestamp, position };
     } catch (err) {
       debug(`Could not read ${fileName}`, err);
       return null;
     }
   };
 
+  const readAfter = async function* (
+    position: number
+  ): AsyncIterableIterator<any> {
+    let currentPosition = position + 1;
+    while (currentPosition < sequence) {
+      const record = await read(currentPosition);
+      if (record) {
+        yield record;
+      }
+      currentPosition++;
+    }
+  };
+
   return {
     add,
-    get,
+    readAfter,
   };
 };
