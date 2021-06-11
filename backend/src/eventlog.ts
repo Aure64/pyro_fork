@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { debug, error } from "loglevel";
+import { getLogger } from "loglevel";
 
 import { writeJson, readJson, ensureExists } from "./fs-utils";
 
@@ -28,6 +28,8 @@ const mkSequenceFileName = (path: string) =>
 const mkEventFileName = (path: string, offset: number) => `${path}/${offset}`;
 
 export const open = async (path: string): Promise<EventLog> => {
+  const log = getLogger("eventlog");
+
   const eventsDir = mkEventsDirName(path);
   const sequenceFileName = mkSequenceFileName(path);
 
@@ -61,7 +63,7 @@ export const open = async (path: string): Promise<EventLog> => {
       const timestamp = (await fs.promises.stat(fileName)).ctime;
       return { value, timestamp, position };
     } catch (err) {
-      debug(`Could not read ${fileName}`, err);
+      log.debug(`Could not read ${fileName}`, err);
       return null;
     }
   };
@@ -84,7 +86,7 @@ export const open = async (path: string): Promise<EventLog> => {
     const toDelete = fileNames
       .filter((name) => parseInt(name) <= position)
       .map((name) => `${eventsDir}/${name}`);
-    debug(`About to delete ${toDelete.length} files`, toDelete);
+    log.debug(`About to delete ${toDelete.length} files`, toDelete);
     await Promise.all(toDelete.map(fs.promises.unlink));
   };
 
@@ -101,14 +103,16 @@ export const gc = (
 ): service.Service => {
   const name = "gc";
 
+  const log = getLogger(name);
+
   const task = async () => {
     const positions = await Promise.all(consumers.map((c) => c.position()));
     const minPosition = Math.min(...positions);
-    debug(`[${name}] Min consumer position is ${minPosition}`);
+    log.debug(`Min consumer position is ${minPosition}`);
     try {
       await eventLog.deleteUpTo(minPosition);
     } catch (err) {
-      error(`[${name}]`, err);
+      log.error(err);
     }
   };
 

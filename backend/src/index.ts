@@ -6,7 +6,7 @@ import { create as EmailSender } from "./senders/email";
 import { create as DesktopSender } from "./senders/desktop";
 import * as EventLog from "./eventlog";
 import { debug, info, warn, error, setLevel } from "loglevel";
-import log, { LogLevelDesc } from "loglevel";
+import loglevel, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import * as Config from "./config";
 import { format } from "date-fns";
@@ -24,19 +24,18 @@ const setupLogging = (logLevel: LogLevelDesc) => {
   };
   const colorizeLevel = (level: string): string => {
     const color = colors[level.toUpperCase()] || Chalk.black;
-    return color(level);
+    return color(level[0]);
   };
 
   // Register prefix plug with loglevel.  This adds timestamp and level to logs.
-  const timestampFormatter = (date: Date) =>
-    format(date, "MM/dd/yyyy, H:mm:ss");
-  const logger = log.noConflict();
+  const timestampFormatter = (date: Date) => format(date, "yyyy-MM-dd H:mm:ss");
+  const logger = loglevel.noConflict();
   prefix.reg(logger);
   prefix.apply(logger, { timestampFormatter });
   // colorize output
-  prefix.apply(log, {
-    format(level, _name, timestamp) {
-      return `${Chalk.gray(`[${timestamp}]`)} ${colorizeLevel(level)}`;
+  prefix.apply(loglevel, {
+    format(level, name, timestamp) {
+      return `${Chalk.gray(`${timestamp}`)} ${colorizeLevel(level)} [${name}]`;
     },
   });
 

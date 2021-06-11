@@ -1,4 +1,4 @@
-import { debug, info, error } from "loglevel";
+import { getLogger } from "loglevel";
 
 import { delay2, CancellableDelay, CancelledError } from "./delay";
 
@@ -14,6 +14,7 @@ export const create = (
   interval: number = 60 * 1e3,
   init?: () => Promise<void>
 ): Service => {
+  const log = getLogger(name);
   let count = 0;
   let shouldRun = true;
   let currentDelay: CancellableDelay | undefined;
@@ -22,33 +23,33 @@ export const create = (
 
   const start = async () => {
     if (init) {
-      info(`[${name}] initializing...`);
+      log.info(`initializing...`);
       await init();
     }
-    info(`[${name}] starting...`);
+    log.info(`starting...`);
     try {
       while (shouldRun) {
         count++;
         const t0 = new Date().getTime();
-        debug(`[${name}] starting iteration ${count}`);
+        log.debug(`starting iteration ${count}`);
         await task(isInterrupted);
         const dt = new Date().getTime() - t0;
-        debug(`[${name}] iteration ${count} done in ${dt} ms`);
+        log.debug(`iteration ${count} done in ${dt} ms`);
         if (!shouldRun) break;
         currentDelay = delay2(interval);
         await currentDelay.promise;
       }
     } catch (err) {
       if (err instanceof CancelledError) {
-        info(`[${name}] cancelled`);
+        log.info(`stopped`);
       } else {
-        error(`[${name}] unexpected error`, err);
+        log.error(`unexpected error`, err);
       }
     }
   };
 
   const stop = () => {
-    info(`[${name}] stopping...`);
+    log.info(`stopping...`);
     shouldRun = false;
     currentDelay?.cancel();
   };

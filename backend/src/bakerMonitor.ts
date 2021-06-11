@@ -1,5 +1,5 @@
 import { BakerEvent, TezosNodeEvent } from "./types";
-import { debug, warn, info, trace } from "loglevel";
+import { getLogger } from "loglevel";
 import {
   BakingRightsQueryArguments,
   BakingRightsResponse,
@@ -21,6 +21,9 @@ import { makeMemoizedAsyncFunction } from "./memoization";
 import { delay } from "./delay";
 
 import * as service from "./service";
+
+const name = "bm";
+const log = getLogger(name);
 
 export const create = async (
   bakers: string[],
@@ -51,7 +54,7 @@ export const create = async (
       const lastBlockCycle = config.getLastBlockCycle();
       const headHeader = await rpc.getBlockHeader();
       const { level, hash } = headHeader;
-      debug(
+      log.debug(
         `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
       );
 
@@ -60,12 +63,12 @@ export const create = async (
         ? Math.max(lastBlockLevel + 1, minLevel)
         : level;
 
-      debug(`Processing blocks starting at level ${startLevel}`);
+      log.debug(`Processing blocks starting at level ${startLevel}`);
 
       let currentLevel = startLevel;
 
       while (currentLevel <= level && !isInterrupted()) {
-        debug(`Processing block at level ${currentLevel}`);
+        log.debug(`Processing block at level ${currentLevel}`);
         const { events, blockLevel, blockCycle } = await checkBlock({
           bakers,
           rpc,
@@ -87,13 +90,13 @@ export const create = async (
         await delay(1000);
       }
     } catch (err) {
-      warn("RPC Error", err);
+      log.warn("RPC Error", err);
     }
   };
 
   const interval = 1000 * constants.time_between_blocks[0].toNumber();
 
-  const srv = service.create("bm", task, interval);
+  const srv = service.create(name, task, interval);
 
   return {
     name: srv.name,
@@ -126,7 +129,7 @@ const checkBlock = async ({
   lastCycle,
   constants,
 }: CheckBlockArgs): Promise<CheckBlockResult> => {
-  trace(`Fetching baker data for block ${blockId}`);
+  log.trace(`Fetching baker data for block ${blockId}`);
   const events: TezosNodeEvent[] = [];
 
   const { metadata, block, bakingRights, endorsingRights } =
@@ -136,7 +139,7 @@ const checkBlock = async ({
       rpc,
     });
 
-  trace(`Successfully retrieved baker data for block ${blockId}`);
+  log.trace(`Successfully retrieved baker data for block ${blockId}`);
 
   if (!metadata.level) {
     throw new Error(`Missing block metadata level`);
@@ -187,7 +190,7 @@ const checkBlock = async ({
       if (deactivationEvent) events.push(deactivationEvent);
       if (futureEndorsingEvent) events.push(futureEndorsingEvent);
     } else {
-      debug(
+      log.debug(
         `Not checking for future rights or deactivations as this cycle (${blockCycle}) was already checked`
       );
     }
@@ -234,11 +237,11 @@ export const loadBlockData = async ({
   blockId,
   rpc,
 }: LoadBlockDataArgs): Promise<BlockData> => {
-  debug(`Fetching block ${blockId}`);
+  log.debug(`Fetching block ${blockId}`);
   const blockPromise = wrap2(() => rpc.getBlock({ block: blockId }));
   const block = await blockPromise;
 
-  debug(`Block ${blockId} is at level`, block.metadata.level);
+  log.debug(`Block ${blockId} is at level`, block.metadata.level);
   const cycle = block.metadata.level?.cycle;
 
   const bakingRightsPromise = wrap2(() =>
@@ -296,11 +299,13 @@ export const checkBlockBakingRights = ({
       bakingRight.level === blockLevel &&
       bakingRight.priority === priority
     ) {
-      debug(`found baking slot for priority ${priority} for baker ${baker}`);
+      log.debug(
+        `found baking slot for priority ${priority} for baker ${baker}`
+      );
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (blockBaker !== baker) {
         const message = `Missed bake detected for baker ${baker}`;
-        info(message);
+        log.info(message);
         return {
           type: "BAKER_NODE",
           kind: "MISSED_BAKE",
@@ -310,7 +315,7 @@ export const checkBlockBakingRights = ({
         };
       } else {
         const message = `Successful bake for block ${blockId} for baker ${baker}`;
-        debug(message);
+        log.debug(message);
         return {
           type: "BAKER_NODE",
           kind: "SUCCESSFUL_BAKE",
@@ -322,7 +327,7 @@ export const checkBlockBakingRights = ({
     }
   }
 
-  debug(`No bake event for block ${blockId} for baker ${baker}`);
+  log.debug(`No bake event for block ${blockId} for baker ${baker}`);
   return null;
 };
 
@@ -348,13 +353,13 @@ export const checkBlockEndorsingRights = ({
   const shouldEndorse = endorsingRight !== undefined;
 
   if (shouldEndorse) {
-    debug(`found endorsing slot for baker ${baker} at level ${blockLevel}`);
+    log.debug(`found endorsing slot for baker ${baker} at level ${blockLevel}`);
     const didEndorse =
       endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
       undefined;
     if (didEndorse) {
       const message = `Successful endorse for baker ${baker}`;
-      debug(message);
+      log.debug(message);
       return {
         type: "BAKER_NODE",
         kind: "SUCCESSFUL_ENDORSE",
@@ -364,7 +369,7 @@ export const checkBlockEndorsingRights = ({
       };
     } else {
       const message = `Missed endorse for baker ${baker} at level ${blockLevel}`;
-      debug(message);
+      log.debug(message);
       return {
         type: "BAKER_NODE",
         kind: "MISSED_ENDORSE",
@@ -375,7 +380,7 @@ export const checkBlockEndorsingRights = ({
     }
   }
 
-  debug(`No endorse event for baker ${baker}`);
+  log.debug(`No endorse event for baker ${baker}`);
   return null;
 };
 
@@ -433,7 +438,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
           if (endorser) {
             if (endorser === baker) {
               const message = `Double endorsement for baker ${baker} at block ${block.hash}`;
-              info(message);
+              log.info(message);
               return {
                 type: "BAKER_NODE",
                 kind: "DOUBLE_ENDORSE",
@@ -443,12 +448,12 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
               };
             }
           } else {
-            warn(
+            log.warn(
               `Unable to find endorser for double endorsed block ${block.hash}`
             );
           }
         } catch (err) {
-          warn(
+          log.warn(
             `Error fetching block info to determine double endorsement violator because of `,
             err
           );
@@ -508,7 +513,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
             ) !== undefined;
           if (hadBakingRights) {
             const message = `Double bake for baker ${baker} at level ${accusedLevel} with hash ${accusedHash}`;
-            info(message);
+            log.info(message);
             return {
               type: "BAKER_NODE",
               kind: "DOUBLE_BAKE",
@@ -518,7 +523,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
             };
           }
         } catch (err) {
-          warn(
+          log.warn(
             `Error fetching baking rights to determine double bake violator because of `,
             err
           );
@@ -550,7 +555,9 @@ export const checkFutureBlockBakingRights = ({
   for (const bakingRight of bakingRights) {
     if (bakingRight.level > blockLevel && bakingRight.priority === 0) {
       const delegate = bakingRight.delegate;
-      trace(`found future baking slot for priority 0 for baker ${delegate}`);
+      log.trace(
+        `found future baking slot for priority 0 for baker ${delegate}`
+      );
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (delegate === baker) {
         const numBlocksUntilBake = bakingRight.level - blockLevel;
@@ -559,7 +566,7 @@ export const checkFutureBlockBakingRights = ({
         const date = new Date(now + secondsUntilBake * 1000);
         const level = bakingRight.level;
         const message = `Future bake opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`;
-        info(message);
+        log.info(message);
         return {
           type: "FUTURE_BAKING",
           kind: "FUTURE_BAKING_OPPORTUNITY",
@@ -569,14 +576,14 @@ export const checkFutureBlockBakingRights = ({
           date,
         };
       } else {
-        trace(
+        log.trace(
           `Other delegate ${delegate} has priority 0, not monitored baker ${baker}`
         );
       }
     }
   }
 
-  debug(`No future baking opportunties for baker ${baker}`);
+  log.debug(`No future baking opportunties for baker ${baker}`);
   return null;
 };
 
@@ -607,7 +614,7 @@ export const checkFutureBlockEndorsingRights = ({
       const date = new Date(now + secondsUntilBake * 1000);
       const level = endorsingRight.level;
       const message = `Future endorse opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`;
-      info(message);
+      log.info(message);
       return {
         type: "FUTURE_BAKING",
         kind: "FUTURE_ENDORSING_OPPORTUNITY",
@@ -619,7 +626,7 @@ export const checkFutureBlockEndorsingRights = ({
     }
   }
 
-  debug(`No future endorsing opportunties for baker ${baker}`);
+  log.debug(`No future endorsing opportunties for baker ${baker}`);
   return null;
 };
 
@@ -651,7 +658,7 @@ export const checkForDeactivations = async ({
 }: CheckForDeactivationsArgs): Promise<TezosNodeEvent | null> => {
   if (delegatesResponse.deactivated) {
     const message = `Baker ${baker} is deactivated (on or before cycle ${cycle})`;
-    debug(message);
+    log.debug(message);
     return {
       type: "BAKER_DEACTIVATION",
       kind: "BAKER_DEACTIVATED",
@@ -661,7 +668,7 @@ export const checkForDeactivations = async ({
     };
   } else if (delegatesResponse.grace_period - cycle <= 1) {
     const message = `Baker ${baker} is scheduled for deactivation in cycle ${delegatesResponse.grace_period}`;
-    debug(message);
+    log.debug(message);
     return {
       type: "BAKER_DEACTIVATION",
       kind: "BAKER_PENDING_DEACTIVATION",
@@ -671,7 +678,7 @@ export const checkForDeactivations = async ({
     };
   } else {
     const message = `Baker ${baker} is not at risk of deactivation`;
-    debug(message);
+    log.debug(message);
   }
 
   return null;

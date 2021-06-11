@@ -1,5 +1,5 @@
 import { PeerEvent, TezosNodeEvent } from "./types";
-import { debug, warn } from "loglevel";
+import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import { wrap2 } from "./networkWrapper";
@@ -65,6 +65,7 @@ const subscribeToNode = (
     ({ block }: { block: string }) => `${block}`
   );
 
+  const log = getLogger(node);
   let nodeData: NodeInfo | undefined;
   let previousEvents: Set<string> = new Set();
   //let halted = false;
@@ -91,19 +92,21 @@ const subscribeToNode = (
         rpc,
         fetchBootstrappedStatus,
         fetchNetworkConnections,
+        log,
       });
       events = checkBlockInfo({
         node,
         nodeInfo,
         previousNodeInfo,
         referenceNodeBlockHistory: getReference()?.history,
+        log,
       });
       // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
       // with other data (eg current block)
       nodeData = nodeInfo;
-      debug("Unable to reach?", unableToReach);
+      log.debug("Unable to reach?", unableToReach);
       if (unableToReach) {
-        debug("Adding reconnected event");
+        log.debug("Adding reconnected event");
         events.push({
           type: "PEER_DATA",
           kind: "RECONNECTED",
@@ -114,8 +117,8 @@ const subscribeToNode = (
       unableToReach = false;
     } catch (err) {
       unableToReach = true;
-      warn(`Node subscription error: ${err.message}`);
-      debug("Unable to reach?", unableToReach);
+      log.warn(`Node subscription error: ${err.message}`);
+      log.debug("Unable to reach?", unableToReach);
       events.push({
         type: "PEER_DATA",
         kind: "ERROR",
@@ -129,9 +132,9 @@ const subscribeToNode = (
     for (const event of events) {
       const key = eventKey(event);
       if (previousEvents.has(key)) {
-        debug(`Event ${key} is already reported, not publishing`);
+        log.debug(`Event ${key} is already reported, not publishing`);
       } else {
-        debug(`Event ${key} is new, publishing`);
+        log.debug(`Event ${key} is new, publishing`);
         await onEvent(event);
       }
       publishedEvents.add(key);
@@ -162,22 +165,24 @@ const updateNodeInfo = async ({
   rpc,
   fetchBootstrappedStatus,
   fetchNetworkConnections,
+  log,
 }: {
   node: string;
   blockHash: string;
   rpc: RpcClient;
   fetchBootstrappedStatus: boolean;
   fetchNetworkConnections: boolean;
+  log: Logger;
 }): Promise<NodeInfo> => {
-  debug(`Node monitor received block ${blockHash} for node ${node}`);
+  log.debug(`Checking block ${blockHash}`);
   let bootstrappedStatus;
 
   if (fetchBootstrappedStatus) {
     try {
       bootstrappedStatus = await wrap2(() => getBootstrappedStatus(node));
-      debug(`Node ${node} bootstrap status: `, bootstrappedStatus);
+      log.debug(`bootstrap status:`, bootstrappedStatus);
     } catch (err) {
-      warn(`Unable to get bootsrap status for node ${node}`, err);
+      log.warn(`Unable to get bootsrap status`, err);
     }
   }
 
@@ -188,9 +193,9 @@ const updateNodeInfo = async ({
     try {
       const connections = await wrap2(() => getNetworkConnections(node));
       peerCount = connections.length;
-      debug(`Node ${node} has ${peerCount} peers`);
+      log.debug(`Node has ${peerCount} peers`);
     } catch (err) {
-      warn(`Unable to get network connections info for node ${node}`, err);
+      log.warn(`Unable to get network connections info`, err);
     }
   }
 
@@ -209,6 +214,7 @@ type CheckBlockInfoArgs = {
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
   referenceNodeBlockHistory: BlockHeaderResponse[] | undefined;
+  log: Logger;
 };
 
 /**
@@ -219,6 +225,7 @@ export const checkBlockInfo = ({
   nodeInfo,
   previousNodeInfo,
   referenceNodeBlockHistory,
+  log,
 }: CheckBlockInfoArgs): PeerEvent[] => {
   const events: PeerEvent[] = [];
 
@@ -227,12 +234,12 @@ export const checkBlockInfo = ({
       nodeInfo.bootstrappedStatus.bootstrapped &&
       nodeInfo.bootstrappedStatus.sync_state !== "synced"
     ) {
-      debug(`Node ${node} is behind`);
+      log.debug(`Node is behind`);
       if (
         previousNodeInfo &&
         previousNodeInfo.bootstrappedStatus?.sync_state !== "synced"
       ) {
-        debug("Node was not synced already, not generating event");
+        log.debug("Node was not synced already, not generating event");
       } else {
         events.push({
           type: "PEER",
@@ -247,7 +254,7 @@ export const checkBlockInfo = ({
         nodeInfo.bootstrappedStatus
       )
     ) {
-      debug(`Node ${node} caught up`);
+      log.debug(`Node caught up`);
       events.push({
         type: "PEER",
         kind: "NODE_CAUGHT_UP",
@@ -264,7 +271,7 @@ export const checkBlockInfo = ({
         referenceNodeBlockHistory
       );
       if (ancestorDistance === NO_ANCESTOR) {
-        debug(`Node ${node} has no shared blocks with reference node`);
+        log.debug(`Node has no shared blocks with reference node`);
         events.push({
           type: "PEER",
           kind: "NODE_ON_A_BRANCH",
@@ -272,23 +279,21 @@ export const checkBlockInfo = ({
           message: `Node ${node} is on a branch`,
         });
       } else {
-        debug(
-          `Node ${node} is ${ancestorDistance} blocks away from reference node`
-        );
+        log.debug(`${ancestorDistance} blocks away from reference node`);
       }
     }
   } else {
-    warn(`Unable to check bootstrapped status for ${node}`);
+    log.warn(`Unable to check bootstrapped status`);
   }
   if (nodeInfo.peerCount !== undefined && nodeInfo.peerCount < minimumPeers) {
     if (
       previousNodeInfo?.peerCount !== undefined &&
       previousNodeInfo.peerCount < minimumPeers
     ) {
-      debug("Node previously had too few peers, not generating event");
+      log.debug("Node previously had too few peers, not generating event");
     } else {
       const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
-      debug(message);
+      log.debug(message);
       events.push({
         type: "PEER",
         kind: "NODE_LOW_PEERS",

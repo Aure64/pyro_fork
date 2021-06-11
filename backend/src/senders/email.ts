@@ -1,4 +1,4 @@
-import { debug } from "loglevel";
+import { getLogger } from "loglevel";
 import { createTransport } from "nodemailer";
 
 import { TezosNodeEvent, Sender } from "../types";
@@ -6,6 +6,8 @@ import { TezosNodeEvent, Sender } from "../types";
 import format from "../format";
 
 export type Protocol = "Plain" | "SSL" | "STARTTLS";
+
+const log = getLogger("email-sender");
 
 export type EmailConfig = {
   enabled: boolean;
@@ -29,7 +31,7 @@ export const create = (config: EmailConfig): Sender => {
   });
 
   return async (events: TezosNodeEvent[]) => {
-    debug(`About to send email for ${events.length} events`, events);
+    log.debug(`About to send email for ${events.length} events`, events);
 
     let subject = `${events.length} events`;
     let text = format(events);
@@ -45,7 +47,7 @@ export const create = (config: EmailConfig): Sender => {
       subject,
       text: format(events),
     });
-    debug("Sent email", result);
+    log.debug("Sent email", result);
     return Promise.resolve();
   };
 };

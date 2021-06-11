@@ -1,5 +1,5 @@
 import { TezosNodeEvent, Sender } from "./types";
-import { debug, info, error } from "loglevel";
+import { getLogger } from "loglevel";
 import { EventLog, EventLogConsumer } from "./eventlog";
 
 import { normalize } from "path";
@@ -15,6 +15,8 @@ export const createChannel = (
   storageDirectory: string,
   eventLog: EventLog
 ): Channel => {
+  const log = getLogger(name);
+
   const path = normalize(`${storageDirectory}/consumers/${name}`);
 
   const readPosition = async () => (await readJson(path)) as number;
@@ -25,18 +27,18 @@ export const createChannel = (
   const task = async () => {
     const batch: TezosNodeEvent[] = [];
     let position = await readPosition();
-    debug(`[${name}] reading from position ${position}`);
+    log.debug(`reading from position ${position}`);
     for await (const record of eventLog.readAfter(position)) {
       batch.push(record.value);
       position = record.position;
     }
-    debug(`[${name}] Read batch of ${batch.length}, last position ${position}`);
+    log.debug(`read batch of ${batch.length}, last position ${position}`);
     if (batch.length > 0) {
       try {
         await send(batch);
         await writePosition(position);
       } catch (err) {
-        error(`[${name}] could not send`, err);
+        log.error(`could not send`, err);
       }
     }
   };
