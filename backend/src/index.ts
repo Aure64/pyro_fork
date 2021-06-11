@@ -112,21 +112,25 @@ const main = async () => {
       ? NodeMonitor.start({ onEvent, nodes, referenceNode })
       : null;
 
+  const gc = EventLog.gc(eventLog, channels);
+
   const stop = () => {
     bakerMonitor?.halt();
     nodeMonitor?.halt();
     for (const ch of channels) {
       ch.stop();
     }
+    gc.stop();
   };
 
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
 
   const channelTasks = channels.map((ch) => ch.start());
+  const gcTask = gc.start();
 
   info("Started");
-  await Promise.all(channelTasks);
+  await Promise.all([...channelTasks, gcTask]);
   info("Done.");
 };
 
