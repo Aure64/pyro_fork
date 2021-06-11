@@ -5,12 +5,14 @@ import * as Notifier2 from "./notifier2";
 import { create as EmailSender } from "./senders/email";
 import { create as DesktopSender } from "./senders/desktop";
 import * as EventLog from "./eventlog";
-import { debug, info, warn, setLevel } from "loglevel";
+import { debug, info, warn, error, setLevel } from "loglevel";
 import log, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import * as Config from "./config";
 import { format } from "date-fns";
 import * as Chalk from "chalk";
+import { writeJson, ensureExists } from "./fs-utils";
+import { lock } from "proper-lockfile";
 
 const setupLogging = (logLevel: LogLevelDesc) => {
   const colors: Record<string, Chalk.Chalk> = {
@@ -49,6 +51,20 @@ const main = async () => {
 
   const config = await Config.load();
   setupLogging(config.getLogLevel());
+
+  const pid = process.pid;
+  const pidFile = `${config.storageDirectory}/pid`;
+  let pidFileLock;
+
+  try {
+    await ensureExists(pidFile, pid);
+    pidFileLock = await lock(pidFile);
+  } catch (err) {
+    error(err);
+    process.exit(1);
+  }
+
+  await writeJson(pidFile, pid);
 
   const eventLog = await EventLog.open(config.storageDirectory);
 
@@ -143,6 +159,8 @@ const main = async () => {
 
   info("Started");
   await Promise.all(allTasks);
+  debug(`Releasing file lock on ${pidFile}`);
+  await pidFileLock();
   info("Done.");
 };
 
