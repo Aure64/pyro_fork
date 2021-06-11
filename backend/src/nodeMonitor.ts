@@ -172,8 +172,9 @@ const updateNodeInfo = async ({
   rpc: RpcClient;
   fetchBootstrappedStatus: boolean;
   fetchNetworkConnections: boolean;
-  log: Logger;
+  log?: Logger;
 }): Promise<NodeInfo> => {
+  if (!log) log = getLogger(__filename);
   log.debug(`Checking block ${blockHash}`);
   let bootstrappedStatus;
 
@@ -214,7 +215,7 @@ type CheckBlockInfoArgs = {
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
   referenceNodeBlockHistory: BlockHeaderResponse[] | undefined;
-  log: Logger;
+  log?: Logger;
 };
 
 /**
@@ -227,6 +228,7 @@ export const checkBlockInfo = ({
   referenceNodeBlockHistory,
   log,
 }: CheckBlockInfoArgs): PeerEvent[] => {
+  if (!log) log = getLogger(__filename);
   const events: PeerEvent[] = [];
 
   if (nodeInfo.bootstrappedStatus) {
