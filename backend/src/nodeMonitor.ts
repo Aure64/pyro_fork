@@ -1,5 +1,5 @@
 import { PeerEvent, TezosNodeEvent } from "./types";
-import { debug, warn, info } from "loglevel";
+import { debug, warn } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
 import { wrap2 } from "./networkWrapper";
@@ -7,20 +7,7 @@ import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { HttpResponseError } from "@taquito/http-utils";
 
-// import { delay } from "./delay";
-
 import * as service from "./service";
-
-type Monitor = {
-  nodes: string[];
-  halt: () => void;
-};
-
-type StartArgs = {
-  nodes: string[];
-  onEvent: (event: TezosNodeEvent) => Promise<void>;
-  referenceNode?: string;
-};
 
 type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
 
