@@ -13,10 +13,10 @@ type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
 
 type Sub = service.Service & NodeInfoProvider;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
 const NoSub: Sub = {
   name: "no-sub",
   start: () => Promise.resolve(),
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   stop: () => {},
   nodeInfo: () => undefined,
 };
