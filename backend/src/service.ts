@@ -10,13 +10,15 @@ export type Service = {
 
 export const create = (
   name: string,
-  task: () => Promise<void>,
+  task: (isInterrupted: () => boolean) => Promise<void>,
   interval: number = 60 * 1e3,
   init?: () => Promise<void>
 ): Service => {
   let count = 0;
   let shouldRun = true;
   let currentDelay: CancellableDelay | undefined;
+
+  const isInterrupted = () => shouldRun;
 
   const start = async () => {
     if (init) {
@@ -29,7 +31,7 @@ export const create = (
         count++;
         const t0 = new Date().getTime();
         debug(`[${name}] starting iteration ${count}`);
-        await task();
+        await task(isInterrupted);
         const dt = new Date().getTime() - t0;
         debug(`[${name}] iteration ${count} done in ${dt} ms`);
         if (!shouldRun) break;

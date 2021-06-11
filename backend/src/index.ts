@@ -94,11 +94,7 @@ const main = async () => {
 
   const bakerMonitor =
     bakers.length > 0
-      ? await BakerMonitor.start({
-          bakers,
-          config,
-          onEvent,
-        })
+      ? await BakerMonitor.create(bakers, onEvent, config)
       : null;
 
   if (!referenceNode) {
@@ -110,13 +106,21 @@ const main = async () => {
 
   const gc = EventLog.gc(eventLog, channels);
 
-  const stop = () => {
-    bakerMonitor?.halt();
+  const stop = (event: NodeJS.Signals) => {
+    info(`Caught signal ${event}, shutting down...`);
+    bakerMonitor?.stop();
+    nodeMonitor?.stop();
     for (const ch of channels) {
       ch.stop();
     }
     gc.stop();
-    nodeMonitor?.stop();
+    const gracePeriod = 5;
+    const timeoutHandle = setTimeout(() => {
+      info(`Some tasks are still running after ${gracePeriod} s, force exit`);
+      process.exit(0);
+    }, gracePeriod * 1e3);
+    //make sure this timer itself doesn't delay process exit
+    timeoutHandle.unref();
   };
 
   process.on("SIGINT", stop);
@@ -130,6 +134,11 @@ const main = async () => {
   if (nodeMonitor) {
     const nodeMonitorTask = nodeMonitor.start();
     allTasks.push(nodeMonitorTask);
+  }
+
+  if (bakerMonitor) {
+    const bakerMonitorTask = bakerMonitor.start();
+    allTasks.push(bakerMonitorTask);
   }
 
   info("Started");

@@ -20,22 +20,13 @@ import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { delay } from "./delay";
 
-type Monitor = {
-  halt: () => void;
-  bakers: string[];
-};
+import * as service from "./service";
 
-type StartArgs = {
-  bakers: string[];
-  onEvent: (event: TezosNodeEvent) => Promise<void>;
-  config: Config;
-};
-
-export const start = async ({
-  bakers,
-  onEvent,
-  config,
-}: StartArgs): Promise<Monitor> => {
+export const create = async (
+  bakers: string[],
+  onEvent: (event: TezosNodeEvent) => Promise<void>,
+  config: Config
+): Promise<service.Service> => {
   const rpcNode = config.getRpc();
 
   const rpc = new RpcClient(rpcNode);
@@ -53,69 +44,62 @@ export const start = async ({
 
   const constants = await wrap2(() => rpc.getConstants());
 
-  let halted = false;
+  const task = async (isInterrupted: () => boolean) => {
+    try {
+      const lastBlockLevel = config.getLastBlockLevel();
+      const catchupLimit = config.getBakerCatchupLimit();
+      const lastBlockCycle = config.getLastBlockCycle();
+      const headHeader = await rpc.getBlockHeader();
+      const { level, hash } = headHeader;
+      debug(
+        `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
+      );
 
-  const loop = async () => {
-    while (!halted) {
-      try {
-        const lastBlockLevel = config.getLastBlockLevel();
-        const catchupLimit = config.getBakerCatchupLimit();
-        const lastBlockCycle = config.getLastBlockCycle();
-        const headHeader = await rpc.getBlockHeader();
-        const { level, hash } = headHeader;
-        debug(
-          `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
-        );
+      const minLevel = catchupLimit ? level - catchupLimit : level;
+      const startLevel = lastBlockLevel
+        ? Math.max(lastBlockLevel + 1, minLevel)
+        : level;
 
-        const minLevel = catchupLimit ? level - catchupLimit : level;
-        const startLevel = lastBlockLevel
-          ? Math.max(lastBlockLevel + 1, minLevel)
-          : level;
+      debug(`Processing blocks starting at level ${startLevel}`);
 
-        debug(`Processing blocks starting at level ${startLevel}`);
+      let currentLevel = startLevel;
 
-        let currentLevel = startLevel;
-
-        while (currentLevel <= level) {
-          debug(`Processing block at level ${currentLevel}`);
-          const { events, blockLevel, blockCycle } = await checkBlock({
-            bakers,
-            rpc,
-            blockId: currentLevel.toString(),
-            lastCycle: lastBlockCycle,
-            constants,
-          });
-          if (blockLevel !== currentLevel) {
-            throw new Error(
-              `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
-            );
-          }
-          for (const event of events) {
-            await onEvent(event);
-          }
-          config.setLastBlockLevel(currentLevel);
-          config.setLastBlockCycle(blockCycle);
-          currentLevel++;
-          await delay(1000);
+      while (currentLevel <= level && !isInterrupted()) {
+        debug(`Processing block at level ${currentLevel}`);
+        const { events, blockLevel, blockCycle } = await checkBlock({
+          bakers,
+          rpc,
+          blockId: currentLevel.toString(),
+          lastCycle: lastBlockCycle,
+          constants,
+        });
+        if (blockLevel !== currentLevel) {
+          throw new Error(
+            `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
+          );
         }
-      } catch (err) {
-        warn("RPC Error", err);
+        for (const event of events) {
+          await onEvent(event);
+        }
+        config.setLastBlockLevel(currentLevel);
+        config.setLastBlockCycle(blockCycle);
+        currentLevel++;
+        await delay(1000);
       }
-      await delay(1000 * constants.time_between_blocks[0].toNumber());
+    } catch (err) {
+      warn("RPC Error", err);
     }
   };
 
-  loop();
+  const interval = 1000 * constants.time_between_blocks[0].toNumber();
 
-  debug(`Baker monitor started`);
+  const srv = service.create("bm", task, interval);
 
-  const halt = () => {
-    info("Halting baker monitor");
-    halted = true;
+  return {
+    name: srv.name,
+    start: srv.start,
+    stop: srv.stop,
   };
-
-  const monitor: Monitor = { bakers, halt };
-  return monitor;
 };
 
 type CheckBlockArgs = {
