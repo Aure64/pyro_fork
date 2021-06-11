@@ -4,6 +4,8 @@ export const delay = (milliseconds: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
+export class CancelledError extends Error {}
+
 export type CancellableDelay = {
   cancel: () => void;
   promise: Promise<void>;
@@ -18,7 +20,7 @@ export const delay2 = (milliseconds: number): CancellableDelay => {
     const timeoutHandle = +setTimeout(resolve, milliseconds);
     cancel = () => {
       clearTimeout(timeoutHandle);
-      reject(new Error("cancelled"));
+      reject(new CancelledError());
     };
   });
 
