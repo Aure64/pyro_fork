@@ -7,7 +7,9 @@ import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { HttpResponseError } from "@taquito/http-utils";
 
-import { delay } from "./delay";
+// import { delay } from "./delay";
+
+import * as service from "./service";
 
 type Monitor = {
   nodes: string[];
@@ -20,19 +22,23 @@ type StartArgs = {
   referenceNode?: string;
 };
 
-type Sub = {
-  close: () => void;
-  nodeInfo: () => NodeInfo | undefined;
-};
+type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
+
+type Sub = service.Service & NodeInfoProvider;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-const NoSub: Sub = { close: () => {}, nodeInfo: () => undefined };
+const NoSub: Sub = {
+  name: "no-sub",
+  start: () => Promise.resolve(),
+  stop: () => {},
+  nodeInfo: () => undefined,
+};
 
-export const start = ({
-  nodes,
-  onEvent,
-  referenceNode,
-}: StartArgs): Monitor => {
+export const create = (
+  onEvent: (event: TezosNodeEvent) => Promise<void>,
+  nodes: string[],
+  referenceNode?: string
+): service.Service => {
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)
     : NoSub;
@@ -41,22 +47,19 @@ export const start = ({
     subscribeToNode(node, onEvent, referenceSubscription.nodeInfo)
   );
 
-  const halt = () => {
-    info("Halting node monitor");
-    referenceSubscription.close();
-    for (const subscription of subscriptions) {
-      subscription.close();
+  const allSubs = [...subscriptions, referenceSubscription];
+
+  const start = async () => {
+    await Promise.all(allSubs.map((s) => s.start()));
+  };
+
+  const stop = () => {
+    for (const s of allSubs) {
+      s.stop();
     }
   };
 
-  const monitor: Monitor = {
-    nodes,
-    halt,
-  };
-
-  debug(`Node monitor started`);
-
-  return monitor;
+  return { name: "nm", start, stop };
 };
 
 const eventKey = (event: PeerEvent): string => {
@@ -77,85 +80,156 @@ const subscribeToNode = (
 
   let nodeData: NodeInfo | undefined;
   let previousEvents: Set<string> = new Set();
-  let halted = false;
+  //let halted = false;
   let unableToReach: boolean | undefined;
 
-  (async () => {
-    while (!halted) {
-      let events: PeerEvent[] = [];
-      try {
-        const headHash = await rpc.getBlockHash();
+  const task = async () => {
+    let events: PeerEvent[] = [];
+    try {
+      const headHash = await rpc.getBlockHash();
 
-        const previousNodeInfo = nodeData;
-        // skip checking boostrapped status if previous check failed
-        const fetchBootstrappedStatus =
-          previousNodeInfo === undefined ||
-          previousNodeInfo.bootstrappedStatus !== undefined;
-        // skip checking  network connections if previous check failed
-        const fetchNetworkConnections =
-          previousNodeInfo === undefined ||
-          previousNodeInfo.peerCount !== undefined;
+      const previousNodeInfo = nodeData;
+      // skip checking boostrapped status if previous check failed
+      const fetchBootstrappedStatus =
+        previousNodeInfo === undefined ||
+        previousNodeInfo.bootstrappedStatus !== undefined;
+      // skip checking  network connections if previous check failed
+      const fetchNetworkConnections =
+        previousNodeInfo === undefined ||
+        previousNodeInfo.peerCount !== undefined;
 
-        const nodeInfo = await updateNodeInfo({
-          node,
-          blockHash: headHash,
-          rpc,
-          fetchBootstrappedStatus,
-          fetchNetworkConnections,
-        });
-        events = checkBlockInfo({
-          node,
-          nodeInfo,
-          previousNodeInfo,
-          referenceNodeBlockHistory: getReference()?.history,
-        });
-        // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
-        // with other data (eg current block)
-        nodeData = nodeInfo;
-        debug("Unable to reach?", unableToReach);
-        if (unableToReach) {
-          debug("Adding reconnected event");
-          events.push({
-            type: "PEER_DATA",
-            kind: "RECONNECTED",
-            message: `Connectivity to ${node} restored`,
-            node,
-          });
-        }
-        unableToReach = false;
-      } catch (err) {
-        unableToReach = true;
-        warn(`Node subscription error: ${err.message}`);
-        debug("Unable to reach?", unableToReach);
+      const nodeInfo = await updateNodeInfo({
+        node,
+        blockHash: headHash,
+        rpc,
+        fetchBootstrappedStatus,
+        fetchNetworkConnections,
+      });
+      events = checkBlockInfo({
+        node,
+        nodeInfo,
+        previousNodeInfo,
+        referenceNodeBlockHistory: getReference()?.history,
+      });
+      // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
+      // with other data (eg current block)
+      nodeData = nodeInfo;
+      debug("Unable to reach?", unableToReach);
+      if (unableToReach) {
+        debug("Adding reconnected event");
         events.push({
           type: "PEER_DATA",
-          kind: "ERROR",
-          message: err.status
-            ? `${node} returned ${err.status} ${err.statusText ?? ""}`
-            : err.message,
+          kind: "RECONNECTED",
+          message: `Connectivity to ${node} restored`,
           node,
         });
       }
-      const publishedEvents = new Set<string>();
-      for (const event of events) {
-        const key = eventKey(event);
-        if (previousEvents.has(key)) {
-          debug(`Event ${key} is already reported, not publishing`);
-        } else {
-          debug(`Event ${key} is new, publishing`);
-          await onEvent(event);
-        }
-        publishedEvents.add(key);
-      }
-      previousEvents = publishedEvents;
-      await delay(30 * 1e3);
+      unableToReach = false;
+    } catch (err) {
+      unableToReach = true;
+      warn(`Node subscription error: ${err.message}`);
+      debug("Unable to reach?", unableToReach);
+      events.push({
+        type: "PEER_DATA",
+        kind: "ERROR",
+        message: err.status
+          ? `${node} returned ${err.status} ${err.statusText ?? ""}`
+          : err.message,
+        node,
+      });
     }
-  })();
+    const publishedEvents = new Set<string>();
+    for (const event of events) {
+      const key = eventKey(event);
+      if (previousEvents.has(key)) {
+        debug(`Event ${key} is already reported, not publishing`);
+      } else {
+        debug(`Event ${key} is new, publishing`);
+        await onEvent(event);
+      }
+      publishedEvents.add(key);
+    }
+    previousEvents = publishedEvents;
+  };
+
+  const srv = service.create(node, task, 30 * 1e3);
+
+  // (async () => {
+  //   while (!halted) {
+  //     let events: PeerEvent[] = [];
+  //     try {
+  //       const headHash = await rpc.getBlockHash();
+
+  //       const previousNodeInfo = nodeData;
+  //       // skip checking boostrapped status if previous check failed
+  //       const fetchBootstrappedStatus =
+  //         previousNodeInfo === undefined ||
+  //         previousNodeInfo.bootstrappedStatus !== undefined;
+  //       // skip checking  network connections if previous check failed
+  //       const fetchNetworkConnections =
+  //         previousNodeInfo === undefined ||
+  //         previousNodeInfo.peerCount !== undefined;
+
+  //       const nodeInfo = await updateNodeInfo({
+  //         node,
+  //         blockHash: headHash,
+  //         rpc,
+  //         fetchBootstrappedStatus,
+  //         fetchNetworkConnections,
+  //       });
+  //       events = checkBlockInfo({
+  //         node,
+  //         nodeInfo,
+  //         previousNodeInfo,
+  //         referenceNodeBlockHistory: getReference()?.history,
+  //       });
+  //       // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
+  //       // with other data (eg current block)
+  //       nodeData = nodeInfo;
+  //       debug("Unable to reach?", unableToReach);
+  //       if (unableToReach) {
+  //         debug("Adding reconnected event");
+  //         events.push({
+  //           type: "PEER_DATA",
+  //           kind: "RECONNECTED",
+  //           message: `Connectivity to ${node} restored`,
+  //           node,
+  //         });
+  //       }
+  //       unableToReach = false;
+  //     } catch (err) {
+  //       unableToReach = true;
+  //       warn(`Node subscription error: ${err.message}`);
+  //       debug("Unable to reach?", unableToReach);
+  //       events.push({
+  //         type: "PEER_DATA",
+  //         kind: "ERROR",
+  //         message: err.status
+  //           ? `${node} returned ${err.status} ${err.statusText ?? ""}`
+  //           : err.message,
+  //         node,
+  //       });
+  //     }
+  //     const publishedEvents = new Set<string>();
+  //     for (const event of events) {
+  //       const key = eventKey(event);
+  //       if (previousEvents.has(key)) {
+  //         debug(`Event ${key} is already reported, not publishing`);
+  //       } else {
+  //         debug(`Event ${key} is new, publishing`);
+  //         await onEvent(event);
+  //       }
+  //       publishedEvents.add(key);
+  //     }
+  //     previousEvents = publishedEvents;
+  //     await delay(30 * 1e3);
+  //   }
+  // })();
 
   return {
-    close: () => {
-      halted = true;
-    },
+    name: srv.name,
+    start: srv.start,
+    stop: srv.stop,
     nodeInfo: () => nodeData,
   };
 };
