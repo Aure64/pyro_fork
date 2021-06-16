@@ -71,7 +71,7 @@ const main = async () => {
 
   const emailConfig = config.getEmailConfig();
   if (emailConfig?.enabled) {
-    const emailChannel = Notifier2.createChannel(
+    const emailChannel = await Notifier2.createChannel(
       "email",
       EmailSender(emailConfig),
       config.storageDirectory,
@@ -82,7 +82,7 @@ const main = async () => {
 
   const desktopConfig = config.getDesktopConfig();
   if (desktopConfig?.enabled) {
-    const desktopChannel = Notifier2.createChannel(
+    const desktopChannel = await Notifier2.createChannel(
       "desktop",
       DesktopSender(desktopConfig),
       config.storageDirectory,

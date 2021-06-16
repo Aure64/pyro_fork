@@ -11,8 +11,7 @@ export type Service = {
 export const create = (
   name: string,
   task: (isInterrupted: () => boolean) => Promise<void>,
-  interval: number = 60 * 1e3,
-  init?: () => Promise<void>
+  interval: number = 60 * 1e3
 ): Service => {
   const log = getLogger(name);
   let count = 0;
@@ -22,10 +21,6 @@ export const create = (
   const isInterrupted = () => !shouldRun;
 
   const start = async () => {
-    if (init) {
-      log.info(`initializing...`);
-      await init();
-    }
     log.info(`starting...`);
     try {
       while (shouldRun) {

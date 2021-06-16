@@ -9,12 +9,12 @@ import * as service from "./service";
 
 export type Channel = service.Service & EventLogConsumer;
 
-export const createChannel = (
+export const createChannel = async (
   name: string,
   send: Sender,
   storageDirectory: string,
   eventLog: EventLog
-): Channel => {
+): Promise<Channel> => {
   const log = getLogger(name);
 
   const path = normalize(`${storageDirectory}/consumers/${name}`);
@@ -22,7 +22,7 @@ export const createChannel = (
   const readPosition = async () => (await readJson(path)) as number;
   const writePosition = async (value: number) => await writeJson(path, value);
 
-  const init = async () => await ensureExists(path, 0);
+  await ensureExists(path, 0);
 
   const task = async () => {
     const batch: TezosNodeEvent[] = [];
@@ -43,7 +43,7 @@ export const createChannel = (
     }
   };
 
-  const srv = service.create(name, task, 60 * 1e3, init);
+  const srv = service.create(name, task, 60 * 1e3);
 
   return {
     name,
