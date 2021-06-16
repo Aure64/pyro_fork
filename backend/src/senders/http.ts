@@ -8,9 +8,9 @@ export type EndpointConfig = {
   url: string;
 };
 
-export const startDummyHttpServer = (port: number = 8005) => {
+export const startDummyHttpServer = (port = 8005) => {
   const log = getLogger("dummy-http-server");
-  var server = createServer((req, res) => {
+  const server = createServer((req, res) => {
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
