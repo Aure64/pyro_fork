@@ -9,7 +9,7 @@ import * as service from "./service";
 
 export type Channel = service.Service & EventLogConsumer;
 
-export const createChannel = async (
+export const create = async (
   name: string,
   send: Sender,
   storageDirectory: string,

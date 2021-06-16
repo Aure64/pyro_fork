@@ -1,7 +1,7 @@
 import { TezosNodeEvent } from "./types";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
-import * as Notifier2 from "./notifier2";
+import * as channel from "./channel";
 import { create as EmailSender } from "./senders/email";
 import { create as DesktopSender } from "./senders/desktop";
 import * as EventLog from "./eventlog";
@@ -67,11 +67,11 @@ const main = async () => {
 
   const eventLog = await EventLog.open(config.storageDirectory);
 
-  const channels: Notifier2.Channel[] = [];
+  const channels: channel.Channel[] = [];
 
   const emailConfig = config.getEmailConfig();
   if (emailConfig?.enabled) {
-    const emailChannel = await Notifier2.createChannel(
+    const emailChannel = await channel.create(
       "email",
       EmailSender(emailConfig),
       config.storageDirectory,
@@ -82,7 +82,7 @@ const main = async () => {
 
   const desktopConfig = config.getDesktopConfig();
   if (desktopConfig?.enabled) {
-    const desktopChannel = await Notifier2.createChannel(
+    const desktopChannel = await channel.create(
       "desktop",
       DesktopSender(desktopConfig),
       config.storageDirectory,
