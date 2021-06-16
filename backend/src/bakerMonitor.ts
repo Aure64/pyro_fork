@@ -23,13 +23,13 @@ import { delay } from "./delay";
 import * as service from "./service";
 
 const name = "bm";
-const log = getLogger(name);
 
 export const create = async (
   bakers: string[],
   onEvent: (event: TezosNodeEvent) => Promise<void>,
   config: Config
 ): Promise<service.Service> => {
+  const log = getLogger(name);
   const rpcNode = config.getRpc();
 
   const rpc = new RpcClient(rpcNode);
@@ -129,6 +129,7 @@ const checkBlock = async ({
   lastCycle,
   constants,
 }: CheckBlockArgs): Promise<CheckBlockResult> => {
+  const log = getLogger(name);
   log.trace(`Fetching baker data for block ${blockId}`);
   const events: TezosNodeEvent[] = [];
 
@@ -237,6 +238,7 @@ export const loadBlockData = async ({
   blockId,
   rpc,
 }: LoadBlockDataArgs): Promise<BlockData> => {
+  const log = getLogger(name);
   log.debug(`Fetching block ${blockId}`);
   const blockPromise = wrap2(() => rpc.getBlock({ block: blockId }));
   const block = await blockPromise;
@@ -293,6 +295,7 @@ export const checkBlockBakingRights = ({
   bakingRights,
   blockId,
 }: CheckBlockBakingRightsArgs): BakerEvent | null => {
+  const log = getLogger(name);
   for (const bakingRight of bakingRights) {
     if (
       bakingRight.delegate === baker &&
@@ -347,6 +350,7 @@ export const checkBlockEndorsingRights = ({
   blockLevel,
   endorsingRights,
 }: CheckBlockEndorsingRightsArgs): BakerEvent | null => {
+  const log = getLogger(name);
   const endorsingRight = endorsingRights.find(
     (right) => right.level === blockLevel && right.delegate === baker
   );
@@ -415,6 +419,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
   rpc,
   blockLevel,
 }: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<TezosNodeEvent | null> => {
+  const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
@@ -493,6 +498,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
   rpc,
   blockLevel,
 }: CheckBlockAccusationsForDoubleBakeArgs): Promise<TezosNodeEvent | null> => {
+  const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_BAKING_EVIDENCE) {
@@ -552,6 +558,7 @@ export const checkFutureBlockBakingRights = ({
   bakingRights,
   timeBetweenBlocks,
 }: CheckFutureBlockBakingRightsArgs): BakerEvent | null => {
+  const log = getLogger(name);
   for (const bakingRight of bakingRights) {
     if (bakingRight.level > blockLevel && bakingRight.priority === 0) {
       const delegate = bakingRight.delegate;
@@ -603,6 +610,7 @@ export const checkFutureBlockEndorsingRights = ({
   endorsingRights,
   timeBetweenBlocks,
 }: CheckFutureBlockEndorsingRightsArgs): BakerEvent | null => {
+  const log = getLogger(name);
   for (const endorsingRight of endorsingRights) {
     if (
       endorsingRight.level > blockLevel &&
@@ -656,6 +664,7 @@ export const checkForDeactivations = async ({
   cycle,
   delegatesResponse,
 }: CheckForDeactivationsArgs): Promise<TezosNodeEvent | null> => {
+  const log = getLogger(name);
   if (delegatesResponse.deactivated) {
     const message = `Baker ${baker} is deactivated (on or before cycle ${cycle})`;
     log.debug(message);
