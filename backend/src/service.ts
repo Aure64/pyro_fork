@@ -19,7 +19,7 @@ export const create = (
   let shouldRun = true;
   let currentDelay: CancellableDelay | undefined;
 
-  const isInterrupted = () => shouldRun;
+  const isInterrupted = () => !shouldRun;
 
   const start = async () => {
     if (init) {
