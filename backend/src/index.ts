@@ -4,6 +4,7 @@ import * as BakerMonitor from "./bakerMonitor";
 import * as channel from "./channel";
 import { create as EmailSender } from "./senders/email";
 import { create as DesktopSender } from "./senders/desktop";
+import { create as HttpSender } from "./senders/http";
 import * as EventLog from "./eventlog";
 import { debug, info, warn, error, setLevel } from "loglevel";
 import loglevel, { LogLevelDesc } from "loglevel";
@@ -89,6 +90,17 @@ const main = async () => {
       eventLog
     );
     channels.push(desktopChannel);
+  }
+
+  const endpointConfig = config.getEndpointConfig();
+  if (endpointConfig?.enabled) {
+    const endpointChannel = await channel.create(
+      `${endpointConfig.url}`,
+      HttpSender(endpointConfig),
+      config.storageDirectory,
+      eventLog
+    );
+    channels.push(endpointChannel);
   }
 
   const onEvent = async (event: TezosNodeEvent) => {
