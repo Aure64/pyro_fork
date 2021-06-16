@@ -7,8 +7,6 @@ import format from "../format";
 
 export type Protocol = "Plain" | "SSL" | "STARTTLS";
 
-const log = getLogger("email-sender");
-
 export type EmailConfig = {
   enabled: boolean;
   host: string;
@@ -29,6 +27,8 @@ export const create = (config: EmailConfig): Sender => {
       pass: config.password,
     },
   });
+
+  const log = getLogger("email-sender");
 
   return async (events: TezosNodeEvent[]) => {
     log.debug(`About to send email for ${events.length} events`, events);
