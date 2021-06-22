@@ -5,6 +5,7 @@ import * as channel from "./channel";
 import { create as EmailSender } from "./senders/email";
 import { create as DesktopSender } from "./senders/desktop";
 import { create as HttpSender } from "./senders/http";
+import { create as TelegramSender } from "./senders/telegram";
 import * as EventLog from "./eventlog";
 import { debug, info, warn, error, setLevel } from "loglevel";
 import loglevel, { LogLevelDesc } from "loglevel";
@@ -101,6 +102,19 @@ const main = async () => {
       eventLog
     );
     channels.push(endpointChannel);
+  }
+
+  const telegramConfig = config.getTelegramConfig();
+  if (telegramConfig?.enabled) {
+    const telegramChannel = await channel.create(
+      "telegram",
+      await TelegramSender(telegramConfig, (chatId: number) =>
+        config.setTelegramChatId(chatId)
+      ),
+      config.storageDirectory,
+      eventLog
+    );
+    channels.push(telegramChannel);
   }
 
   const onEvent = async (event: TezosNodeEvent) => {

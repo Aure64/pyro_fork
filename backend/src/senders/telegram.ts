@@ -1,0 +1,99 @@
+import * as TelegramBot from "node-telegram-bot-api";
+import { getLogger } from "loglevel";
+import { TezosNodeEvent, Sender } from "../types";
+import format from "../format";
+import { delay } from "../delay";
+
+const LOGGER_NAME = "telegram-sender";
+
+export type TelegramConfig = {
+  chatId: number | undefined;
+  enabled: boolean;
+  token: string;
+};
+
+export type TelegramNotificationChannel = {
+  bot: TelegramBot;
+  chatId: number | undefined;
+};
+
+const MAX_MESSAGE_LENGTH = 4096;
+
+/**
+ * Fetch chatId for the given token. Telegram expires updates after 24 hours, so the chat must
+ * have had activity during this time to succeed.
+ * Times out with a failure after 20 seconds.
+ */
+
+const listenForChatId = async (token: string): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const bot = new TelegramBot(token, { polling: true });
+
+    const timeout = setTimeout(() => {
+      bot.stopPolling();
+      reject(new Error("No telegram messages received for provided token."));
+    }, 20000);
+
+    bot.on("message", (message) => {
+      bot.stopPolling();
+      const chatId = message.chat.id;
+      clearTimeout(timeout);
+      resolve(chatId);
+    });
+  });
+};
+
+export const create = async (
+  config: TelegramConfig,
+  saveChatId: (chatId: number) => void
+): Promise<Sender> => {
+  const log = getLogger(LOGGER_NAME);
+  const bot = new TelegramBot(config.token);
+  let chatId = config.chatId;
+
+  if (!config.chatId) {
+    log.info(`No Telegram chatId found in config, attempting to fetch...`);
+    log.info(`Send any message to your bot in Telegram`);
+    try {
+      chatId = await listenForChatId(config.token);
+      saveChatId(chatId);
+      log.info(`Telegram chatId loaded and saved to system: ${chatId}`);
+    } catch (err) {
+      log.warn(
+        `Unable to fetch Telegram chatId for token ${config.token}`,
+        err
+      );
+    }
+  }
+
+  return async (events: TezosNodeEvent[]) => {
+    if (!chatId) {
+      throw new Error("Telegram notification channel is missing chatId");
+    }
+    let text = format(events);
+    let message = "";
+    let count = 0;
+    for (const line of text.split("\n")) {
+      if (message.length + line.length + 1 < MAX_MESSAGE_LENGTH) {
+        message += line + "\n";
+      } else {
+        count += 1;
+        log.debug(
+          `Sending message ${count} of length ${message.length}`,
+          message
+        );
+        await bot.sendMessage(chatId, message);
+        message = line + "\n";
+        await delay(1000);
+      }
+    }
+    if (message.length > 0) {
+      count += 1;
+      log.debug(
+        `Sending message ${count} of length ${message.length}`,
+        message
+      );
+      await bot.sendMessage(chatId, message);
+    }
+  };
+};
