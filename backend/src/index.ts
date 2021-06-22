@@ -6,6 +6,7 @@ import { create as EmailSender } from "./senders/email";
 import { create as DesktopSender } from "./senders/desktop";
 import { create as HttpSender } from "./senders/http";
 import { create as TelegramSender } from "./senders/telegram";
+import { create as SlackSender } from "./senders/slack";
 import * as EventLog from "./eventlog";
 import { debug, info, warn, error, setLevel } from "loglevel";
 import loglevel, { LogLevelDesc } from "loglevel";
@@ -115,6 +116,17 @@ const main = async () => {
       eventLog
     );
     channels.push(telegramChannel);
+  }
+
+  const slackConfig = config.getSlackConfig();
+  if (slackConfig?.enabled) {
+    const slackChannel = await channel.create(
+      "slack",
+      SlackSender(slackConfig),
+      config.storageDirectory,
+      eventLog
+    );
+    channels.push(slackChannel);
   }
 
   const onEvent = async (event: TezosNodeEvent) => {
