@@ -1,11 +1,11 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
 import { LogLevelDesc, trace } from "loglevel";
-import { SlackConfig } from "./slackNotificationChannel";
-import { TelegramConfig } from "./telegramNotificationChannel";
-import { EmailConfig } from "./emailNotificationChannel";
-import { DesktopConfig } from "./desktopNotificationChannel";
-import { EndpointConfig } from "./endpointNotificationChannel";
+import { SlackConfig } from "./senders/slack";
+import { TelegramConfig } from "./senders/telegram";
+import { EmailConfig } from "./senders/email";
+import { DesktopConfig } from "./senders/desktop";
+import { EndpointConfig } from "./senders/http";
 import * as FS from "fs";
 import * as Path from "path";
 import envPaths from "env-paths";
