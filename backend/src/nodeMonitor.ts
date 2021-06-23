@@ -50,8 +50,11 @@ export const create = (
 };
 
 const eventKey = (event: PeerEvent): string => {
-  const { kind, type, message } = event;
-  return `${kind}:${type}:${message}`;
+  const { kind, type } = event;
+  if (event.type === "PEER_DATA") {
+    return `${kind}:${type}:${event.message}`;
+  }
+  return `${kind}:${type}`;
 };
 
 const subscribeToNode = (
@@ -247,7 +250,6 @@ export const checkBlockInfo = ({
           type: "PEER",
           kind: "NODE_BEHIND",
           node,
-          message: "Node is behind",
         });
       }
     } else if (
@@ -261,7 +263,6 @@ export const checkBlockInfo = ({
         type: "PEER",
         kind: "NODE_CAUGHT_UP",
         node,
-        message: "Node caught up",
       });
     }
     if (
@@ -278,7 +279,6 @@ export const checkBlockInfo = ({
           type: "PEER",
           kind: "NODE_ON_A_BRANCH",
           node,
-          message: `Node ${node} is on a branch`,
         });
       } else {
         log.debug(`${ancestorDistance} blocks away from reference node`);
@@ -300,7 +300,6 @@ export const checkBlockInfo = ({
         type: "PEER",
         kind: "NODE_LOW_PEERS",
         node,
-        message,
       });
     }
   }

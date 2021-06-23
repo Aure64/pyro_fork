@@ -24,7 +24,6 @@ describe("checkBlockInfo", () => {
         kind: "NODE_BEHIND",
         node: "http://somenode",
         type: "PEER",
-        message: "Node is behind",
       },
     ]);
   });
@@ -126,7 +125,6 @@ describe("checkBlockInfo", () => {
         kind: "NODE_CAUGHT_UP",
         node: "http://somenode",
         type: "PEER",
-        message: "Node caught up",
       },
     ]);
   });
@@ -151,7 +149,6 @@ describe("checkBlockInfo", () => {
     expect(events).toEqual([
       {
         kind: "NODE_ON_A_BRANCH",
-        message: "Node http://somenode is on a branch",
         node: "http://somenode",
         type: "PEER",
       },
@@ -227,7 +224,6 @@ describe("checkBlockInfo", () => {
         kind: "NODE_LOW_PEERS",
         node: "http://somenode",
         type: "PEER",
-        message: "Node http://somenode has too few peers: 9/10",
       },
     ]);
   });

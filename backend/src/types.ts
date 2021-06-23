@@ -20,10 +20,10 @@ export type BakerNodeEventKind = Static<typeof BakerNodeEventKind_RT>;
 export type BakerNodeEvent = {
   kind: BakerNodeEventKind;
   type: "BAKER_NODE";
-  message: string;
   baker: string;
   blockLevel: number;
 };
+
 const FutureBakingEventKind_RT = Union(
   Literal("FUTURE_BAKING_OPPORTUNITY"),
   Literal("FUTURE_ENDORSING_OPPORTUNITY")
@@ -34,7 +34,6 @@ export type FutureBakingEventKind = Static<typeof FutureBakingEventKind_RT>;
 export type FutureBakingEvent = {
   kind: FutureBakingEventKind;
   type: "FUTURE_BAKING";
-  message: string;
   baker: string;
   level: number;
   date: Date;
@@ -47,7 +46,6 @@ export type BakerDeactivationEventKind =
 export type BakerDeactivationEvent = {
   kind: BakerDeactivationEventKind;
   type: "BAKER_DEACTIVATION";
-  message: string;
   baker: string;
   cycle: number;
 };
@@ -80,7 +78,6 @@ export type PeerNodeEventKind = Static<typeof PeerNodeEventKind_RT>;
 export type PeerNodeEvent = {
   kind: PeerNodeEventKind;
   type: "PEER";
-  message: string;
   node: string;
 };
 
