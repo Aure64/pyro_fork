@@ -129,7 +129,13 @@ const main = async () => {
     channels.push(slackChannel);
   }
 
+  const excludedEvents = config.getExcludedEvents();
+
   const onEvent = async (event: TezosNodeEvent) => {
+    if ("kind" in event && excludedEvents.includes(event.kind)) {
+      debug(`Event excluded because type ${event.kind} is filtered`);
+      return;
+    }
     await eventLog.add(event);
   };
 
