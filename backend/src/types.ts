@@ -95,28 +95,6 @@ export type Message = {
   message: string;
 };
 
-export type NotifierEvent = {
-  type: "NOTIFIER";
-  channelName: string;
-  message: string;
-};
-
-export type NotifyResult =
-  | { kind: "SUCCESS" }
-  | { kind: "ERROR"; error: Error; channelName: string };
-
-export type Notify<T> = (
-  notifier: T,
-  message: Message
-) => Promise<NotifyResult>;
-export type NotifyFunction = (message: Message) => Promise<NotifyResult>;
-export type NotifyEventFunction = (
-  event: TezosNodeEvent | NotifierEvent
-) => Promise<NotifyResult>;
-export type NotificationChannelMiddleware = (
-  notifyFunction: NotifyEventFunction
-) => NotifyEventFunction;
-
 // iterate through the various event kinds that we want to expose in docs
 const generateEventKinds = () => {
   const bakerEventKinds = BakerNodeEventKind_RT.alternatives.map(
