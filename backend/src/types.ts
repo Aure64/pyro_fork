@@ -90,11 +90,6 @@ export type TezosNodeEvent = BakerEvent | PeerEvent;
 
 export type Sender = (events: TezosNodeEvent[]) => Promise<void>;
 
-export type Message = {
-  title: string;
-  message: string;
-};
-
 // iterate through the various event kinds that we want to expose in docs
 const generateEventKinds = () => {
   const bakerEventKinds = BakerNodeEventKind_RT.alternatives.map(
