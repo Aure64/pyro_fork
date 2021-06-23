@@ -12,7 +12,7 @@ export const create = (config: SlackConfig): Sender => {
   const webhook = new IncomingWebhook(config.url);
 
   return async (events: TezosNodeEvent[]) => {
-    let text = format(events);
+    const text = format(events);
     await webhook.send(text);
   };
 };
