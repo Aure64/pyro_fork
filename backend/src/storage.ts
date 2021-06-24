@@ -3,7 +3,7 @@ import * as path from "path";
 import { getLogger } from "loglevel";
 
 import { writeJson, readJson } from "./fs-utils";
-import { normalize } from "path";
+import { normalize, join } from "path";
 
 export type Key = string | number;
 
@@ -14,9 +14,14 @@ export type Storage = {
   keys: () => Promise<string[]>;
 };
 
-export const open = async (storageDir: string): Promise<Storage> => {
+export const open = async (
+  storagePath: string | string[]
+): Promise<Storage> => {
   const log = getLogger("storage");
-  storageDir = normalize(storageDir);
+
+  const storageDir = normalize(
+    Array.isArray(storagePath) ? join(...storagePath) : storagePath
+  );
   log.debug(`Storage path: ${storageDir}`);
 
   await fs.promises.mkdir(storageDir, { recursive: true });
