@@ -15,7 +15,7 @@ export const create = async (
 ): Promise<Channel> => {
   const log = getLogger(name);
 
-  const store = await storage.open(`${storageDirectory}/consumers`);
+  const store = await storage.open([storageDirectory, "consumers"]);
 
   const readPosition = async () => (await store.get(name, 0)) as number;
   const writePosition = async (value: number) => await store.put(name, value);

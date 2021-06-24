@@ -1,5 +1,4 @@
 import { getLogger } from "loglevel";
-
 import * as storage from "./storage";
 import * as service from "./service";
 
@@ -18,8 +17,8 @@ export type EventLog = {
   deleteUpTo: (position: number) => Promise<void>;
 };
 
-export const open = async (path: string): Promise<EventLog> => {
-  const store = await storage.open(`${path}/eventlog`);
+export const open = async (storageDir: string): Promise<EventLog> => {
+  const store = await storage.open([storageDir, "eventlog"]);
 
   const log = getLogger("eventlog");
 
