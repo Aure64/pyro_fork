@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import * as Chalk from "chalk";
 import { writeJson, ensureExists } from "./fs-utils";
 import { lock } from "proper-lockfile";
+import { join as joinPath, normalize as normalizePath } from "path";
 
 const setupLogging = (logLevel: LogLevelDesc) => {
   const colors: Record<string, Chalk.Chalk> = {
@@ -54,8 +55,10 @@ const main = async () => {
   const config = await Config.load();
   setupLogging(config.getLogLevel());
 
+  const storageDir = normalizePath(config.storageDirectory);
+
   const pid = process.pid;
-  const pidFile = `${config.storageDirectory}/pid`;
+  const pidFile = joinPath(storageDir, "pid");
   let pidFileLock;
 
   try {
