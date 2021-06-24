@@ -2,10 +2,8 @@ import { TezosNodeEvent, Sender } from "./types";
 import { getLogger } from "loglevel";
 import { EventLog, EventLogConsumer } from "./eventlog";
 
-import { normalize } from "path";
-
-import { writeJson, readJson, ensureExists } from "./fs-utils";
 import * as service from "./service";
+import * as storage from "./storage";
 
 export type Channel = service.Service & EventLogConsumer;
 
@@ -17,12 +15,10 @@ export const create = async (
 ): Promise<Channel> => {
   const log = getLogger(name);
 
-  const path = normalize(`${storageDirectory}/consumers/${name}`);
+  const store = await storage.open(`${storageDirectory}/consumers`);
 
-  const readPosition = async () => (await readJson(path)) as number;
-  const writePosition = async (value: number) => await writeJson(path, value);
-
-  await ensureExists(path, 0);
+  const readPosition = async () => (await store.get(name, 0)) as number;
+  const writePosition = async (value: number) => await store.put(name, value);
 
   const task = async () => {
     const batch: TezosNodeEvent[] = [];

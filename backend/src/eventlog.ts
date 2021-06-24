@@ -1,8 +1,6 @@
-import * as fs from "fs";
 import { getLogger } from "loglevel";
 
-import { writeJson, readJson, ensureExists } from "./fs-utils";
-
+import * as storage from "./storage";
 import * as service from "./service";
 
 export type EventLogConsumer = {
@@ -12,7 +10,6 @@ export type EventLogConsumer = {
 export type LogEntry = {
   value: any;
   position: number;
-  timestamp: Date;
 };
 
 export type EventLog = {
@@ -21,56 +18,36 @@ export type EventLog = {
   deleteUpTo: (position: number) => Promise<void>;
 };
 
-const mkParentDirName = (path: string) => `${path}/eventlog`;
-const mkEventsDirName = (path: string) => `${mkParentDirName(path)}/events`;
-const mkSequenceFileName = (path: string) =>
-  `${mkParentDirName(path)}/sequence`;
-const mkEventFileName = (path: string, offset: number) => `${path}/${offset}`;
-
 export const open = async (path: string): Promise<EventLog> => {
+  const store = await storage.open(`${path}/eventlog`);
+
   const log = getLogger("eventlog");
 
-  const eventsDir = mkEventsDirName(path);
-  const sequenceFileName = mkSequenceFileName(path);
-
-  await fs.promises.mkdir(eventsDir, { recursive: true });
-
-  const stats = await fs.promises.stat(path);
-  if (!stats.isDirectory()) {
-    throw Error(`${path} must be a directory`);
-  }
-
-  const writeSeq = async (value: number) =>
-    await writeJson(sequenceFileName, value);
-
-  await ensureExists(sequenceFileName, 0);
-
-  let sequence = (await readJson(sequenceFileName)) as number;
+  const SEQ_KEY = "_sequence";
+  let sequence = (await store.get(SEQ_KEY, 0)) as number;
 
   const add = async (event: any): Promise<LogEntry> => {
+    log.debug(`about to store event ${sequence}`, event);
     const eventPos = sequence;
-    await writeJson(mkEventFileName(eventsDir, eventPos), event);
+    await store.put(eventPos, event);
     const nextSequenceValue = sequence + 1;
-    await writeSeq(nextSequenceValue);
+    await store.put(SEQ_KEY, nextSequenceValue);
     sequence = nextSequenceValue;
-    return { value: event, position: eventPos, timestamp: new Date() };
+    return { value: event, position: eventPos };
   };
 
-  const read = async (position: number): Promise<any> => {
-    const fileName = mkEventFileName(eventsDir, position);
-    try {
-      const value = await readJson(fileName);
-      const timestamp = (await fs.promises.stat(fileName)).ctime;
-      return { value, timestamp, position };
-    } catch (err) {
-      log.debug(`Could not read ${fileName}`, err);
-      return null;
+  const read = async (position: number): Promise<LogEntry> => {
+    const value = await store.get(position);
+    log.debug(`got event at ${position}`, value);
+    if (value !== null) {
+      return { value, position };
     }
+    return value;
   };
 
   const readAfter = async function* (
     position: number
-  ): AsyncIterableIterator<any> {
+  ): AsyncIterableIterator<LogEntry> {
     let currentPosition = position + 1;
     while (currentPosition < sequence) {
       const record = await read(currentPosition);
@@ -82,12 +59,11 @@ export const open = async (path: string): Promise<EventLog> => {
   };
 
   const deleteUpTo = async (position: number): Promise<void> => {
-    const fileNames = await fs.promises.readdir(eventsDir);
-    const toDelete = fileNames
-      .filter((name) => parseInt(name) <= position)
-      .map((name) => `${eventsDir}/${name}`);
-    log.debug(`About to delete ${toDelete.length} files`, toDelete);
-    await Promise.all(toDelete.map(fs.promises.unlink));
+    const keys = (await store.keys()).filter((k) => k !== SEQ_KEY);
+    // const fileNames = await fs.promises.readdir(eventsDir);
+    const toDelete = keys.filter((name) => parseInt(name) <= position);
+    log.debug(`About to delete ${toDelete.length} keys`, toDelete);
+    await Promise.all(toDelete.map(store.remove));
   };
 
   return {
@@ -107,6 +83,7 @@ export const gc = (
 
   const task = async () => {
     const positions = await Promise.all(consumers.map((c) => c.position()));
+    log.debug(`Consumer positions`, positions);
     const minPosition = Math.min(...positions);
     log.debug(`Min consumer position is ${minPosition}`);
     try {

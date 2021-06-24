@@ -97,7 +97,7 @@ const main = async () => {
   const endpointConfig = config.getEndpointConfig();
   if (endpointConfig?.enabled) {
     const endpointChannel = await channel.create(
-      `${endpointConfig.url}`,
+      "webhook",
       HttpSender(endpointConfig),
       config.storageDirectory,
       eventLog
