@@ -508,10 +508,6 @@ export type Config = {
   getReferenceNode: GetReferenceNode;
   getNodes: GetNodes;
   getLogLevel: GetLogLevel;
-  getNumber: GetNumber;
-  setNumber: SetNumber;
-  getBoolean: GetBoolean;
-  setBoolean: SetBoolean;
   getExcludedEvents: GetExcludedEvents;
   getSlackConfig: GetSlackConfig;
   getTelegramConfig: GetTelegramConfig;
@@ -612,29 +608,6 @@ export const load = async (): Promise<Config> => {
 
   const saveConfig = () => save(systemConfigPath);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const setAndSave = (key: string, value: any) => {
-    trace("setting", key, value);
-    nconf.set(key, value);
-    saveConfig();
-  };
-
-  /**
-   * Sets an arbitrary number to the system config at `key`.  Do not use this for values that need to be
-   * configured via the CLI, as they won't be reported in the CLI help.
-   */
-  const setNumber: SetNumber = (key, value) => {
-    setAndSave(`${SYSTEM_PREFIX}:${key}`, value);
-  };
-
-  /**
-   * Sets an arbitrary boolean to the system config at `key`.  Do not use this for values that need to be
-   * configured via the CLI, as they won't be reported in the CLI help.
-   */
-  const setBoolean: SetBoolean = (key, value) => {
-    setAndSave(`${SYSTEM_PREFIX}:${key}`, value);
-  };
-
   const config: Config = {
     save: saveConfig,
     getBakers,
@@ -642,10 +615,6 @@ export const load = async (): Promise<Config> => {
     getReferenceNode,
     getNodes,
     getLogLevel,
-    getNumber,
-    setNumber,
-    getBoolean,
-    setBoolean,
     getExcludedEvents,
     getSlackConfig,
     getTelegramConfig,
@@ -705,30 +674,6 @@ const getLogLevel: GetLogLevel = () => {
 const logLevelFromString = (value: string): LogLevelDesc => {
   return value as LogLevelDesc;
 };
-
-type GetNumber = (key: string) => number | undefined;
-
-/**
- * Gets an arbitrary number from the system config at `key`.  Do not use this for values that need to be
- * configured via the CLI, as they won't be reported in the CLI help.
- */
-const getNumber: GetNumber = (key) => {
-  return nconf.get(`${SYSTEM_PREFIX}:${key}`);
-};
-
-type SetNumber = (key: string, value: number) => void;
-
-type GetBoolean = (key: string) => boolean | undefined;
-
-/**
- * Gets an arbitrary boolean from the system config at `key`.  Do not use this for values that need to be
- * configured via the CLI, as they won't be reported in the CLI help.
- */
-const getBoolean: GetBoolean = (key) => {
-  return nconf.get(`${SYSTEM_PREFIX}:${key}`);
-};
-
-type SetBoolean = (key: string, value: boolean) => void;
 
 type GetExcludedEvents = () => string[];
 
@@ -791,8 +736,6 @@ type GetBakerCatchupLimit = () => number;
 const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
   return nconf.get(BAKER_CATCHUP_LIMIT.key);
 };
-
-type SetTelegramChatId = (value: number) => void;
 
 const printConfig = () => {
   console.log(JSON.stringify(nconf.get(), null, 2));
