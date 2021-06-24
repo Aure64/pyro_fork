@@ -15,8 +15,6 @@ import * as Validator from "validatorjs";
 import { eventKinds } from "./types";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
-// system prefs
-const TELEGRAM_CHAT_ID = `${SYSTEM_PREFIX}:telegram_chat_id`;
 
 // user prefs
 type UserPref = {
@@ -522,7 +520,6 @@ export type Config = {
   getEndpointConfig: GetEndpointConfig;
   storageDirectory: string;
   getBakerCatchupLimit: GetBakerCatchupLimit;
-  setTelegramChatId: SetTelegramChatId;
   getQueueConfig: GetQueueConfig;
 };
 
@@ -638,10 +635,6 @@ export const load = async (): Promise<Config> => {
     setAndSave(`${SYSTEM_PREFIX}:${key}`, value);
   };
 
-  const setTelegramChatId: SetTelegramChatId = (value) => {
-    setAndSave(TELEGRAM_CHAT_ID, value);
-  };
-
   const config: Config = {
     save: saveConfig,
     getBakers,
@@ -655,7 +648,6 @@ export const load = async (): Promise<Config> => {
     setBoolean,
     getExcludedEvents,
     getSlackConfig,
-    setTelegramChatId,
     getTelegramConfig,
     getEmailConfig,
     getDesktopConfig,
@@ -757,9 +749,8 @@ type GetTelegramConfig = () => TelegramConfig | undefined;
 
 const getTelegramConfig: GetTelegramConfig = () => {
   const enabled = nconf.get(TELEGRAM_ENABLED.key);
-  const chatId = nconf.get(TELEGRAM_CHAT_ID);
   const token = nconf.get(TELEGRAM_TOKEN.key);
-  if (token) return { chatId, enabled, token };
+  if (token) return { enabled, token };
   return undefined;
 };
 

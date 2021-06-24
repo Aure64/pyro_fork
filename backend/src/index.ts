@@ -102,7 +102,7 @@ const main = async () => {
     const endpointChannel = await channel.create(
       "webhook",
       HttpSender(endpointConfig),
-      config.storageDirectory,
+      storageDir,
       eventLog
     );
     channels.push(endpointChannel);
@@ -112,9 +112,7 @@ const main = async () => {
   if (telegramConfig?.enabled) {
     const telegramChannel = await channel.create(
       "telegram",
-      await TelegramSender(telegramConfig, (chatId: number) =>
-        config.setTelegramChatId(chatId)
-      ),
+      await TelegramSender(telegramConfig, storageDir),
       storageDir,
       eventLog
     );

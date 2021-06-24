@@ -4,17 +4,13 @@ import { TezosNodeEvent, Sender } from "../types";
 import format from "../format";
 import { delay } from "../delay";
 
+import { open as openStorage } from "../storage";
+
 const LOGGER_NAME = "telegram-sender";
 
 export type TelegramConfig = {
-  chatId: number | undefined;
   enabled: boolean;
   token: string;
-};
-
-export type TelegramNotificationChannel = {
-  bot: TelegramBot;
-  chatId: number | undefined;
 };
 
 const MAX_MESSAGE_LENGTH = 4096;
@@ -45,21 +41,31 @@ const listenForChatId = async (token: string): Promise<number> => {
 
 export const create = async (
   config: TelegramConfig,
-  saveChatId: (chatId: number) => void
+  storageDir: string
 ): Promise<Sender> => {
   const log = getLogger(LOGGER_NAME);
   const bot = new TelegramBot(config.token);
-  let chatId = config.chatId;
 
-  if (!config.chatId) {
-    log.info(`No Telegram chatId found in config, attempting to fetch...`);
+  const store = await openStorage([storageDir, "telegram"]);
+
+  const CHAT_ID_KEY = "chat-id";
+  const getChatId = async () => await store.get(CHAT_ID_KEY);
+  const setChatId = async (value: number) =>
+    await store.put(CHAT_ID_KEY, value);
+
+  let chatId = await getChatId();
+
+  log.info(`Telegram chat id: ${chatId}`);
+
+  if (!chatId) {
+    log.info(`No Telegram chat id , attempting to fetch...`);
     log.info(`Send any message to your bot in Telegram`);
     try {
       chatId = await listenForChatId(config.token);
-      saveChatId(chatId);
-      log.info(`Telegram chatId loaded and saved to system: ${chatId}`);
+      setChatId(chatId);
+      log.info(`Fetched Telegram chat id: ${chatId}`);
     } catch (err) {
-      log.warn(
+      log.error(
         `Unable to fetch Telegram chatId for token ${config.token}`,
         err
       );
