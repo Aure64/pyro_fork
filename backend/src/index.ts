@@ -71,7 +71,7 @@ const main = async () => {
 
   await writeJson(pidFile, pid);
 
-  const eventLog = await EventLog.open(config.storageDirectory);
+  const eventLog = await EventLog.open(storageDir);
 
   const channels: channel.Channel[] = [];
 
@@ -80,7 +80,7 @@ const main = async () => {
     const emailChannel = await channel.create(
       "email",
       EmailSender(emailConfig),
-      config.storageDirectory,
+      storageDir,
       eventLog
     );
     channels.push(emailChannel);
@@ -91,7 +91,7 @@ const main = async () => {
     const desktopChannel = await channel.create(
       "desktop",
       DesktopSender(desktopConfig),
-      config.storageDirectory,
+      storageDir,
       eventLog
     );
     channels.push(desktopChannel);
@@ -115,7 +115,7 @@ const main = async () => {
       await TelegramSender(telegramConfig, (chatId: number) =>
         config.setTelegramChatId(chatId)
       ),
-      config.storageDirectory,
+      storageDir,
       eventLog
     );
     channels.push(telegramChannel);
@@ -126,7 +126,7 @@ const main = async () => {
     const slackChannel = await channel.create(
       "slack",
       SlackSender(slackConfig),
-      config.storageDirectory,
+      storageDir,
       eventLog
     );
     channels.push(slackChannel);
