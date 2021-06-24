@@ -15,24 +15,27 @@ import {
   DelegatesResponse,
 } from "@taquito/rpc";
 import { wrap2 } from "./networkWrapper";
-import { Config } from "./config";
+
 import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { delay } from "./delay";
 
 import * as service from "./service";
+import * as storage from "./storage";
 
 const name = "bm";
 
+type ChainPositionInfo = { blockLevel: number; blockCycle: number };
+
 export const create = async (
+  storageDirectory: string,
   bakers: string[],
-  onEvent: (event: TezosNodeEvent) => Promise<void>,
-  config: Config
+  rpcUrl: string,
+  catchupLimit: number,
+  onEvent: (event: TezosNodeEvent) => Promise<void>
 ): Promise<service.Service> => {
   const log = getLogger(name);
-  const rpcNode = config.getRpc();
-
-  const rpc = new RpcClient(rpcNode);
+  const rpc = new RpcClient(rpcUrl);
 
   rpc.getBakingRights = makeMemoizedAsyncFunction(
     rpc.getBakingRights.bind(rpc),
@@ -45,13 +48,26 @@ export const create = async (
     10
   );
 
+  const store = await storage.open([storageDirectory, "baker-monitor"]);
+
   const constants = await wrap2(() => rpc.getConstants());
+
+  const CHAIN_POSITION_KEY = "position";
+
+  const getPosition = async () =>
+    (await store.get(CHAIN_POSITION_KEY, {
+      blockLevel: -1,
+      blockCycle: -1,
+    })) as ChainPositionInfo;
+
+  const setPosition = async (value: ChainPositionInfo) =>
+    await store.put(CHAIN_POSITION_KEY, value);
 
   const task = async (isInterrupted: () => boolean) => {
     try {
-      const lastBlockLevel = config.getLastBlockLevel();
-      const catchupLimit = config.getBakerCatchupLimit();
-      const lastBlockCycle = config.getLastBlockCycle();
+      const chainPosition = await getPosition();
+      const lastBlockLevel = chainPosition.blockLevel;
+      const lastBlockCycle = chainPosition.blockCycle;
       const headHeader = await rpc.getBlockHeader();
       const { level, hash } = headHeader;
       log.debug(
@@ -84,8 +100,7 @@ export const create = async (
         for (const event of events) {
           await onEvent(event);
         }
-        config.setLastBlockLevel(currentLevel);
-        config.setLastBlockCycle(blockCycle);
+        await setPosition({ blockLevel: currentLevel, blockCycle });
         currentLevel++;
         await delay(1000);
       }

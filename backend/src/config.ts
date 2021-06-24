@@ -16,8 +16,6 @@ import { eventKinds } from "./types";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 // system prefs
-const LAST_BLOCK_LEVEL = `${SYSTEM_PREFIX}:last_block_level`;
-const LAST_BLOCK_CYCLE = `${SYSTEM_PREFIX}:last_block_cycle`;
 const TELEGRAM_CHAT_ID = `${SYSTEM_PREFIX}:telegram_chat_id`;
 
 // user prefs
@@ -512,10 +510,6 @@ export type Config = {
   getReferenceNode: GetReferenceNode;
   getNodes: GetNodes;
   getLogLevel: GetLogLevel;
-  getLastBlockLevel: GetLastBlockLevel;
-  setLastBlockLevel: SetLastBlockLevel;
-  getLastBlockCycle: GetLastBlockCycle;
-  setLastBlockCycle: SetLastBlockCycle;
   getNumber: GetNumber;
   setNumber: SetNumber;
   getBoolean: GetBoolean;
@@ -551,6 +545,9 @@ export const load = async (): Promise<Config> => {
     "pyrometer",
     { suffix: "" }
   );
+  console.log("Data directory:", dataDirectory);
+  console.log("Config directory:", configDirectory);
+
   // ensure system directories exist
   createDirectory(dataDirectory);
   createDirectory(configDirectory);
@@ -641,14 +638,6 @@ export const load = async (): Promise<Config> => {
     setAndSave(`${SYSTEM_PREFIX}:${key}`, value);
   };
 
-  const setLastBlockCycle: SetLastBlockCycle = (value) => {
-    setAndSave(LAST_BLOCK_CYCLE, value);
-  };
-
-  const setLastBlockLevel: SetLastBlockLevel = (value) => {
-    setAndSave(LAST_BLOCK_LEVEL, value);
-  };
-
   const setTelegramChatId: SetTelegramChatId = (value) => {
     setAndSave(TELEGRAM_CHAT_ID, value);
   };
@@ -660,10 +649,6 @@ export const load = async (): Promise<Config> => {
     getReferenceNode,
     getNodes,
     getLogLevel,
-    getLastBlockLevel,
-    setLastBlockLevel,
-    getLastBlockCycle,
-    setLastBlockCycle,
     getNumber,
     setNumber,
     getBoolean,
@@ -728,22 +713,6 @@ const getLogLevel: GetLogLevel = () => {
 const logLevelFromString = (value: string): LogLevelDesc => {
   return value as LogLevelDesc;
 };
-
-type GetLastBlockLevel = () => number | undefined;
-
-const getLastBlockLevel: GetLastBlockLevel = () => {
-  return nconf.get(LAST_BLOCK_LEVEL);
-};
-
-type SetLastBlockLevel = (value: number) => void;
-
-type GetLastBlockCycle = () => number | undefined;
-
-const getLastBlockCycle: GetLastBlockCycle = () => {
-  return nconf.get(LAST_BLOCK_CYCLE);
-};
-
-type SetLastBlockCycle = (value: number) => void;
 
 type GetNumber = (key: string) => number | undefined;
 
@@ -826,7 +795,7 @@ const getEndpointConfig: GetEndpointConfig = () => {
   return undefined;
 };
 
-type GetBakerCatchupLimit = () => number | undefined;
+type GetBakerCatchupLimit = () => number;
 
 const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
   return nconf.get(BAKER_CATCHUP_LIMIT.key);

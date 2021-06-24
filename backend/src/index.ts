@@ -156,7 +156,13 @@ const main = async () => {
 
   const bakerMonitor =
     bakers.length > 0
-      ? await BakerMonitor.create(bakers, onEvent, config)
+      ? await BakerMonitor.create(
+          storageDir,
+          bakers,
+          rpcNode,
+          config.getBakerCatchupLimit(),
+          onEvent
+        )
       : null;
 
   if (!referenceNode) {
