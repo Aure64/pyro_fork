@@ -1,3 +1,23 @@
+export enum Kind {
+  Baked = "baked",
+  MissedBake = "missed_bake",
+  DoubleBaked = "double_baked",
+  Endorsed = "endorsed",
+  MissedEndorsement = "missed_endorsement",
+  DoubleEndorsed = "double_endorsed",
+  BakeScheduled = "bake_scheduled",
+  EndorsementScheduled = "endosement_scheduled",
+  Deactivated = "deactivated",
+  DeactivationRisk = "deactivation_risk",
+  NodeBehind = "node_behind",
+  NodeSynced = "node_synced",
+  NodeOnBranch = "node_on_branch",
+  NodeLowPeers = "node_low_peers",
+  RpcError = "rpc_error",
+  RpcErrorResolved = "rpc_error_resolved",
+  Notification = "notification",
+}
+
 export type BasicEvent = {
   createdAt: Date;
 };
@@ -14,76 +34,72 @@ export type CycleEvent = BasicBakerEvent & {
   cycle: number;
 };
 
-export type BakedEvent = BlockEvent & { kind: "baked" };
+export type Baked = BlockEvent & { kind: Kind.Baked };
 
-export type MissedBakedEvent = BlockEvent & { kind: "missed_bake" };
+export type MissedBake = BlockEvent & { kind: Kind.MissedBake };
 
-export type DoubleBakedEvent = BlockEvent & { kind: "double_baked" };
+export type DoubleBaked = BlockEvent & { kind: Kind.DoubleBaked };
 
-export type EndorsedEvent = BlockEvent & { kind: "endorsed" };
+export type Endorsed = BlockEvent & { kind: Kind.Endorsed };
 
-export type MissedEndorsementEvent = BlockEvent & {
-  kind: "missed_endorsement";
+export type MissedEndorsement = BlockEvent & {
+  kind: Kind.MissedEndorsement;
 };
 
-export type DoubleEndorsedEvent = BlockEvent & { kind: "double_endorsed" };
+export type DoubleEndorsed = BlockEvent & { kind: Kind.DoubleEndorsed };
 
 export type BakeScheduled = BlockEvent & {
-  kind: "bake_scheduled";
+  kind: Kind.BakeScheduled;
   priority: number;
   estimatedTime: Date;
 };
 
 export type EndorsementScheduled = BlockEvent & {
-  kind: "endorsement_scheduled";
+  kind: Kind.EndorsementScheduled;
   estimatedTime: Date;
 };
 
-export type DeactivatedEvent = CycleEvent & { kind: "deactivated" };
+export type Deactivated = CycleEvent & { kind: "deactivated" };
 
-export type DeactivationRiskEvent = CycleEvent & { kind: "deactivation_risk" };
+export type DeactivationRisk = CycleEvent & { kind: "deactivation_risk" };
 
 export type BakerEvent =
-  | BakedEvent
-  | MissedBakedEvent
-  | DoubleBakedEvent
-  | EndorsedEvent
-  | MissedEndorsementEvent
-  | DoubleEndorsedEvent
+  | Baked
+  | MissedBake
+  | DoubleBaked
+  | Endorsed
+  | MissedEndorsement
+  | DoubleEndorsed
   | BakeScheduled
   | EndorsementScheduled
-  | DeactivatedEvent
-  | DeactivationRiskEvent;
+  | Deactivated
+  | DeactivationRisk;
 
 export type BasicNodeEvent = BasicEvent & { node: string };
 
-export type NodeBehindEvent = BasicNodeEvent & { kind: "node_behind" };
+export type NodeBehind = BasicNodeEvent & { kind: Kind.NodeBehind };
 
-export type NodeSyncedEvent = BasicNodeEvent & { kind: "node_synced" };
+export type NodeSynced = BasicNodeEvent & { kind: Kind.NodeSynced };
 
-export type NodeOnBranchEvent = BasicNodeEvent & { kind: "node_on_branch" };
+export type NodeOnBranch = BasicNodeEvent & { kind: Kind.NodeOnBranch };
 
-export type NodeLowPeersEvent = BasicNodeEvent & { kind: "node_low_peers" };
+export type NodeLowPeers = BasicNodeEvent & { kind: Kind.NodeLowPeers };
 
-export type NodeEvent =
-  | NodeBehindEvent
-  | NodeSyncedEvent
-  | NodeOnBranchEvent
-  | NodeLowPeersEvent;
+export type NodeEvent = NodeBehind | NodeSynced | NodeOnBranch | NodeLowPeers;
 
-export type RpcErrorEvent = BasicNodeEvent & {
-  kind: "rpc_error";
+export type RpcError = BasicNodeEvent & {
+  kind: Kind.RpcError;
   message: string;
 };
 
-export type RpcErrorResolvedEvent = BasicNodeEvent & {
-  kind: "rpc_error_resolved";
+export type RpcErrorResolved = BasicNodeEvent & {
+  kind: Kind.RpcErrorResolved;
 };
 
-export type RpcEvent = RpcErrorEvent | RpcErrorResolvedEvent;
+export type RpcEvent = RpcError | RpcErrorResolved;
 
 export type Notification = BasicEvent & {
-  kind: "notification";
+  kind: Kind.Notification;
   message: string;
 };
 

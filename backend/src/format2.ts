@@ -1,7 +1,8 @@
-import * as events from "./types2";
+import * as eventTypes from "./types2";
+import { Kind as E } from "./types2";
 import { format, parseISO } from "date-fns";
 
-export default (events: events.Event[]): string => {
+export default (events: eventTypes.Event[]): string => {
   return events.map(toString).join("\n");
 };
 
@@ -11,36 +12,36 @@ const dateToString = (date: Date | string): string => {
 };
 
 const Formatters: {
-  [K in events.Event["kind"]]: (
-    u: Extract<events.Event, { kind: K }>
+  [K in eventTypes.Event["kind"]]: (
+    u: Extract<eventTypes.Event, { kind: K }>
   ) => string;
 } = {
-  missed_bake: (e) => `${e.baker} missed a bake at level ${e.level}`,
-  baked: (e) => `${e.baker} baked block ${e.level}`,
-  double_baked: (e) => `${e.baker} double baked block ${e.level}`,
-  missed_endorsement: (e) =>
+  [E.MissedBake]: (e) => `${e.baker} missed a bake at level ${e.level}`,
+  [E.Baked]: (e) => `${e.baker} baked block ${e.level}`,
+  [E.DoubleBaked]: (e) => `${e.baker} double baked block ${e.level}`,
+  [E.MissedEndorsement]: (e) =>
     `${e.baker} missed endorsement of block ${e.level}`,
-  endorsed: (e) => `${e.baker} endorsed block ${e.level}`,
-  double_endorsed: (e) => `${e.baker} double endorsed block ${e.level}`,
-  bake_scheduled: (e) =>
+  [E.Endorsed]: (e) => `${e.baker} endorsed block ${e.level}`,
+  [E.DoubleEndorsed]: (e) => `${e.baker} double endorsed block ${e.level}`,
+  [E.BakeScheduled]: (e) =>
     `${e.baker} will have a baking opportunity on ${dateToString(
       e.estimatedTime
     )}`,
-  endorsement_scheduled: (e) =>
+  [E.EndorsementScheduled]: (e) =>
     `${e.baker} will have an endorsement opportunity on ${dateToString(
       e.estimatedTime
     )}`,
-  node_behind: (e) => `Node ${e.node} is behind`,
-  node_synced: (e) => `Node ${e.node} has caught up`,
-  node_low_peers: (e) => `Node ${e.node} has a low peer count`,
-  node_on_branch: (e) => `Node ${e.node} is on a branch`,
-  deactivated: (e) => `${e.baker} has been deactivated`,
-  deactivation_risk: (e) =>
+  [E.NodeBehind]: (e) => `Node ${e.node} is behind`,
+  [E.NodeSynced]: (e) => `Node ${e.node} has caught up`,
+  [E.NodeLowPeers]: (e) => `Node ${e.node} has a low peer count`,
+  [E.NodeOnBranch]: (e) => `Node ${e.node} is on a branch`,
+  [E.Deactivated]: (e) => `${e.baker} has been deactivated`,
+  [E.DeactivationRisk]: (e) =>
     `${e.baker} is at risk of deactivation in cycle ${e.cycle}`,
-  rpc_error: (e) => `Unable to reach ${e.node}: ${e.message}`,
-  rpc_error_resolved: (e) => `Resolved: ${e.node} is reachable again`,
-  notification: (e) => `${e.message}`,
+  [E.RpcError]: (e) => `Unable to reach ${e.node}: ${e.message}`,
+  [E.RpcErrorResolved]: (e) => `Resolved: ${e.node} is reachable again`,
+  [E.Notification]: (e) => `${e.message}`,
 };
 
-export const toString = (e: events.Event) =>
-  (Formatters[e.kind] as (v: events.Event) => string)(e);
+export const toString = (e: eventTypes.Event) =>
+  (Formatters[e.kind] as (v: eventTypes.Event) => string)(e);
