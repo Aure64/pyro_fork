@@ -27,22 +27,28 @@ setLevel("SILENT");
 import { DelegatesResponse, RpcClient } from "@taquito/rpc";
 import { BigNumber } from "bignumber.js";
 
+import { Kind as Events } from "./types2";
+
 const { delegate, level } = priorityZero;
+
+Date.now = jest.fn(() => 1624758855227);
+
+const createdAt = new Date(Date.now());
 
 describe("checkBlockBakingRights", () => {
   it("returns success for baked blocks", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: delegate,
-      blockLevel: level,
+      level,
       blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1299013,
-      kind: "SUCCESSFUL_BAKE",
-      type: "BAKER_NODE",
+      level: 1299013,
+      kind: Events.Baked,
+      createdAt,
     });
   });
 
@@ -50,15 +56,15 @@ describe("checkBlockBakingRights", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: "other_baker",
-      blockLevel: level,
+      level,
       blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1299013,
-      kind: "MISSED_BAKE",
-      type: "BAKER_NODE",
+      level: 1299013,
+      kind: Events.MissedBake,
+      createdAt,
     });
   });
 
@@ -66,7 +72,7 @@ describe("checkBlockBakingRights", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: "other_baker",
-      blockLevel: levelWithMultipleBakers,
+      level: levelWithMultipleBakers,
       blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
@@ -131,14 +137,14 @@ describe("checkBlockEndorsingRights", () => {
     const result = checkBlockEndorsingRights({
       baker: endorsementBaker,
       endorsementOperations: endorsementsWithSuccess,
-      blockLevel: endorsementLevel,
+      level: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1318230,
-      kind: "SUCCESSFUL_ENDORSE",
-      type: "BAKER_NODE",
+      level: 1318230,
+      kind: Events.Endorsed,
+      createdAt,
     });
   });
 
@@ -146,14 +152,14 @@ describe("checkBlockEndorsingRights", () => {
     const result = checkBlockEndorsingRights({
       baker: endorsementBaker,
       endorsementOperations: endorsementsWithMiss,
-      blockLevel: endorsementLevel,
+      level: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1318230,
-      kind: "MISSED_ENDORSE",
-      type: "BAKER_NODE",
+      level: 1318230,
+      kind: Events.MissedEndorsement,
+      createdAt,
     });
   });
 
@@ -161,7 +167,7 @@ describe("checkBlockEndorsingRights", () => {
     const result = checkBlockEndorsingRights({
       baker: "another_baker",
       endorsementOperations: endorsementsWithMiss,
-      blockLevel: endorsementLevel + 1,
+      level: endorsementLevel + 1,
       endorsingRights: endorsingRightsResponse,
     });
     expect(result).toBe(null);
@@ -171,7 +177,7 @@ describe("checkBlockEndorsingRights", () => {
     const result = checkBlockEndorsingRights({
       baker: endorsementBaker,
       endorsementOperations: endorsementsWithMiss,
-      blockLevel: 12,
+      level: 12,
       endorsingRights: endorsingRightsResponse,
     });
     expect(result).toBe(null);
@@ -192,13 +198,13 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       baker: endorsementBaker,
       rpc,
       operations: operationsWithDoubleEndorsementAccusation,
-      blockLevel: 1000,
+      level: 1000,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1000,
-      kind: "DOUBLE_ENDORSE",
-      type: "BAKER_NODE",
+      level: 1000,
+      kind: Events.DoubleEndorsed,
+      createdAt,
     });
   });
   it("Does not fetch block when there are no accusations", async () => {
@@ -211,7 +217,7 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       baker: endorsementBaker,
       rpc,
       operations: [],
-      blockLevel: 1000,
+      level: 1000,
     });
     expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);
@@ -231,13 +237,13 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       baker: delegate,
       rpc,
       operations: operationsWithDoubleBakeAccusation,
-      blockLevel: 1000,
+      level: 1000,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      blockLevel: 1000,
-      kind: "DOUBLE_BAKE",
-      type: "BAKER_NODE",
+      level: 1000,
+      kind: Events.DoubleBaked,
+      createdAt,
     });
   });
   it("Does not fetch baking rights when there are no accusations", async () => {
@@ -250,7 +256,7 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       baker: delegate,
       rpc,
       operations: [],
-      blockLevel: 1000,
+      level: 1000,
     });
     expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);
@@ -268,8 +274,8 @@ describe("checkFutureBlockBakingRights", () => {
     });
     expect(result).toMatchObject({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      kind: "FUTURE_BAKING_OPPORTUNITY",
-      type: "FUTURE_BAKING",
+      kind: Events.BakeScheduled,
+      createdAt,
     });
   });
 
@@ -295,8 +301,8 @@ describe("checkFutureBlockEndorsingRights", () => {
     });
     expect(result).toMatchObject({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      kind: "FUTURE_ENDORSING_OPPORTUNITY",
-      type: "FUTURE_BAKING",
+      kind: Events.EndorsementScheduled,
+      createdAt,
     });
   });
 
@@ -352,8 +358,8 @@ describe("checkForDeactivations", () => {
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
       cycle: 1000,
-      kind: "BAKER_DEACTIVATED",
-      type: "BAKER_DEACTIVATION",
+      kind: Events.Deactivated,
+      createdAt,
     });
   });
 
@@ -372,8 +378,8 @@ describe("checkForDeactivations", () => {
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
       cycle: 1001,
-      kind: "BAKER_PENDING_DEACTIVATION",
-      type: "BAKER_DEACTIVATION",
+      kind: Events.DeactivationRisk,
+      createdAt,
     });
   });
 });

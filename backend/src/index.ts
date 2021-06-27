@@ -1,4 +1,5 @@
-import { TezosNodeEvent } from "./types";
+//import { TezosNodeEvent } from "./types";
+import { Event } from "./types2";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
 import * as channel from "./channel";
@@ -132,7 +133,7 @@ const main = async () => {
 
   const excludedEvents = config.getExcludedEvents();
 
-  const onEvent = async (event: TezosNodeEvent) => {
+  const onEvent = async (event: Event) => {
     if ("kind" in event && excludedEvents.includes(event.kind)) {
       debug(`Event excluded because type ${event.kind} is filtered`);
       return;

@@ -63,7 +63,6 @@
     "nodemailer": "6.6.1",
     "proper-lockfile": "^4.1.2",
     "ramda": "0.27.1",
-    "runtypes": "6.3.0",
     "validatorjs": "3.22.1",
     "yargs": "17.0.1"
   }

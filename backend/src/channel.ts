@@ -1,4 +1,4 @@
-import { TezosNodeEvent, Sender } from "./types";
+import { Event, Sender } from "./types2";
 import { getLogger } from "loglevel";
 import { EventLog, EventLogConsumer } from "./eventlog";
 
@@ -21,7 +21,7 @@ export const create = async (
   const writePosition = async (value: number) => await store.put(name, value);
 
   const task = async () => {
-    const batch: TezosNodeEvent[] = [];
+    const batch: Event[] = [];
     let position = await readPosition();
     log.debug(`reading from position ${position}`);
     for await (const record of eventLog.readAfter(position)) {

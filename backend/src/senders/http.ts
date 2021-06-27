@@ -1,7 +1,7 @@
 import fetch from "cross-fetch";
 import { createServer } from "http";
 import { getLogger } from "loglevel";
-import { TezosNodeEvent, Sender } from "../types";
+import { Event, Sender } from "../types2";
 
 export type EndpointConfig = {
   enabled: boolean;
@@ -26,7 +26,7 @@ export const startDummyHttpServer = (port = 8005) => {
 export const create = (config: EndpointConfig): Sender => {
   startDummyHttpServer();
   const log = getLogger("http-sender");
-  return async (events: TezosNodeEvent[]) => {
+  return async (events: Event[]) => {
     const url = config.url;
     const method = "POST";
     const body = JSON.stringify(events);

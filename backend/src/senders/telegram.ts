@@ -1,7 +1,7 @@
 import * as TelegramBot from "node-telegram-bot-api";
 import { getLogger } from "loglevel";
-import { TezosNodeEvent, Sender } from "../types";
-import format from "../format";
+import { Event, Sender } from "../types2";
+import format from "../format2";
 import { delay } from "../delay";
 
 import { open as openStorage } from "../storage";
@@ -72,7 +72,7 @@ export const create = async (
     }
   }
 
-  return async (events: TezosNodeEvent[]) => {
+  return async (events: Event[]) => {
     if (!chatId) {
       throw new Error("Telegram notification channel is missing chatId");
     }

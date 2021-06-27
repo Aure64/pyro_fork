@@ -1,4 +1,5 @@
-import { PeerEvent, TezosNodeEvent } from "./types";
+//import { PeerEvent, TezosNodeEvent } from "./types";
+import { Event, Kind as Events, RpcEvent, NodeEvent } from "./types2";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
@@ -8,6 +9,7 @@ import { makeMemoizedAsyncFunction } from "./memoization";
 import { HttpResponseError } from "@taquito/http-utils";
 
 import * as service from "./service";
+import now from "./now";
 
 type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
 
@@ -22,7 +24,7 @@ const NoSub: Sub = {
 };
 
 export const create = (
-  onEvent: (event: TezosNodeEvent) => Promise<void>,
+  onEvent: (event: Event) => Promise<void>,
   nodes: string[],
   referenceNode?: string
 ): service.Service => {
@@ -49,17 +51,16 @@ export const create = (
   return { name: "nm", start, stop };
 };
 
-const eventKey = (event: PeerEvent): string => {
-  const { kind, type } = event;
-  if (event.type === "PEER_DATA") {
-    return `${kind}:${type}:${event.message}`;
+const eventKey = (event: RpcEvent | NodeEvent): string => {
+  if (event.kind === Events.RpcError) {
+    return `${event.kind}:${event.message}`;
   }
-  return `${kind}:${type}`;
+  return event.kind;
 };
 
 const subscribeToNode = (
   node: string,
-  onEvent: (event: TezosNodeEvent) => Promise<void>,
+  onEvent: (event: Event) => Promise<void>,
   getReference: () => NodeInfo | undefined
 ): Sub => {
   const rpc = new RpcClient(node);
@@ -75,7 +76,7 @@ const subscribeToNode = (
   let unableToReach: boolean | undefined;
 
   const task = async () => {
-    let events: PeerEvent[] = [];
+    let events: (NodeEvent | RpcEvent)[] = [];
     try {
       const headHash = await rpc.getBlockHash();
 
@@ -111,10 +112,9 @@ const subscribeToNode = (
       if (unableToReach) {
         log.debug("Adding reconnected event");
         events.push({
-          type: "PEER_DATA",
-          kind: "RECONNECTED",
-          message: `Connectivity to ${node} restored`,
+          kind: Events.RpcErrorResolved,
           node,
+          createdAt: now(),
         });
       }
       unableToReach = false;
@@ -123,12 +123,12 @@ const subscribeToNode = (
       log.warn(`Node subscription error: ${err.message}`);
       log.debug("Unable to reach?", unableToReach);
       events.push({
-        type: "PEER_DATA",
-        kind: "ERROR",
+        kind: Events.RpcError,
         message: err.status
           ? `${node} returned ${err.status} ${err.statusText ?? ""}`
           : err.message,
         node,
+        createdAt: now(),
       });
     }
     const publishedEvents = new Set<string>();
@@ -230,9 +230,13 @@ export const checkBlockInfo = ({
   previousNodeInfo,
   referenceNodeBlockHistory,
   log,
-}: CheckBlockInfoArgs): PeerEvent[] => {
+}: CheckBlockInfoArgs): NodeEvent[] => {
   if (!log) log = getLogger(__filename);
-  const events: PeerEvent[] = [];
+  const events: NodeEvent[] = [];
+  type ValueOf<T> = T[keyof T];
+  const newEvent = (kind: ValueOf<Pick<NodeEvent, "kind">>): NodeEvent => {
+    return { kind, node, createdAt: now() };
+  };
 
   if (nodeInfo.bootstrappedStatus) {
     if (
@@ -246,11 +250,7 @@ export const checkBlockInfo = ({
       ) {
         log.debug("Node was not synced already, not generating event");
       } else {
-        events.push({
-          type: "PEER",
-          kind: "NODE_BEHIND",
-          node,
-        });
+        events.push(newEvent(Events.NodeBehind));
       }
     } else if (
       catchUpOccurred(
@@ -259,11 +259,7 @@ export const checkBlockInfo = ({
       )
     ) {
       log.debug(`Node caught up`);
-      events.push({
-        type: "PEER",
-        kind: "NODE_CAUGHT_UP",
-        node,
-      });
+      events.push(newEvent(Events.NodeSynced));
     }
     if (
       referenceNodeBlockHistory &&
@@ -275,11 +271,7 @@ export const checkBlockInfo = ({
       );
       if (ancestorDistance === NO_ANCESTOR) {
         log.debug(`Node has no shared blocks with reference node`);
-        events.push({
-          type: "PEER",
-          kind: "NODE_ON_A_BRANCH",
-          node,
-        });
+        events.push(newEvent(Events.NodeOnBranch));
       } else {
         log.debug(`${ancestorDistance} blocks away from reference node`);
       }
@@ -296,11 +288,7 @@ export const checkBlockInfo = ({
     } else {
       const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
       log.debug(message);
-      events.push({
-        type: "PEER",
-        kind: "NODE_LOW_PEERS",
-        node,
-      });
+      events.push(newEvent(Events.NodeLowPeers));
     }
   }
 

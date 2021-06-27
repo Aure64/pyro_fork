@@ -59,9 +59,9 @@ export type EndorsementScheduled = BlockEvent & {
   estimatedTime: Date;
 };
 
-export type Deactivated = CycleEvent & { kind: "deactivated" };
+export type Deactivated = CycleEvent & { kind: Kind.Deactivated };
 
-export type DeactivationRisk = CycleEvent & { kind: "deactivation_risk" };
+export type DeactivationRisk = CycleEvent & { kind: Kind.DeactivationRisk };
 
 export type BakerEvent =
   | Baked
@@ -104,3 +104,5 @@ export type Notification = BasicEvent & {
 };
 
 export type Event = RpcEvent | NodeEvent | BakerEvent | Notification;
+
+export type Sender = (events: Event[]) => Promise<void>;

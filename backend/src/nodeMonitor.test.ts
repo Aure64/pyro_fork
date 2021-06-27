@@ -1,5 +1,10 @@
+import { Kind as Events } from "./types2";
 import { checkBlockInfo, BootstrappedStatus } from "./nodeMonitor";
 import { history } from "./testFixtures/nodeMonitoring";
+
+Date.now = jest.fn(() => 1624758855227);
+
+const createdAt = new Date(Date.now());
 
 describe("checkBlockInfo", () => {
   test("returns event when node is behind", async () => {
@@ -21,9 +26,9 @@ describe("checkBlockInfo", () => {
     });
     expect(events).toEqual([
       {
-        kind: "NODE_BEHIND",
+        kind: Events.NodeBehind,
         node: "http://somenode",
-        type: "PEER",
+        createdAt,
       },
     ]);
   });
@@ -122,9 +127,9 @@ describe("checkBlockInfo", () => {
     });
     expect(events).toEqual([
       {
-        kind: "NODE_CAUGHT_UP",
+        kind: Events.NodeSynced,
         node: "http://somenode",
-        type: "PEER",
+        createdAt,
       },
     ]);
   });
@@ -148,9 +153,9 @@ describe("checkBlockInfo", () => {
     });
     expect(events).toEqual([
       {
-        kind: "NODE_ON_A_BRANCH",
+        kind: Events.NodeOnBranch,
         node: "http://somenode",
-        type: "PEER",
+        createdAt,
       },
     ]);
   });
@@ -221,9 +226,9 @@ describe("checkBlockInfo", () => {
     });
     expect(events).toEqual([
       {
-        kind: "NODE_LOW_PEERS",
+        kind: Events.NodeLowPeers,
         node: "http://somenode",
-        type: "PEER",
+        createdAt,
       },
     ]);
   });

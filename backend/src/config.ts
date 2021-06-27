@@ -12,7 +12,7 @@ import envPaths from "env-paths";
 import * as yargs from "yargs";
 import * as R from "ramda";
 import * as Validator from "validatorjs";
-import { eventKinds } from "./types";
+import { Kind as Events } from "./types2";
 
 const SYSTEM_PREFIX = "system"; // prefix before system settings
 
@@ -102,14 +102,14 @@ const REFERENCE_NODE: UserPref = {
 const EXCLUDED_EVENTS: UserPref = {
   key: "filter:omit",
   default: [
-    "FUTURE_BAKING_OPPORTUNITY",
-    "FUTURE_ENDORSING_OPPORTUNITY",
-    "SUCCESSFUL_ENDORSE",
-    "SUCCESSFUL_BAKE",
+    Events.BakeScheduled,
+    Events.EndorsementScheduled,
+    Events.Baked,
+    Events.Endorsed,
   ],
-  description: `Events to omit from notifications\nAvailable options: ${eventKinds.join(
-    ", "
-  )}`,
+  description: `Events to omit from notifications\nAvailable options: ${Object.values(
+    Events
+  ).join(", ")}`,
   alias: undefined,
   type: "string",
   group: undefined,
