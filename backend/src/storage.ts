@@ -14,6 +14,10 @@ export type Storage = {
   keys: () => Promise<string[]>;
 };
 
+const TMP_POSTFIX = ".tmp";
+
+const isNotTmp = (fileName: string) => !fileName.endsWith(TMP_POSTFIX);
+
 export const open = async (
   storagePath: string | string[]
 ): Promise<Storage> => {
@@ -32,9 +36,13 @@ export const open = async (
   }
 
   const mkFullPath = (key: Key) => path.join(storageDir, key.toString());
+  const mkTmpPath = (key: Key) => path.join(storageDir, `${key}${TMP_POSTFIX}`);
 
   const put = async (key: Key, value: any) => {
-    await writeJson(mkFullPath(key), value);
+    const tmp = mkTmpPath(key);
+    const fileName = mkFullPath(key);
+    await writeJson(tmp, value);
+    await fs.promises.rename(tmp, fileName);
   };
 
   const get = async (key: Key, defaultValue: any = null) => {
@@ -48,7 +56,7 @@ export const open = async (
   };
 
   const keys = async (): Promise<string[]> => {
-    return await fs.promises.readdir(storageDir);
+    return (await fs.promises.readdir(storageDir)).filter(isNotTmp);
   };
 
   const remove = async (key: Key) => {
