@@ -512,7 +512,6 @@ export type Config = {
   getEndpointConfig: GetEndpointConfig;
   storageDirectory: string;
   getBakerCatchupLimit: GetBakerCatchupLimit;
-  getQueueConfig: GetQueueConfig;
 };
 
 const formatValidationErrors = (errors: Validator.ValidationErrors): string => {
@@ -617,7 +616,6 @@ export const load = async (): Promise<Config> => {
     getEndpointConfig,
     storageDirectory: dataDirectory,
     getBakerCatchupLimit,
-    getQueueConfig,
   };
   return config;
 };
@@ -740,18 +738,4 @@ const createDirectory = (path: string) => {
     console.log(`Creating directory: ${path}`);
     FS.mkdirSync(path, { recursive: true });
   }
-};
-
-type GetQueueConfig = () => {
-  maxRetries: number;
-  retryDelay: number;
-};
-
-const getQueueConfig: GetQueueConfig = () => {
-  const maxRetries = nconf.get(QUEUE_RETRIES.key);
-  const retryDelay = nconf.get(QUEUE_DELAY.key);
-  return {
-    maxRetries,
-    retryDelay,
-  };
 };
