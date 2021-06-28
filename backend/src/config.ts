@@ -1,6 +1,6 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
-import { LogLevelDesc, trace } from "loglevel";
+import { LogLevelDesc } from "loglevel";
 import { SlackConfig } from "./senders/slack";
 import { TelegramConfig } from "./senders/telegram";
 import { EmailConfig } from "./senders/email";
@@ -13,8 +13,6 @@ import * as yargs from "yargs";
 import * as R from "ramda";
 import * as Validator from "validatorjs";
 import { Kind as Events } from "./types2";
-
-const SYSTEM_PREFIX = "system"; // prefix before system settings
 
 // user prefs
 type UserPref = {
@@ -498,11 +496,9 @@ const setPath = <T>(path: string, data: T, value: unknown): T => {
   return R.set(lensPath, value, data);
 };
 
-const makeUserConfigPath = (path: string) => Path.join(path, "config.json");
-const makeSystemConfigPath = (path: string) => Path.join(path, "system.json");
+const makeUserConfigPath = (path: string) => Path.join(path, "pyrometer.json");
 
 export type Config = {
-  save: () => void;
   getBakers: GetBakers;
   getRpc: GetRpc;
   getReferenceNode: GetReferenceNode;
@@ -582,7 +578,7 @@ export const load = async (): Promise<Config> => {
           /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
         },
         () => {
-          clearData({ dataDirectory, configDirectory });
+          clearData({ dataDirectory });
           process.exit(0);
         }
       )
@@ -590,12 +586,10 @@ export const load = async (): Promise<Config> => {
   // user config file from argv overrides default location
   const configPath =
     nconf.get(CONFIG_FILE.key) || makeUserConfigPath(configDirectory);
-  nconf.file("user", configPath);
-  const systemConfigPath = makeSystemConfigPath(configDirectory);
-  nconf.file("system", systemConfigPath);
   if (configPath && !FS.existsSync(configPath)) {
     console.warn(`Config file ${configPath} doens't exist`);
   }
+  nconf.file(configPath);
   nconf.defaults(makeConfigDefaults());
 
   const loadAsync = promisify(nconf.load.bind(nconf));
@@ -609,10 +603,7 @@ export const load = async (): Promise<Config> => {
     process.exit(1);
   }
 
-  const saveConfig = () => save(systemConfigPath);
-
   const config: Config = {
-    save: saveConfig,
     getBakers,
     getRpc,
     getReferenceNode,
@@ -629,19 +620,6 @@ export const load = async (): Promise<Config> => {
     getQueueConfig,
   };
   return config;
-};
-
-const save = (systemConfigPath: string): void => {
-  // read in system config.  Pyrometer currently doesn't update user settings
-  const { [SYSTEM_PREFIX]: systemSettings } = nconf.get();
-  trace("Saving config to disk.");
-  // save system config
-  if (systemSettings) {
-    FS.writeFileSync(
-      systemConfigPath,
-      JSON.stringify({ system: systemSettings }, null, 2)
-    );
-  }
 };
 
 type GetBakers = () => string[];
@@ -746,22 +724,14 @@ const printConfig = () => {
 
 type ClearDataArgs = {
   dataDirectory: string;
-  configDirectory: string;
 };
 
-const clearData = ({ dataDirectory, configDirectory }: ClearDataArgs) => {
+const clearData = ({ dataDirectory }: ClearDataArgs) => {
   if (FS.existsSync(dataDirectory)) {
     FS.rmdirSync(dataDirectory, { recursive: true });
     console.log(`Data directory deleted: ${dataDirectory}`);
   } else {
     console.log("Data directory does not exist");
-  }
-  const systemConfigPath = makeSystemConfigPath(configDirectory);
-  if (FS.existsSync(systemConfigPath)) {
-    FS.rmSync(systemConfigPath);
-    console.log(`System config deleted: ${systemConfigPath}`);
-  } else {
-    console.log(`System config does not exist: ${systemConfigPath}`);
   }
 };
 
