@@ -100,7 +100,7 @@ const REFERENCE_NODE: UserPref = {
 };
 
 const EXCLUDED_EVENTS: UserPref = {
-  key: "filter:omit",
+  key: "exclude",
   default: [
     Events.BakeScheduled,
     Events.EndorsementScheduled,
@@ -120,7 +120,7 @@ const EXCLUDED_EVENTS: UserPref = {
 // email notifier config
 const SLACK_NOTIFIER_GROUP = "Slack Notifications:";
 const SLACK_ENABLED: UserPref = {
-  key: "notifier:slack:enabled",
+  key: "slack:enabled",
   default: undefined,
   description: "Whether slack notifier is enabled",
   alias: undefined,
@@ -130,7 +130,7 @@ const SLACK_ENABLED: UserPref = {
   validationRule: ["boolean", "required_with:notifier.slack"],
 };
 const SLACK_URL: UserPref = {
-  key: "notifier:slack:url",
+  key: "slack:url",
   default: undefined,
   description: "Webhook URL for Slack notifications",
   alias: undefined,
@@ -144,7 +144,7 @@ const SLACK_URL: UserPref = {
 const TELEGRAM_NOTIFIER_GROUP = "Telegram Notifications:";
 
 const TELEGRAM_ENABLED: UserPref = {
-  key: "notifier:telegram:enabled",
+  key: "telegram:enabled",
   default: undefined,
   description: "Whether telegram notifier is enabled",
   alias: undefined,
@@ -154,7 +154,7 @@ const TELEGRAM_ENABLED: UserPref = {
   validationRule: ["boolean", "required_with:notifier.telegram"],
 };
 const TELEGRAM_TOKEN: UserPref = {
-  key: "notifier:telegram:token",
+  key: "telegram:token",
   default: undefined,
   description: "API token for Telegram notification channel",
   alias: undefined,
@@ -168,7 +168,7 @@ const TELEGRAM_TOKEN: UserPref = {
 //
 const EMAIL_NOTIFIER_GROUP = "Email Notifications:";
 const EMAIL_ENABLED: UserPref = {
-  key: "notifier:email:enabled",
+  key: "email:enabled",
   default: undefined,
   description: "Whether email notifier is enabled",
   alias: undefined,
@@ -178,7 +178,7 @@ const EMAIL_ENABLED: UserPref = {
   validationRule: ["boolean", "required_with:notifier.email"],
 };
 const EMAIL_HOST: UserPref = {
-  key: "notifier:email:host",
+  key: "email:host",
   default: undefined,
   description: "Host for email notification channel",
   alias: undefined,
@@ -188,7 +188,7 @@ const EMAIL_HOST: UserPref = {
   validationRule: ["string", "required_with:notifier.email"],
 };
 const EMAIL_PORT: UserPref = {
-  key: "notifier:email:port",
+  key: "email:port",
   default: undefined,
   description: "Port for email notification channel",
   alias: undefined,
@@ -199,7 +199,7 @@ const EMAIL_PORT: UserPref = {
 };
 const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
 const EMAIL_PROTOCOL: UserPref = {
-  key: "notifier:email:protocol",
+  key: "email:protocol",
   default: undefined,
   description: `Protocol for email notification channel [${PROTOCOL_OPTIONS}]`,
   alias: undefined,
@@ -209,7 +209,7 @@ const EMAIL_PROTOCOL: UserPref = {
   validationRule: ["email_protocol", "required_with:notifier.email"],
 };
 const EMAIL_USERNAME: UserPref = {
-  key: "notifier:email:username",
+  key: "email:username",
   default: undefined,
   description: "Username for email notification channel",
   alias: undefined,
@@ -219,7 +219,7 @@ const EMAIL_USERNAME: UserPref = {
   validationRule: "string",
 };
 const EMAIL_PASSWORD: UserPref = {
-  key: "notifier:email:password",
+  key: "email:password",
   default: undefined,
   description: "Password for email notification channel",
   alias: undefined,
@@ -229,7 +229,7 @@ const EMAIL_PASSWORD: UserPref = {
   validationRule: "string",
 };
 const EMAIL_EMAIL: UserPref = {
-  key: "notifier:email:email",
+  key: "email:email",
   default: undefined,
   description: "Address for email notifier channel",
   alias: undefined,
@@ -242,7 +242,7 @@ const EMAIL_EMAIL: UserPref = {
 // desktop notifier config
 const DESKTOP_NOTIFIER_GROUP = "Desktop Notifications:";
 const DESKTOP_ENABLED: UserPref = {
-  key: "notifier:desktop:enabled",
+  key: "desktop:enabled",
   default: true,
   description: "Whether desktop notifier is enabled",
   alias: undefined,
@@ -252,7 +252,7 @@ const DESKTOP_ENABLED: UserPref = {
   validationRule: ["boolean", "required_with:notifier.desktop"],
 };
 const DESKTOP_SOUND: UserPref = {
-  key: "notifier:desktop:sound",
+  key: "desktop:sound",
   default: false,
   description: "Whether desktop notifier should use sound",
   alias: undefined,
@@ -264,7 +264,7 @@ const DESKTOP_SOUND: UserPref = {
 // endpoint notifier config
 const ENDPOINT_NOTIFIER_GROUP = "Endpoint Notifications:";
 const ENDPOINT_ENABLED: UserPref = {
-  key: "notifier:endpoint:enabled",
+  key: "endpoint:enabled",
   default: undefined,
   description: "Whether endpoint notifier is enabled",
   alias: undefined,
@@ -274,7 +274,7 @@ const ENDPOINT_ENABLED: UserPref = {
   validationRule: ["boolean", "required_with:notifier.endpoint"],
 };
 const ENDPOINT_URL: UserPref = {
-  key: "notifier:endpoint:url",
+  key: "endpoint:url",
   default: undefined,
   description: "URL for posting raw JSON notifications",
   alias: undefined,
@@ -299,7 +299,7 @@ const CONFIG_FILE: UserPref = {
 // queue config
 const QUEUE_GROUP = "Notification Queues:";
 const QUEUE_RETRIES: UserPref = {
-  key: "notifier:queue:max_retries",
+  key: "queue:max_retries",
   default: 10,
   description: "Maximum number of times to retry notifications",
   alias: undefined,
@@ -309,7 +309,7 @@ const QUEUE_RETRIES: UserPref = {
   validationRule: "numeric",
 };
 const QUEUE_DELAY: UserPref = {
-  key: "notifier:queue:retry_delay",
+  key: "queue:retry_delay",
   default: 60000,
   description: "Delay between retries in milliseconds",
   alias: undefined,
