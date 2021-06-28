@@ -14,7 +14,7 @@ const mkTempDir = async (): Promise<string> => {
 
 describe("eventlog", () => {
   it("appends and reads items", async () => {
-    const elog = await eventlog.open(await mkTempDir());
+    const elog = await eventlog.open<any>(await mkTempDir());
 
     const item1 = { a: 1 };
     const item2 = { b: 2 };
@@ -24,7 +24,7 @@ describe("eventlog", () => {
     const entry2 = await elog.add(item2);
     const entry3 = await elog.add(item3);
 
-    const batch: eventlog.LogEntry[] = [];
+    const batch: eventlog.LogEntry<any>[] = [];
     for await (const record of elog.readAfter(-1)) {
       batch.push(record);
     }
@@ -45,7 +45,7 @@ describe("eventlog", () => {
 
     await elog.deleteUpTo(lastEntry.position - 1);
 
-    const batch: eventlog.LogEntry[] = [];
+    const batch: eventlog.LogEntry<any>[] = [];
     for await (const record of elog.readAfter(-1)) {
       batch.push(record);
     }

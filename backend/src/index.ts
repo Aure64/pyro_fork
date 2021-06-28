@@ -72,7 +72,7 @@ const main = async () => {
 
   await writeJson(pidFile, pid);
 
-  const eventLog = await EventLog.open(storageDir);
+  const eventLog = await EventLog.open<Event>(storageDir);
 
   const channels: channel.Channel[] = [];
 

@@ -6,18 +6,18 @@ export type EventLogConsumer = {
   position: () => Promise<number>;
 };
 
-export type LogEntry = {
-  value: any;
+export type LogEntry<T> = {
+  value: T;
   position: number;
 };
 
-export type EventLog = {
-  add: (event: any) => Promise<LogEntry>;
-  readAfter: (position: number) => AsyncIterableIterator<LogEntry>;
+export type EventLog<T> = {
+  add: (event: T) => Promise<LogEntry<T>>;
+  readAfter: (position: number) => AsyncIterableIterator<LogEntry<T>>;
   deleteUpTo: (position: number) => Promise<void>;
 };
 
-export const open = async (storageDir: string): Promise<EventLog> => {
+export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
   const store = await storage.open([storageDir, "eventlog"]);
 
   const log = getLogger("eventlog");
@@ -25,7 +25,7 @@ export const open = async (storageDir: string): Promise<EventLog> => {
   const SEQ_KEY = "_sequence";
   let sequence = (await store.get(SEQ_KEY, 0)) as number;
 
-  const add = async (event: any): Promise<LogEntry> => {
+  const add = async (event: any): Promise<LogEntry<T>> => {
     log.debug(`about to store event ${sequence}`, event);
     const eventPos = sequence;
     await store.put(eventPos, event);
@@ -35,18 +35,18 @@ export const open = async (storageDir: string): Promise<EventLog> => {
     return { value: event, position: eventPos };
   };
 
-  const read = async (position: number): Promise<LogEntry> => {
-    const value = await store.get(position);
+  const read = async (position: number): Promise<LogEntry<T> | null> => {
+    const value = (await store.get(position)) as T;
     log.debug(`got event at ${position}`, value);
     if (value !== null) {
       return { value, position };
     }
-    return value;
+    return null;
   };
 
   const readAfter = async function* (
     position: number
-  ): AsyncIterableIterator<LogEntry> {
+  ): AsyncIterableIterator<LogEntry<T>> {
     let currentPosition = position + 1;
     while (currentPosition < sequence) {
       const record = await read(currentPosition);
@@ -73,7 +73,7 @@ export const open = async (storageDir: string): Promise<EventLog> => {
 };
 
 export const gc = (
-  eventLog: EventLog,
+  eventLog: EventLog<any>,
   consumers: EventLogConsumer[]
 ): service.Service => {
   const name = "gc";

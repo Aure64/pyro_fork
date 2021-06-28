@@ -7,17 +7,23 @@ import * as storage from "./storage";
 
 export type Channel = service.Service & EventLogConsumer;
 
+type Seconds = number;
+type Milliseconds = number;
+
 export const create = async (
   name: string,
   send: Sender,
   storageDirectory: string,
-  eventLog: EventLog
+  eventLog: EventLog<Event>,
+  maxBatchSize: number = 100,
+  ttl: Seconds = 24 * 60 * 60,
+  interval: Milliseconds = 60 * 1e3
 ): Promise<Channel> => {
   const log = getLogger(name);
 
   const store = await storage.open([storageDirectory, "consumers"]);
 
-  const readPosition = async () => (await store.get(name, 0)) as number;
+  const readPosition = async () => (await store.get(name, -1)) as number;
   const writePosition = async (value: number) => await store.put(name, value);
 
   const task = async () => {
@@ -25,8 +31,14 @@ export const create = async (
     let position = await readPosition();
     log.debug(`reading from position ${position}`);
     for await (const record of eventLog.readAfter(position)) {
-      batch.push(record.value);
+      const event = record.value;
+      if (Date.now() - event.createdAt.getTime() > 1e3 * ttl) {
+        log.info(`Skipping event (expired)`, record);
+      } else {
+        batch.push(event);
+      }
       position = record.position;
+      if (batch.length === maxBatchSize) break;
     }
     log.debug(`read batch of ${batch.length}, last position ${position}`);
     if (batch.length > 0) {
@@ -39,7 +51,7 @@ export const create = async (
     }
   };
 
-  const srv = service.create(name, task, 60 * 1e3);
+  const srv = service.create(name, task, interval);
 
   return {
     name,
