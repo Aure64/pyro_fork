@@ -593,6 +593,9 @@ export const load = async (): Promise<Config> => {
   nconf.file("user", configPath);
   const systemConfigPath = makeSystemConfigPath(configDirectory);
   nconf.file("system", systemConfigPath);
+  if (configPath && !FS.existsSync(configPath)) {
+    console.warn(`Config file ${configPath} doens't exist`);
+  }
   nconf.defaults(makeConfigDefaults());
 
   const loadAsync = promisify(nconf.load.bind(nconf));
