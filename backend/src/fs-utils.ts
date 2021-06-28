@@ -4,11 +4,32 @@ import { dirname } from "path";
 
 const encoding = "utf8";
 
+const datePrefix = "~d:";
+const datePrefixLen = datePrefix.length;
+
+function jsonReplacer(this: any, key: any, value: any): any {
+  if (this[key] instanceof Date) {
+    return `${datePrefix}${value}`;
+  }
+  return value;
+}
+
+function jsonReviver(_key: any, value: any): any {
+  if (typeof value === "string" && value.startsWith(datePrefix)) {
+    return new Date(value.substring(datePrefixLen));
+  }
+  return value;
+}
+
 export const writeJson = async (fileName: string, value: any) =>
-  await fs.promises.writeFile(fileName, JSON.stringify(value), encoding);
+  await fs.promises.writeFile(
+    fileName,
+    JSON.stringify(value, jsonReplacer),
+    encoding
+  );
 
 export const readJson = async (fileName: string) =>
-  JSON.parse(await fs.promises.readFile(fileName, encoding));
+  JSON.parse(await fs.promises.readFile(fileName, encoding), jsonReviver);
 
 export const ensureExists = async (fileName: string, initialValue: any) => {
   try {

@@ -19,7 +19,7 @@ describe("storage", () => {
 
     expect(await store.keys()).toEqual([]);
 
-    const item1 = { a: 1 };
+    const item1 = { a: 1, b: new Date(1624845623) };
     const item2 = 42;
     const item3 = "hello";
 
