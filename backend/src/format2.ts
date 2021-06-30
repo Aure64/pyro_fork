@@ -1,24 +1,29 @@
 import * as eventTypes from "./types2";
 import { Kind as E } from "./types2";
-import { format, parseISO } from "date-fns";
-import { groupBy, sortBy, first, last } from "lodash";
+import { format as formatDate, parseISO } from "date-fns";
+import { groupBy, sortBy, countBy, first, last } from "lodash";
 
 const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
   "baker" in e;
 
 const nonBakerEvent = (e: eventTypes.Event) => !isBakerEvent(e);
 
-export default (events: eventTypes.Event[]): string[] => {
+const format = (
+  events: eventTypes.Event[],
+  useEmoji: boolean = false
+): string[] => {
   const bakerEvents = events.filter(isBakerEvent);
   const otherEvents = events.filter(nonBakerEvent);
-  const formattedBakerEvents = aggregateByBaker(bakerEvents, true);
+  const formattedBakerEvents = aggregateByBaker(bakerEvents, useEmoji);
   const formattedOtherEvents = otherEvents.map(toString);
   return [...formattedOtherEvents, ...formattedBakerEvents];
 };
 
+export default format;
+
 const dateToString = (date: Date | string): string => {
   const parsedDate = typeof date === "string" ? parseISO(date) : date;
-  return format(parsedDate, "MM/dd/yyyy, H:mm:ss");
+  return formatDate(parsedDate, "MM/dd/yyyy, H:mm:ss");
 };
 
 const KindEmojiFormatters: {
@@ -123,4 +128,38 @@ export const aggregateByBaker = (
     lines.push(line);
   }
   return lines;
+};
+
+export const summary = (
+  events: eventTypes.Event[],
+  useEmoji: boolean = false
+): string => {
+  const formatKind = useEmoji ? formatKindEmoji : formatKindText;
+  const counts = countBy(events, "kind");
+  const parts: string[] = [];
+  for (const kind in counts) {
+    parts.push(`${formatKind(kind as E)} ${counts[kind]}`);
+  }
+
+  return parts.join(" ");
+};
+
+export const email = (
+  events: eventTypes.Event[],
+  useEmoji: boolean = false
+): [string, string] => {
+  let lines = format(events, useEmoji);
+
+  let subject;
+  let text;
+
+  if (lines.length === 1) {
+    subject = lines[0];
+    text = "";
+  } else {
+    subject = summary(events, true);
+    text = lines.join("\n");
+  }
+
+  return [subject, text];
 };

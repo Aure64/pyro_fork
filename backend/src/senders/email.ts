@@ -3,7 +3,7 @@ import { createTransport } from "nodemailer";
 
 import { Event, Sender } from "../types2";
 
-import format from "../format2";
+import { email as formatEmail } from "../format2";
 
 export type Protocol = "Plain" | "SSL" | "STARTTLS";
 
@@ -33,16 +33,7 @@ export const create = (config: EmailConfig): Sender => {
   return async (events: Event[]) => {
     log.debug(`About to send email for ${events.length} events`, events);
 
-    let subject = `${events.length} events`;
-    let lines = format(events);
-    let text;
-
-    if (lines.length === 1) {
-      subject = lines[0];
-      text = "";
-    } else {
-      text = lines.join("\n");
-    }
+    const [subject, text] = formatEmail(events);
 
     const result = await transporter.sendMail({
       from: `Pyrometer ${config.email}`,
