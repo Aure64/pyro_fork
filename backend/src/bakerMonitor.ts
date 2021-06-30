@@ -168,14 +168,15 @@ const checkBlock = async ({
       rpc,
     });
 
-  log.trace(`Successfully retrieved baker data for block ${blockId}`);
+  log.trace(`Successfully retrieved baker data for block ${blockId}`, metadata);
 
-  if (!metadata.level) {
+  if (!metadata.level_info) {
+    log.error("No level info in metadata", metadata);
     throw new Error(`Missing block metadata level`);
   }
 
-  const blockLevel = metadata.level.level;
-  const blockCycle = metadata.level.cycle;
+  const blockLevel = metadata.level_info.level;
+  const blockCycle = metadata.level_info.cycle;
 
   for (const baker of bakers) {
     const endorsementOperations = block.operations[0];
@@ -185,12 +186,12 @@ const checkBlock = async ({
       bakingRights,
       blockBaker: metadata.baker,
       blockId,
-      level: metadata.level.level,
+      level: blockLevel,
     });
     if (bakingEvent) events.push(bakingEvent);
     const endorsingEvent = checkBlockEndorsingRights({
       baker,
-      level: metadata.level.level - 1,
+      level: blockLevel - 1,
       endorsementOperations,
       endorsingRights,
     });
@@ -201,20 +202,20 @@ const checkBlock = async ({
         baker,
         bakingRights,
         blockBaker: metadata.baker,
-        blockLevel: metadata.level.level,
+        blockLevel: blockLevel,
         timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
       });
       if (futureBakingEvent) events.push(futureBakingEvent);
       const futureEndorsingEvent = checkFutureBlockEndorsingRights({
         baker,
         endorsingRights,
-        blockLevel: metadata.level.level,
+        blockLevel: blockLevel,
         timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
       });
       const deactivationEvent = await getDeactivationEvent({
         baker,
         rpc,
-        cycle: metadata.level.cycle,
+        cycle: blockCycle,
       });
       if (deactivationEvent) events.push(deactivationEvent);
       if (futureEndorsingEvent) events.push(futureEndorsingEvent);
@@ -227,7 +228,7 @@ const checkBlock = async ({
       baker,
       operations: anonymousOperations,
       rpc,
-      level: metadata.level.level,
+      level: blockLevel,
     });
     if (doubleBakeEvent) {
       events.push(doubleBakeEvent);
@@ -236,7 +237,7 @@ const checkBlock = async ({
       baker,
       operations: anonymousOperations,
       rpc,
-      level: metadata.level.level,
+      level: blockLevel,
     });
     if (doubleEndorseEvent) {
       events.push(doubleEndorseEvent);
@@ -271,8 +272,14 @@ export const loadBlockData = async ({
   const blockPromise = wrap2(() => rpc.getBlock({ block: blockId }));
   const block = await blockPromise;
 
-  log.debug(`Block ${blockId} is at level`, block.metadata.level);
-  const cycle = block.metadata.level?.cycle;
+  if (block === undefined) throw new Error(`Block ${blockId} not found`);
+  if (block.metadata === undefined)
+    throw new Error(`Block ${blockId} has no metadata`);
+  if (block.metadata.level_info === undefined)
+    throw new Error(`Block ${blockId} metadata has no level`);
+
+  log.debug(`Block ${blockId} is at level`, block.metadata.level_info);
+  const cycle = block.metadata.level_info.cycle;
 
   const bakingRightsPromise = wrap2(() =>
     rpc.getBakingRights(
