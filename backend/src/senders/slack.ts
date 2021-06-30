@@ -12,7 +12,8 @@ export const create = (config: SlackConfig): Sender => {
   const webhook = new IncomingWebhook(config.url);
 
   return async (events: Event[]) => {
-    const text = format(events);
+    const lines = format(events);
+    const text = lines.join("\n");
     await webhook.send(text);
   };
 };

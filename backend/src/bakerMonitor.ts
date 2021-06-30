@@ -35,6 +35,7 @@ import * as service from "./service";
 import * as storage from "./storage";
 
 import now from "./now";
+import * as format from "./format2";
 
 const name = "bm";
 
@@ -97,7 +98,9 @@ export const create = async (
       let currentLevel = startLevel;
 
       while (currentLevel <= level && !isInterrupted()) {
-        log.debug(`Processing block at level ${currentLevel}`);
+        log.debug(
+          `Processing block at level ${currentLevel} for ${bakers.length} baker(s)`
+        );
         const { events, blockLevel, blockCycle } = await checkBlock({
           bakers,
           rpc,
@@ -110,6 +113,10 @@ export const create = async (
             `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
           );
         }
+        log.debug(
+          `About to post ${events.length} baking events`,
+          format.aggregateByBaker(events)
+        );
         for (const event of events) {
           await onEvent(event);
         }

@@ -76,10 +76,10 @@ export const create = async (
     if (!chatId) {
       throw new Error("Telegram notification channel is missing chatId");
     }
-    const text = format(events);
+    const lines = format(events);
     let message = "";
     let count = 0;
-    for (const line of text.split("\n")) {
+    for (const line of lines) {
       if (message.length + line.length + 1 < MAX_MESSAGE_LENGTH) {
         message += line + "\n";
       } else {

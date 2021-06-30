@@ -34,18 +34,21 @@ export const create = (config: EmailConfig): Sender => {
     log.debug(`About to send email for ${events.length} events`, events);
 
     let subject = `${events.length} events`;
-    let text = format(events);
+    let lines = format(events);
+    let text;
 
-    if (events.length === 1) {
-      subject = text;
+    if (lines.length === 1) {
+      subject = lines[0];
       text = "";
+    } else {
+      text = lines.join("\n");
     }
 
     const result = await transporter.sendMail({
       from: `Pyrometer ${config.email}`,
       to: config.email,
       subject,
-      text: format(events),
+      text,
     });
     log.debug("Sent email", result);
     return Promise.resolve();
