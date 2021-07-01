@@ -1,5 +1,5 @@
 import { notify } from "node-notifier";
-import { toString } from "../format2";
+import format from "../format2";
 
 import { Event, Sender } from "../types2";
 
@@ -27,9 +27,9 @@ const post = async (message: string, sound: boolean): Promise<void> => {
 export const create = (config: DesktopConfig): Sender => {
   return async (events: Event[]) => {
     //doesn't support multiline messages, must post one by one
-    const messages = events.map(toString);
-    for (const m of messages) {
-      await post(m, config.enableSound);
+    const lines = format(events);
+    for (const line of lines) {
+      await post(line, config.enableSound);
     }
   };
 };
