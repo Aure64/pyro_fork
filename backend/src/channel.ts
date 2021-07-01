@@ -15,7 +15,7 @@ export const create = async (
   send: Sender,
   storageDirectory: string,
   eventLog: EventLog<Event>,
-  maxBatchSize: number = 100,
+  maxBatchSize = 100,
   ttl: Seconds = 24 * 60 * 60,
   interval: Milliseconds = 60 * 1e3
 ): Promise<Channel> => {

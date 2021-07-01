@@ -8,10 +8,7 @@ const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
 
 const nonBakerEvent = (e: eventTypes.Event) => !isBakerEvent(e);
 
-const format = (
-  events: eventTypes.Event[],
-  useEmoji: boolean = false
-): string[] => {
+const format = (events: eventTypes.Event[], useEmoji = false): string[] => {
   const bakerEvents = events.filter(isBakerEvent);
   const otherEvents = events.filter(nonBakerEvent);
   const formattedBakerEvents = aggregateByBaker(bakerEvents, useEmoji);
@@ -89,7 +86,7 @@ export const toString = (e: eventTypes.Event) =>
 
 export const aggregateByBaker = (
   events: eventTypes.BakerEvent[],
-  useEmoji: boolean = false
+  useEmoji = false
 ): string[] => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const eventsByBaker = groupBy(events, "baker");
@@ -107,9 +104,9 @@ export const aggregateByBaker = (
       } else {
         const firstEvent = first(events);
         const lastEvent = last(events);
-        let firstLevel =
+        const firstLevel =
           firstEvent && "level" in firstEvent && firstEvent.level;
-        let lastLevel = lastEvent && "level" in lastEvent && lastEvent.level;
+        const lastLevel = lastEvent && "level" in lastEvent && lastEvent.level;
         if (firstEvent) {
           if (firstLevel === lastLevel) {
             formattedRange = `${firstLevel}`;
@@ -132,7 +129,7 @@ export const aggregateByBaker = (
 
 export const summary = (
   events: eventTypes.Event[],
-  useEmoji: boolean = false
+  useEmoji = false
 ): string => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const counts = countBy(events, "kind");
@@ -146,9 +143,9 @@ export const summary = (
 
 export const email = (
   events: eventTypes.Event[],
-  useEmoji: boolean = false
+  useEmoji = false
 ): [string, string] => {
-  let lines = format(events, useEmoji);
+  const lines = format(events, useEmoji);
 
   let subject;
   let text;
