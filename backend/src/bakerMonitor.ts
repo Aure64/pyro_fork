@@ -65,8 +65,9 @@ export const create = async (
   const store = await storage.open([storageDirectory, "baker-monitor"]);
 
   const constants = await wrap2(() => rpc.getConstants());
+  const chainId = await wrap2(() => rpc.getChainId());
 
-  const CHAIN_POSITION_KEY = "position";
+  const CHAIN_POSITION_KEY = `${chainId}-pos`;
 
   const getPosition = async () =>
     (await store.get(CHAIN_POSITION_KEY, {
