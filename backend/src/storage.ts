@@ -8,9 +8,9 @@ import { normalize, join } from "path";
 export type Key = string | number;
 
 export type Storage = {
-  put: (key: Key, value: any) => Promise<void>;
-  get: (key: Key, defaultValue?: any) => Promise<any>;
-  remove: (key: Key) => Promise<any>;
+  put: (key: Key, value: unknown) => Promise<void>;
+  get: (key: Key, defaultValue?: unknown) => Promise<unknown>;
+  remove: (key: Key) => Promise<unknown>;
   keys: () => Promise<string[]>;
 };
 
@@ -38,14 +38,14 @@ export const open = async (
   const mkFullPath = (key: Key) => path.join(storageDir, key.toString());
   const mkTmpPath = (key: Key) => path.join(storageDir, `${key}${TMP_POSTFIX}`);
 
-  const put = async (key: Key, value: any) => {
+  const put = async (key: Key, value: unknown) => {
     const tmp = mkTmpPath(key);
     const fileName = mkFullPath(key);
     await writeJson(tmp, value);
     await fs.promises.rename(tmp, fileName);
   };
 
-  const get = async (key: Key, defaultValue: any = null) => {
+  const get = async (key: Key, defaultValue: unknown = null) => {
     const fileName = mkFullPath(key);
     try {
       return await readJson(fileName);

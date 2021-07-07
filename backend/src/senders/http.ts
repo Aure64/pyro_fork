@@ -1,3 +1,4 @@
+import { Server } from "net";
 import fetch from "cross-fetch";
 import { createServer } from "http";
 import { getLogger } from "loglevel";
@@ -8,7 +9,7 @@ export type EndpointConfig = {
   url: string;
 };
 
-export const startDummyHttpServer = (port = 8005) => {
+export const startDummyHttpServer = (port = 8005): Server => {
   const log = getLogger("dummy-http-server");
   const server = createServer((req, res) => {
     let data = "";
@@ -20,7 +21,7 @@ export const startDummyHttpServer = (port = 8005) => {
       res.end();
     });
   });
-  server.listen(port);
+  return server.listen(port);
 };
 
 export const create = (config: EndpointConfig): Sender => {

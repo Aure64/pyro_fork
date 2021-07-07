@@ -49,7 +49,7 @@ export const create = async (
   const store = await openStorage([storageDir, "telegram"]);
 
   const CHAT_ID_KEY = "chat-id";
-  const getChatId = async () => await store.get(CHAT_ID_KEY);
+  const getChatId = async () => (await store.get(CHAT_ID_KEY)) as number;
   const setChatId = async (value: number) =>
     await store.put(CHAT_ID_KEY, value);
 

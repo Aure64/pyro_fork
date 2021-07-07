@@ -1,10 +1,10 @@
 import { setWith, clone } from "lodash";
 
-const setPath = (
+const setPath = <T>(
   path: string,
-  data: Record<string, any>,
+  data: Record<string, T>,
   value: unknown
-): Record<string, any> => {
+): Record<string, T> => {
   const objectPath = path.split(":");
   return setWith(clone(data), objectPath, value, clone);
 };

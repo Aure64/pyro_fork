@@ -81,7 +81,7 @@ const Formatters: {
   [E.Notification]: (e) => `${e.message}`,
 };
 
-export const toString = (e: eventTypes.Event) =>
+export const toString = (e: eventTypes.Event): string =>
   (Formatters[e.kind] as (v: eventTypes.Event) => string)(e);
 
 export const aggregateByBaker = (

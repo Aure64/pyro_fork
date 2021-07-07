@@ -1,1 +1,1 @@
-export default () => new Date(Date.now());
+export default (): Date => new Date(Date.now());

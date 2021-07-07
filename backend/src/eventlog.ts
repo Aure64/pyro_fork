@@ -25,7 +25,7 @@ export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
   const SEQ_KEY = "_sequence";
   let sequence = (await store.get(SEQ_KEY, 0)) as number;
 
-  const add = async (event: any): Promise<LogEntry<T>> => {
+  const add = async (event: T): Promise<LogEntry<T>> => {
     log.debug(`about to store event ${sequence}`, event);
     const eventPos = sequence;
     await store.put(eventPos, event);
@@ -72,8 +72,8 @@ export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
   };
 };
 
-export const gc = (
-  eventLog: EventLog<any>,
+export const gc = <T>(
+  eventLog: EventLog<T>,
   consumers: EventLogConsumer[]
 ): service.Service => {
   const name = "gc";

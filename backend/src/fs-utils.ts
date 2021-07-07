@@ -21,17 +21,20 @@ function jsonReviver(_key: any, value: any): any {
   return value;
 }
 
-export const writeJson = async (fileName: string, value: any) =>
+export const writeJson = async (fileName: string, value: any): Promise<void> =>
   await fs.promises.writeFile(
     fileName,
     JSON.stringify(value, jsonReplacer),
     encoding
   );
 
-export const readJson = async (fileName: string) =>
+export const readJson = async (fileName: string): Promise<any> =>
   JSON.parse(await fs.promises.readFile(fileName, encoding), jsonReviver);
 
-export const ensureExists = async (fileName: string, initialValue: any) => {
+export const ensureExists = async (
+  fileName: string,
+  initialValue: any
+): Promise<void> => {
   try {
     await fs.promises.access(fileName, fs.constants.F_OK);
   } catch (err) {

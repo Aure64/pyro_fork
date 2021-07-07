@@ -13,18 +13,19 @@ const mkTempDir = async (): Promise<string> => {
 };
 
 describe("eventlog", () => {
-  it("appends and reads items", async () => {
-    const elog = await eventlog.open<any>(await mkTempDir());
+  type T = Record<string, number>;
+  const item1 = { a: 1 };
+  const item2 = { b: 2 };
+  const item3 = { c: 3 };
 
-    const item1 = { a: 1 };
-    const item2 = { b: 2 };
-    const item3 = { c: 3 };
+  it("appends and reads items", async () => {
+    const elog = await eventlog.open<T>(await mkTempDir());
 
     const entry1 = await elog.add(item1);
     const entry2 = await elog.add(item2);
     const entry3 = await elog.add(item3);
 
-    const batch: eventlog.LogEntry<any>[] = [];
+    const batch: eventlog.LogEntry<T>[] = [];
     for await (const record of elog.readAfter(-1)) {
       batch.push(record);
     }
@@ -33,11 +34,7 @@ describe("eventlog", () => {
   });
 
   it("deletes items", async () => {
-    const elog = await eventlog.open(await mkTempDir());
-
-    const item1 = { a: 1 };
-    const item2 = { b: 2 };
-    const item3 = { c: 3 };
+    const elog = await eventlog.open<T>(await mkTempDir());
 
     await elog.add(item1);
     await elog.add(item2);
@@ -45,7 +42,7 @@ describe("eventlog", () => {
 
     await elog.deleteUpTo(lastEntry.position - 1);
 
-    const batch: eventlog.LogEntry<any>[] = [];
+    const batch: eventlog.LogEntry<T>[] = [];
     for await (const record of elog.readAfter(-1)) {
       batch.push(record);
     }
