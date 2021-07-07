@@ -482,17 +482,6 @@ const makeConfigValidations = (): Validator.Rules => {
   return rules;
 };
 
-// /**
-//  * Creates a new `data` with the `value` set to the nested `path`.  `path` is a UserPref style path
-//  * delimited by colons.
-//  */
-// const setPath = <T>(path: string, data: T, value: unknown): T => {
-//   const objectPath = path.split(":");
-//   // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
-//   const lensPath = R.lensPath(objectPath);
-//   return R.set(lensPath, value, data);
-// };
-
 const makeUserConfigPath = (path: string) => Path.join(path, "pyrometer.json");
 
 export type Config = {
