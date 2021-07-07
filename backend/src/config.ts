@@ -10,9 +10,10 @@ import * as FS from "fs";
 import * as Path from "path";
 import envPaths from "env-paths";
 import * as yargs from "yargs";
-import * as R from "ramda";
 import * as Validator from "validatorjs";
 import { Kind as Events } from "./types2";
+
+import setPath from "./setPath";
 
 // user prefs
 type UserPref = {
@@ -376,11 +377,7 @@ const makeConfigDefaults = () => {
   const defaults = userPrefs.reduce(
     (accumulator: { [key: string]: unknown }, pref: UserPref) => {
       if (pref.default !== undefined) {
-        const objectPath = pref.key.split(":");
-        // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
-        const lensPath = R.lensPath(objectPath);
-        const updatedAccumulator = R.set(lensPath, pref.default, accumulator);
-        return updatedAccumulator;
+        return setPath(pref.key, accumulator, pref.default);
       }
       return accumulator;
     },
@@ -485,16 +482,16 @@ const makeConfigValidations = (): Validator.Rules => {
   return rules;
 };
 
-/**
- * Creates a new `data` with the `value` set to the nested `path`.  `path` is a UserPref style path
- * delimited by colons.
- */
-const setPath = <T>(path: string, data: T, value: unknown): T => {
-  const objectPath = path.split(":");
-  // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
-  const lensPath = R.lensPath(objectPath);
-  return R.set(lensPath, value, data);
-};
+// /**
+//  * Creates a new `data` with the `value` set to the nested `path`.  `path` is a UserPref style path
+//  * delimited by colons.
+//  */
+// const setPath = <T>(path: string, data: T, value: unknown): T => {
+//   const objectPath = path.split(":");
+//   // create Ramda lens for writing to that path (simplest way to ensure entire path exists)
+//   const lensPath = R.lensPath(objectPath);
+//   return R.set(lensPath, value, data);
+// };
 
 const makeUserConfigPath = (path: string) => Path.join(path, "pyrometer.json");
 
@@ -589,7 +586,11 @@ export const load = async (): Promise<Config> => {
     console.warn(`Config file ${configPath} doens't exist`);
   }
   nconf.file(configPath);
-  nconf.defaults(makeConfigDefaults());
+
+  const configDefaults = makeConfigDefaults();
+  console.log("configDefaults", configDefaults);
+
+  nconf.defaults(configDefaults);
 
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync();
