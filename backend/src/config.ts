@@ -8,7 +8,6 @@ import { DesktopConfig } from "./senders/desktop";
 import { EndpointConfig } from "./senders/http";
 import * as FS from "fs";
 import * as Path from "path";
-import envPaths from "env-paths";
 import * as yargs from "yargs";
 import * as Validator from "validatorjs";
 import { Kind as Events } from "./types2";
@@ -370,6 +369,8 @@ const makeYargOptions = () => {
   return options;
 };
 
+export const yargOptions = makeYargOptions();
+
 /**
  * Iterates through the UserPrefs to create an object of default config values for Nconf.
  */
@@ -387,22 +388,10 @@ const makeConfigDefaults = () => {
 };
 
 /**
- * Calls makeConfigFile and writes the result to the specified path.
- */
-const writeSampleConfig = (path: string) => {
-  console.log(`Creating User Config file at ${path}`);
-  console.log(
-    "Note: config has invalid placeholder data that must be replaced before this config can be used."
-  );
-  const sampleConfig = makeConfigFile();
-  FS.writeFileSync(path, JSON.stringify(sampleConfig, null, 2));
-};
-
-/**
  * Creates a sample config, with the proper structure.  The values will be populated with defaults where
  * present, otherwise placeholder text with the option's description and type.
  */
-const makeConfigFile = (): Record<string, string> => {
+export const makeConfigFile = (): Record<string, string> => {
   const sampleConfig = userPrefs.reduce(
     (accumulator: Record<string, string>, userPref: UserPref) => {
       // ignore user prefs that are only supported by the command line
@@ -498,6 +487,7 @@ export type Config = {
   getEndpointConfig: GetEndpointConfig;
   storageDirectory: string;
   getBakerCatchupLimit: GetBakerCatchupLimit;
+  asObject: () => any;
 };
 
 const formatValidationErrors = (errors: Validator.ValidationErrors): string => {
@@ -514,60 +504,11 @@ const formatValidationErrors = (errors: Validator.ValidationErrors): string => {
  * Load config settings from argv and the file system.  File system will use the path from envPaths
  * unless overriden by argv.
  */
-export const load = async (): Promise<Config> => {
-  const { data: dataDirectory, config: configDirectory } = envPaths(
-    "pyrometer",
-    { suffix: "" }
-  );
-  console.log("Data directory:", dataDirectory);
-  console.log("Config directory:", configDirectory);
-
-  // ensure system directories exist
-  createDirectory(dataDirectory);
-  createDirectory(configDirectory);
-
-  nconf.argv(
-    yargs
-      .strict()
-      .options(makeYargOptions())
-      .alias("help", "h")
-      .alias("version", "v")
-      .command(
-        "create-config <path>",
-        "Create a sample user config at the provided path.",
-        () => {
-          /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
-        },
-        ({ path }: { path: string }) => {
-          writeSampleConfig(path);
-          process.exit(0);
-        }
-      )
-      .command(
-        "print-config",
-        "Print the entire config, derived from the CLI and config files.",
-        () => {
-          /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
-        },
-        () => {
-          setTimeout(() => {
-            printConfig();
-            process.exit(0);
-          }, 1000);
-        }
-      )
-      .command(
-        "clear-data",
-        "Deletes all system data, including job queues and block history.",
-        () => {
-          /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
-        },
-        () => {
-          clearData({ dataDirectory });
-          process.exit(0);
-        }
-      )
-  );
+export const load = async (
+  dataDirectory: string,
+  configDirectory: string
+): Promise<Config> => {
+  nconf.argv(yargs.strict().options(yargOptions));
   // user config file from argv overrides default location
   const configPath =
     nconf.get(CONFIG_FILE.key) || makeUserConfigPath(configDirectory);
@@ -577,8 +518,6 @@ export const load = async (): Promise<Config> => {
   nconf.file(configPath);
 
   const configDefaults = makeConfigDefaults();
-  console.log("configDefaults", configDefaults);
-
   nconf.defaults(configDefaults);
 
   const loadAsync = promisify(nconf.load.bind(nconf));
@@ -591,6 +530,14 @@ export const load = async (): Promise<Config> => {
     console.log(formatValidationErrors(errors));
     process.exit(1);
   }
+
+  const asObject = () => {
+    const obj = nconf.get();
+    delete obj["_"];
+    delete obj["$0"];
+    delete obj["type"];
+    return obj;
+  };
 
   const config: Config = {
     getBakers,
@@ -606,6 +553,7 @@ export const load = async (): Promise<Config> => {
     getEndpointConfig,
     storageDirectory: dataDirectory,
     getBakerCatchupLimit,
+    asObject,
   };
   return config;
 };
@@ -704,28 +652,4 @@ type GetBakerCatchupLimit = () => number;
 
 const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
   return nconf.get(BAKER_CATCHUP_LIMIT.key);
-};
-
-const printConfig = () => {
-  console.log(JSON.stringify(nconf.get(), null, 2));
-};
-
-type ClearDataArgs = {
-  dataDirectory: string;
-};
-
-const clearData = ({ dataDirectory }: ClearDataArgs) => {
-  if (FS.existsSync(dataDirectory)) {
-    FS.rmdirSync(dataDirectory, { recursive: true });
-    console.log(`Data directory deleted: ${dataDirectory}`);
-  } else {
-    console.log("Data directory does not exist");
-  }
-};
-
-const createDirectory = (path: string) => {
-  if (!FS.existsSync(path)) {
-    console.log(`Creating directory: ${path}`);
-    FS.mkdirSync(path, { recursive: true });
-  }
 };

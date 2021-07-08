@@ -1,218 +1,92 @@
-//import { TezosNodeEvent } from "./types";
-import { Event } from "./types2";
-import * as NodeMonitor from "./nodeMonitor";
-import * as BakerMonitor from "./bakerMonitor";
-import * as channel from "./channel";
-import { create as EmailSender } from "./senders/email";
-import { create as DesktopSender } from "./senders/desktop";
-import { create as HttpSender } from "./senders/http";
-import { create as TelegramSender } from "./senders/telegram";
-import { create as SlackSender } from "./senders/slack";
-import * as EventLog from "./eventlog";
-import { debug, info, warn, error, setLevel } from "loglevel";
-import loglevel, { LogLevelDesc } from "loglevel";
-import * as prefix from "loglevel-plugin-prefix";
+import * as FS from "fs";
+
+import envPaths from "env-paths";
+import * as yargs from "yargs";
+
 import * as Config from "./config";
-import { format } from "date-fns";
-import * as Chalk from "chalk";
-import { writeJson, ensureExists } from "./fs-utils";
-import { lock } from "proper-lockfile";
-import { join as joinPath, normalize as normalizePath } from "path";
+import run from "./run";
 
-const setupLogging = (logLevel: LogLevelDesc) => {
-  const colors: Record<string, Chalk.Chalk> = {
-    TRACE: Chalk.magenta,
-    DEBUG: Chalk.cyan,
-    INFO: Chalk.blue,
-    WARN: Chalk.yellow,
-    ERROR: Chalk.red,
-  };
-  const colorizeLevel = (level: string): string => {
-    const color = colors[level.toUpperCase()] || Chalk.black;
-    return color(level[0]);
-  };
+/**
+ * Calls makeConfigFile and writes the result to the specified path.
+ */
+const writeSampleConfig = (path: string) => {
+  console.log(`Creating User Config file at ${path}`);
+  console.log(
+    "Note: config has invalid placeholder data that must be replaced before this config can be used."
+  );
+  const sampleConfig = Config.makeConfigFile();
+  FS.writeFileSync(path, JSON.stringify(sampleConfig, null, 2));
+};
 
-  // Register prefix plug with loglevel.  This adds timestamp and level to logs.
-  const timestampFormatter = (date: Date) => format(date, "yyyy-MM-dd H:mm:ss");
-  const logger = loglevel.noConflict();
-  prefix.reg(logger);
-  prefix.apply(logger, { timestampFormatter });
-  // colorize output
-  prefix.apply(loglevel, {
-    format(level, name, timestamp) {
-      return `${Chalk.gray(`${timestamp}`)} ${colorizeLevel(level)} [${name}]`;
-    },
-  });
+type ClearDataArgs = {
+  dataDirectory: string;
+};
 
-  setLevel(logLevel);
+const clearData = ({ dataDirectory }: ClearDataArgs) => {
+  if (FS.existsSync(dataDirectory)) {
+    FS.rmdirSync(dataDirectory, { recursive: true });
+    console.log(`Data directory deleted: ${dataDirectory}`);
+  } else {
+    console.log("Data directory does not exist");
+  }
 };
 
 const main = async () => {
-  // Makes the script crash on unhandled rejections instead of silently ignoring them.
-  process.on("unhandledRejection", (err) => {
-    throw err;
-  });
+  const { data: dataDirectory, config: configDirectory } = envPaths(
+    "pyrometer",
+    { suffix: "" }
+  );
 
-  const config = await Config.load();
-  setupLogging(config.getLogLevel());
+  console.log("Data directory:", dataDirectory);
+  console.log("Config directory:", configDirectory);
 
-  const storageDir = normalizePath(config.storageDirectory);
+  FS.mkdirSync(dataDirectory, { recursive: true });
+  FS.mkdirSync(configDirectory, { recursive: true });
 
-  const pid = process.pid;
-  const pidFile = joinPath(storageDir, "pid");
-  let pidFileLock;
-
-  try {
-    await ensureExists(pidFile, pid);
-    pidFileLock = await lock(pidFile);
-  } catch (err) {
-    error(err);
-    process.exit(1);
-  }
-
-  await writeJson(pidFile, pid);
-
-  const eventLog = await EventLog.open<Event>(storageDir);
-
-  const channels: channel.Channel[] = [];
-
-  const emailConfig = config.getEmailConfig();
-  if (emailConfig?.enabled) {
-    const emailChannel = await channel.create(
-      "email",
-      EmailSender(emailConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(emailChannel);
-  }
-
-  const desktopConfig = config.getDesktopConfig();
-  if (desktopConfig?.enabled) {
-    const desktopChannel = await channel.create(
-      "desktop",
-      DesktopSender(desktopConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(desktopChannel);
-  }
-
-  const endpointConfig = config.getEndpointConfig();
-  if (endpointConfig?.enabled) {
-    const endpointChannel = await channel.create(
-      "webhook",
-      HttpSender(endpointConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(endpointChannel);
-  }
-
-  const telegramConfig = config.getTelegramConfig();
-  if (telegramConfig?.enabled) {
-    const telegramChannel = await channel.create(
-      "telegram",
-      await TelegramSender(telegramConfig, storageDir),
-      storageDir,
-      eventLog
-    );
-    channels.push(telegramChannel);
-  }
-
-  const slackConfig = config.getSlackConfig();
-  if (slackConfig?.enabled) {
-    const slackChannel = await channel.create(
-      "slack",
-      SlackSender(slackConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(slackChannel);
-  }
-
-  const excludedEvents = config.getExcludedEvents();
-
-  const onEvent = async (event: Event) => {
-    if ("kind" in event && excludedEvents.includes(event.kind)) {
-      debug(`Event excluded because type ${event.kind} is filtered`);
-      return;
-    }
-    await eventLog.add(event);
-  };
-
-  const bakers = config.getBakers();
-  const rpcNode = config.getRpc();
-  const referenceNode = config.getReferenceNode();
-
-  //always monitor rpc node
-  const nodes = [...new Set([...config.getNodes(), rpcNode])];
-
-  if (bakers.length === 0 && nodes.length === 0) {
-    console.error("You must specify nodes or bakers to watch.");
-    process.exit(1);
-  }
-
-  const bakerMonitor =
-    bakers.length > 0
-      ? await BakerMonitor.create(
-          storageDir,
-          bakers,
-          rpcNode,
-          config.getBakerCatchupLimit(),
-          onEvent
-        )
-      : null;
-
-  if (!referenceNode) {
-    warn("Reference node is not set, node-on-a-branch detection is off");
-  }
-
-  const nodeMonitor =
-    nodes.length > 0 ? NodeMonitor.create(onEvent, nodes, referenceNode) : null;
-
-  const gc = EventLog.gc(eventLog, channels);
-
-  const stop = (event: NodeJS.Signals) => {
-    info(`Caught signal ${event}, shutting down...`);
-    bakerMonitor?.stop();
-    nodeMonitor?.stop();
-    for (const ch of channels) {
-      ch.stop();
-    }
-    gc.stop();
-    const gracePeriod = 5;
-    const timeoutHandle = setTimeout(() => {
-      info(`Some tasks are still running after ${gracePeriod} s, force exit`);
-      process.exit(0);
-    }, gracePeriod * 1e3);
-    //make sure this timer itself doesn't delay process exit
-    timeoutHandle.unref();
-  };
-
-  process.on("SIGINT", stop);
-  process.on("SIGTERM", stop);
-
-  const channelTasks = channels.map((ch) => ch.start());
-  const gcTask = gc.start();
-
-  const allTasks = [...channelTasks, gcTask];
-
-  if (nodeMonitor) {
-    const nodeMonitorTask = nodeMonitor.start();
-    allTasks.push(nodeMonitorTask);
-  }
-
-  if (bakerMonitor) {
-    const bakerMonitorTask = bakerMonitor.start();
-    allTasks.push(bakerMonitorTask);
-  }
-
-  info("Started");
-  await Promise.all(allTasks);
-  debug(`Releasing file lock on ${pidFile}`);
-  await pidFileLock();
-  info("Done.");
+  yargs(process.argv.slice(2))
+    .strict()
+    .command(
+      "create-config <path>",
+      "Create a sample user config at the provided path.",
+      () => {
+        /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
+      },
+      ({ path }: { path: string }) => {
+        writeSampleConfig(path);
+      }
+    )
+    .command(
+      "print-config",
+      "Print the entire config, derived from the CLI and config files.",
+      async (yargs) => {
+        return yargs.options(Config.yargOptions);
+      },
+      async () => {
+        const config = await Config.load(dataDirectory, configDirectory);
+        console.log(JSON.stringify(config.asObject(), null, 2));
+      }
+    )
+    .command(
+      "clear-data",
+      "Deletes all system data, including job queues and block history.",
+      () => {
+        /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
+      },
+      () => {
+        clearData({ dataDirectory });
+      }
+    )
+    .command(
+      "run",
+      "Starts event monitoring.",
+      async (yargs) => {
+        return yargs.options(Config.yargOptions);
+      },
+      async () => {
+        const config = await Config.load(dataDirectory, configDirectory);
+        await run(config);
+      }
+    ).argv;
 };
 
 main();
