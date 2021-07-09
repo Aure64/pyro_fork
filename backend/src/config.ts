@@ -1,6 +1,11 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
 import { LogLevelDesc } from "loglevel";
+import {
+  validateAddress,
+  ValidationResult as TzValidationResult,
+} from "@taquito/utils";
+
 import { SlackConfig } from "./senders/slack";
 import { TelegramConfig } from "./senders/telegram";
 import { EmailConfig } from "./senders/email";
@@ -416,13 +421,12 @@ export const makeConfigFile = (): Record<string, string> => {
  * few custom validators for specific fields.
  */
 const makeConfigValidations = (): Validator.Rules => {
-  const bakerRegex = new RegExp(/^tz[\d\w]*$/);
   Validator.register(
     "baker",
     (value) => {
-      return bakerRegex.test(`${value}`);
+      return validateAddress(value) === TzValidationResult.VALID;
     },
-    "The :attribute is not a proper baker hash."
+    "The :attribute is not a valid baker address."
   );
   Validator.register(
     "loglevel",
