@@ -49,6 +49,7 @@
     "@tezos-kiln:registry": "https://gitlab.com/api/v4/projects/22897259/packages/npm/"
   },
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
     "@slack/webhook": "6.0.0",
     "@taquito/rpc": "9.2.0",
     "@taquito/utils": "9.2.0",

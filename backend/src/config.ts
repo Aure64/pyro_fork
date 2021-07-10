@@ -1,6 +1,8 @@
 import * as nconf from "nconf";
 import { promisify } from "util";
 import { LogLevelDesc } from "loglevel";
+import * as TOML from "@iarna/toml";
+
 import {
   validateAddress,
   ValidationResult as TzValidationResult,
@@ -475,7 +477,7 @@ const makeConfigValidations = (): Validator.Rules => {
   return rules;
 };
 
-const makeUserConfigPath = (path: string) => Path.join(path, "pyrometer.json");
+const makeConfigPath = (path: string) => Path.join(path, "pyrometer.json");
 
 export type Config = {
   getBakers: GetBakers;
@@ -514,12 +516,16 @@ export const load = async (
 ): Promise<Config> => {
   nconf.argv(yargs.strict().options(yargOptions));
   // user config file from argv overrides default location
-  const configPath =
-    nconf.get(CONFIG_FILE.key) || makeUserConfigPath(configDirectory);
+  const configPath = (nconf.get(CONFIG_FILE.key) ||
+    makeConfigPath(configDirectory)) as string;
   if (configPath && !FS.existsSync(configPath)) {
     console.warn(`Config file ${configPath} doens't exist`);
   }
-  nconf.file(configPath);
+  if (configPath.endsWith(".json")) {
+    nconf.file(configPath);
+  } else {
+    nconf.file({ file: configPath, format: TOML });
+  }
 
   const configDefaults = makeConfigDefaults();
   nconf.defaults(configDefaults);

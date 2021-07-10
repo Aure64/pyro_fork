@@ -2,6 +2,7 @@ import * as FS from "fs";
 
 import envPaths from "env-paths";
 import * as yargs from "yargs";
+import * as TOML from "@iarna/toml";
 
 import * as Config from "./config";
 import run from "./run";
@@ -9,13 +10,18 @@ import run from "./run";
 /**
  * Calls makeConfigFile and writes the result to the specified path.
  */
-const writeSampleConfig = (path: string) => {
+const writeSampleConfig = (path: string | null) => {
   console.log(`Creating User Config file at ${path}`);
   console.log(
     "Note: config has invalid placeholder data that must be replaced before this config can be used."
   );
   const sampleConfig = Config.makeConfigFile();
-  FS.writeFileSync(path, JSON.stringify(sampleConfig, null, 2));
+  const serialized = TOML.stringify(sampleConfig);
+  if (path) {
+    FS.writeFileSync(path, serialized);
+  } else {
+    console.log(serialized);
+  }
 };
 
 type ClearDataArgs = {
@@ -46,8 +52,8 @@ const main = async () => {
   yargs(process.argv.slice(2))
     .strict()
     .command(
-      "create-config <path>",
-      "Create a sample user config at the provided path.",
+      "create-config [path]",
+      "Print sample config or write it to a file",
       () => {
         /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
       },
@@ -63,7 +69,8 @@ const main = async () => {
       },
       async () => {
         const config = await Config.load(dataDirectory, configDirectory);
-        console.log(JSON.stringify(config.asObject(), null, 2));
+        const serialized = TOML.stringify(config.asObject());
+        console.log(serialized);
       }
     )
     .command(
