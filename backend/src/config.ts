@@ -543,9 +543,15 @@ export const load = async (
 
   const asObject = () => {
     const obj = nconf.get();
-    delete obj["_"];
-    delete obj["$0"];
-    delete obj["type"];
+    const nonConfigKeys = ["_", "$0", "type"];
+
+    const cliAliases = userPrefs
+      .map(({ alias }) => alias)
+      .flatMap((x) => x)
+      .filter((x): x is string => !!x);
+
+    [...nonConfigKeys, ...cliAliases].forEach((alias) => delete obj[alias]);
+
     return obj;
   };
 
