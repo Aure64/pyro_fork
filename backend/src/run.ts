@@ -191,6 +191,7 @@ const run = async (config: Config.Config) => {
 
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
+  process.on("exit", (code) => info(`Done (exit code ${code})`));
 
   const channelTasks = channels.map((ch) => ch.start());
   const gcTask = gc.start();
@@ -211,7 +212,6 @@ const run = async (config: Config.Config) => {
   await Promise.all(allTasks);
   debug(`Releasing file lock on ${pidFile}`);
   await pidFileLock();
-  info("Done.");
 };
 
 export default run;
