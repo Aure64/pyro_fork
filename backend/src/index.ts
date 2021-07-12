@@ -54,28 +54,30 @@ const main = async () => {
 
   yargs(process.argv.slice(2))
     .strict()
-    .command(
-      "create-config [path]",
-      "Print sample config or write it to a file",
-      () => {
-        /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
-      },
-      ({ path }: { path: string }) => {
-        writeSampleConfig(path);
-      }
-    )
-    .command(
-      "print-config",
-      "Print the entire config, derived from the CLI and config files.",
-      async (yargs) => {
-        return yargs.options(Config.yargOptions);
-      },
-      async () => {
-        const config = await Config.load(dataDirectory, configDirectory);
-        const serialized = TOML.stringify(config.asObject());
-        console.log(serialized);
-      }
-    )
+    .command("config", "Commands to view and manage configuration", (yargs) => {
+      return yargs
+        .command(
+          "show",
+          "Show effective config derived from command line and config file",
+          async (yargs) => {
+            return yargs.options(Config.yargOptions);
+          },
+          async () => {
+            const config = await Config.load(dataDirectory, configDirectory);
+            const serialized = TOML.stringify(config.asObject());
+            console.log(serialized);
+          }
+        )
+        .command(
+          "sample [path]",
+          "Print sample config or write it to a file",
+          () => {},
+          ({ path }: { path: string }) => {
+            writeSampleConfig(path);
+          }
+        )
+        .demandCommand();
+    })
     .command(
       "clear-data",
       "Deletes all system data, including job queues and block history.",
