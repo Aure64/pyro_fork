@@ -12,7 +12,7 @@ import { SlackConfig } from "./senders/slack";
 import { TelegramConfig } from "./senders/telegram";
 import { EmailConfig } from "./senders/email";
 import { DesktopConfig } from "./senders/desktop";
-import { EndpointConfig } from "./senders/http";
+import { WebhookConfig } from "./senders/http";
 import * as FS from "fs";
 import * as Path from "path";
 import * as yargs from "yargs";
@@ -266,27 +266,27 @@ const DESKTOP_SOUND: UserPref = {
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.desktop"],
 };
-// endpoint notifier config
-const ENDPOINT_NOTIFIER_GROUP = "Endpoint Notifications:";
-const ENDPOINT_ENABLED: UserPref = {
-  key: "endpoint:enabled",
+// webhook notifier config
+const WEBHOOK_NOTIFIER_GROUP = "Webhook Notifications:";
+const WEBHOOK_ENABLED: UserPref = {
+  key: "webhook:enabled",
   default: undefined,
-  description: "Whether endpoint notifier is enabled",
+  description: "Whether webhook notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: ENDPOINT_NOTIFIER_GROUP,
+  group: WEBHOOK_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.endpoint"],
+  validationRule: ["boolean", "required_with:notifier.webhook"],
 };
-const ENDPOINT_URL: UserPref = {
-  key: "endpoint:url",
+const WEBHOOK_URL: UserPref = {
+  key: "webhook:url",
   default: undefined,
   description: "URL for posting raw JSON notifications",
   alias: undefined,
   type: "string",
-  group: ENDPOINT_NOTIFIER_GROUP,
+  group: WEBHOOK_NOTIFIER_GROUP,
   isArray: false,
-  validationRule: ["link", "required_with:notifier.endpoint"],
+  validationRule: ["link", "required_with:notifier.webhook"],
 };
 const CONFIG_FILE: UserPref = {
   key: "config",
@@ -345,8 +345,8 @@ const userPrefs = [
   EMAIL_PASSWORD,
   DESKTOP_ENABLED,
   DESKTOP_SOUND,
-  ENDPOINT_ENABLED,
-  ENDPOINT_URL,
+  WEBHOOK_ENABLED,
+  WEBHOOK_URL,
   CONFIG_FILE,
   QUEUE_RETRIES,
   QUEUE_DELAY,
@@ -490,7 +490,7 @@ export type Config = {
   getTelegramConfig: GetTelegramConfig;
   getEmailConfig: GetEmailConfig;
   getDesktopConfig: GetDesktopConfig;
-  getEndpointConfig: GetEndpointConfig;
+  getWebhookConfig: GetWebhookConfig;
   storageDirectory: string;
   getBakerCatchupLimit: GetBakerCatchupLimit;
   asObject: () => any;
@@ -560,7 +560,7 @@ export const load = async (
     getTelegramConfig,
     getEmailConfig,
     getDesktopConfig,
-    getEndpointConfig,
+    getWebhookConfig,
     storageDirectory: dataDirectory,
     getBakerCatchupLimit,
     asObject,
@@ -649,11 +649,11 @@ const getDesktopConfig: GetDesktopConfig = () => {
   return { enabled, enableSound };
 };
 
-type GetEndpointConfig = () => EndpointConfig | undefined;
+type GetWebhookConfig = () => WebhookConfig | undefined;
 
-const getEndpointConfig: GetEndpointConfig = () => {
-  const enabled = nconf.get(ENDPOINT_ENABLED.key);
-  const url = nconf.get(ENDPOINT_URL.key);
+const getWebhookConfig: GetWebhookConfig = () => {
+  const enabled = nconf.get(WEBHOOK_ENABLED.key);
+  const url = nconf.get(WEBHOOK_URL.key);
   if (url) return { enabled, url };
   return undefined;
 };

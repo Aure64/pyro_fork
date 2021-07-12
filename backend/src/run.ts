@@ -97,15 +97,15 @@ const run = async (config: Config.Config) => {
     channels.push(desktopChannel);
   }
 
-  const endpointConfig = config.getEndpointConfig();
-  if (endpointConfig?.enabled) {
-    const endpointChannel = await channel.create(
+  const webhookConfig = config.getWebhookConfig();
+  if (webhookConfig?.enabled) {
+    const webhookChannel = await channel.create(
       "webhook",
-      HttpSender(endpointConfig),
+      HttpSender(webhookConfig),
       storageDir,
       eventLog
     );
-    channels.push(endpointChannel);
+    channels.push(webhookChannel);
   }
 
   const telegramConfig = config.getTelegramConfig();
