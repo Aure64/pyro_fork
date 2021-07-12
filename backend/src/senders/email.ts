@@ -14,7 +14,7 @@ export type EmailConfig = {
   protocol: Protocol;
   username: string | undefined;
   password: string | undefined;
-  email: string;
+  to: string;
 };
 
 export const create = (config: EmailConfig): Sender => {
@@ -36,8 +36,8 @@ export const create = (config: EmailConfig): Sender => {
     const [subject, text] = formatEmail(events);
 
     const result = await transporter.sendMail({
-      from: `Pyrometer ${config.email}`,
-      to: config.email,
+      from: `Pyrometer ${config.to}`,
+      to: config.to,
       subject,
       text,
     });

@@ -233,8 +233,8 @@ const EMAIL_PASSWORD: UserPref = {
   isArray: false,
   validationRule: "string",
 };
-const EMAIL_EMAIL: UserPref = {
-  key: "email:email",
+const EMAIL_TO: UserPref = {
+  key: "email:to",
   default: undefined,
   description: "Address for email notifier channel",
   alias: undefined,
@@ -340,7 +340,7 @@ const userPrefs = [
   EMAIL_HOST,
   EMAIL_PORT,
   EMAIL_PROTOCOL,
-  EMAIL_EMAIL,
+  EMAIL_TO,
   EMAIL_USERNAME,
   EMAIL_PASSWORD,
   DESKTOP_ENABLED,
@@ -635,9 +635,9 @@ const getEmailConfig: GetEmailConfig = () => {
   const protocol = nconf.get(EMAIL_PROTOCOL.key);
   const username = nconf.get(EMAIL_USERNAME.key);
   const password = nconf.get(EMAIL_PASSWORD.key);
-  const email = nconf.get(EMAIL_EMAIL.key);
-  if (host && port && protocol && email)
-    return { enabled, host, port, protocol, username, password, email };
+  const to = nconf.get(EMAIL_TO.key);
+  if (host && port && protocol && to)
+    return { enabled, host, port, protocol, username, password, to };
   return undefined;
 };
 
