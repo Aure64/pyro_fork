@@ -240,8 +240,8 @@ const EMAIL_TO: UserPref = {
   alias: undefined,
   type: "string",
   group: EMAIL_NOTIFIER_GROUP,
-  isArray: false,
-  validationRule: ["string", "required_with:notifier.email"],
+  isArray: true,
+  validationRule: ["email", "required_with:notifier.email"],
 };
 
 // desktop notifier config

@@ -14,7 +14,7 @@ export type EmailConfig = {
   protocol: Protocol;
   username: string | undefined;
   password: string | undefined;
-  to: string;
+  to: string | string[];
 };
 
 export const create = (config: EmailConfig): Sender => {
