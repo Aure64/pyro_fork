@@ -477,7 +477,7 @@ const makeConfigValidations = (): Validator.Rules => {
   return rules;
 };
 
-const makeConfigPath = (path: string) => Path.join(path, "pyrometer.json");
+const makeConfigPath = (path: string) => Path.join(path, "pyrometer.toml");
 
 export type Config = {
   getBakers: GetBakers;
@@ -519,7 +519,7 @@ export const load = async (
   const configPath = (nconf.get(CONFIG_FILE.key) ||
     makeConfigPath(configDirectory)) as string;
   if (configPath && !FS.existsSync(configPath)) {
-    console.warn(`Config file ${configPath} doens't exist`);
+    console.info(`No config file at ${configPath}`);
   }
   if (configPath.endsWith(".json")) {
     nconf.file(configPath);
