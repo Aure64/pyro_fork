@@ -79,11 +79,9 @@ const main = async () => {
         .demandCommand();
     })
     .command(
-      "clear-data",
-      "Deletes all system data, including job queues and block history.",
-      () => {
-        /* not used.  See more at https://github.com/yargs/yargs/blob/master/docs/api.md#command */
-      },
+      "reset",
+      "Clear state data, including notifications queues and block history.",
+      () => {},
       () => {
         clearData({ dataDirectory });
       }
@@ -98,7 +96,8 @@ const main = async () => {
         const config = await Config.load(dataDirectory, configDirectory);
         await run(config);
       }
-    ).argv;
+    )
+    .demandCommand().argv;
 };
 
 main();
