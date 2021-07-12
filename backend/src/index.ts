@@ -1,3 +1,6 @@
+//see https://github.com/yagop/node-telegram-bot-api/issues/319
+process.env["NTBA_FIX_319"] = "1";
+
 import * as FS from "fs";
 
 import envPaths from "env-paths";
