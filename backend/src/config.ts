@@ -38,8 +38,8 @@ type UserPref = {
     | Validator.Rules;
 };
 
-// baker monitor config
 const BAKER_GROUP = "Baker Monitor:";
+
 const BAKER: UserPref = {
   key: "baker_monitor:baker",
   default: undefined,
@@ -50,6 +50,7 @@ const BAKER: UserPref = {
   isArray: true,
   validationRule: "baker",
 };
+
 const BAKER_CATCHUP_LIMIT: UserPref = {
   key: "baker_monitor:catchup_limit",
   default: 120,
@@ -63,6 +64,7 @@ const BAKER_CATCHUP_LIMIT: UserPref = {
 };
 
 const LOG_LEVELS = ["trace", "info", "debug", "warn", "error"];
+
 const LOGGING: UserPref = {
   key: "logging",
   default: "info",
@@ -73,6 +75,7 @@ const LOGGING: UserPref = {
   isArray: false,
   validationRule: "loglevel",
 };
+
 const NODE: UserPref = {
   key: "node",
   default: undefined,
@@ -83,6 +86,7 @@ const NODE: UserPref = {
   isArray: true,
   validationRule: "link",
 };
+
 const RPC: UserPref = {
   key: "rpc",
   default: "https://mainnet-tezos.giganode.io/",
@@ -93,6 +97,7 @@ const RPC: UserPref = {
   isArray: false,
   validationRule: "link",
 };
+
 const REFERENCE_NODE: UserPref = {
   key: "reference-node",
   default: undefined,
@@ -123,31 +128,31 @@ const EXCLUDED_EVENTS: UserPref = {
   validationRule: "string",
 };
 
-// email notifier config
-const SLACK_NOTIFIER_GROUP = "Slack Notifications:";
+const SLACK_GROUP = "Slack Notifications:";
+
 const SLACK_ENABLED: UserPref = {
   key: "slack:enabled",
   default: undefined,
   description: "Whether slack notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: SLACK_NOTIFIER_GROUP,
+  group: SLACK_GROUP,
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.slack"],
 };
+
 const SLACK_URL: UserPref = {
   key: "slack:url",
   default: undefined,
   description: "Webhook URL for Slack notifications",
   alias: undefined,
   type: "string",
-  group: SLACK_NOTIFIER_GROUP,
+  group: SLACK_GROUP,
   isArray: false,
   validationRule: ["link", "required_with:notifier.slack"],
 };
 
-// telegram notifier config
-const TELEGRAM_NOTIFIER_GROUP = "Telegram Notifications:";
+const TELEGRAM_GROUP = "Telegram Notifications:";
 
 const TELEGRAM_ENABLED: UserPref = {
   key: "telegram:enabled",
@@ -155,140 +160,151 @@ const TELEGRAM_ENABLED: UserPref = {
   description: "Whether telegram notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: TELEGRAM_NOTIFIER_GROUP,
+  group: TELEGRAM_GROUP,
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.telegram"],
 };
+
 const TELEGRAM_TOKEN: UserPref = {
   key: "telegram:token",
   default: undefined,
   description: "API token for Telegram notification channel",
   alias: undefined,
   type: "string",
-  group: TELEGRAM_NOTIFIER_GROUP,
+  group: TELEGRAM_GROUP,
   isArray: false,
   validationRule: ["string", "required_with:notifier.telegram"],
 };
 
-// email notifier config
-//
-const EMAIL_NOTIFIER_GROUP = "Email Notifications:";
+const EMAIL_GROUP = "Email Notifications:";
+
 const EMAIL_ENABLED: UserPref = {
   key: "email:enabled",
   default: undefined,
   description: "Whether email notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.email"],
 };
+
 const EMAIL_HOST: UserPref = {
   key: "email:host",
   default: undefined,
   description: "Host for email notification channel",
   alias: undefined,
   type: "string",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: false,
   validationRule: ["string", "required_with:notifier.email"],
 };
+
 const EMAIL_PORT: UserPref = {
   key: "email:port",
   default: undefined,
   description: "Port for email notification channel",
   alias: undefined,
   type: "number",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: false,
   validationRule: ["numeric", "required_with:notifier.email"],
 };
+
 const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
+
 const EMAIL_PROTOCOL: UserPref = {
   key: "email:protocol",
   default: undefined,
   description: `Protocol for email notification channel [${PROTOCOL_OPTIONS}]`,
   alias: undefined,
   type: "string",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: false,
   validationRule: ["email_protocol", "required_with:notifier.email"],
 };
+
 const EMAIL_USERNAME: UserPref = {
   key: "email:username",
   default: undefined,
   description: "Username for email notification channel",
   alias: undefined,
   type: "string",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: false,
   validationRule: "string",
 };
+
 const EMAIL_PASSWORD: UserPref = {
   key: "email:password",
   default: undefined,
   description: "Password for email notification channel",
   alias: undefined,
   type: "string",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: false,
   validationRule: "string",
 };
+
 const EMAIL_TO: UserPref = {
   key: "email:to",
   default: undefined,
   description: "Address for email notifier channel",
   alias: undefined,
   type: "string",
-  group: EMAIL_NOTIFIER_GROUP,
+  group: EMAIL_GROUP,
   isArray: true,
   validationRule: ["email", "required_with:notifier.email"],
 };
 
-// desktop notifier config
-const DESKTOP_NOTIFIER_GROUP = "Desktop Notifications:";
+const DESKTOP_GROUP = "Desktop Notifications:";
+
 const DESKTOP_ENABLED: UserPref = {
   key: "desktop:enabled",
   default: true,
   description: "Whether desktop notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: DESKTOP_NOTIFIER_GROUP,
+  group: DESKTOP_GROUP,
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.desktop"],
 };
+
 const DESKTOP_SOUND: UserPref = {
   key: "desktop:sound",
   default: false,
   description: "Whether desktop notifier should use sound",
   alias: undefined,
   type: "boolean",
-  group: DESKTOP_NOTIFIER_GROUP,
+  group: DESKTOP_GROUP,
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.desktop"],
 };
-// webhook notifier config
-const WEBHOOK_NOTIFIER_GROUP = "Webhook Notifications:";
+
+const WEBHOOK_GROUP = "Webhook Notifications:";
+
 const WEBHOOK_ENABLED: UserPref = {
   key: "webhook:enabled",
   default: undefined,
   description: "Whether webhook notifier is enabled",
   alias: undefined,
   type: "boolean",
-  group: WEBHOOK_NOTIFIER_GROUP,
+  group: WEBHOOK_GROUP,
   isArray: false,
   validationRule: ["boolean", "required_with:notifier.webhook"],
 };
+
 const WEBHOOK_URL: UserPref = {
   key: "webhook:url",
   default: undefined,
   description: "URL for posting raw JSON notifications",
   alias: undefined,
   type: "string",
-  group: WEBHOOK_NOTIFIER_GROUP,
+  group: WEBHOOK_GROUP,
   isArray: false,
   validationRule: ["link", "required_with:notifier.webhook"],
 };
+
 const CONFIG_FILE: UserPref = {
   key: "config",
   default: undefined,
