@@ -58,7 +58,7 @@ describe("channel", () => {
     const batches: Event[][] = [];
 
     const maxBatchSize = 1;
-    const interval = 100;
+    const interval = 0.1;
     const ttl = Number.MAX_SAFE_INTEGER;
 
     const chan = await channel.create(
@@ -71,7 +71,7 @@ describe("channel", () => {
       { maxBatchSize, ttl, interval }
     );
 
-    setTimeout(() => chan.stop(), interval * 5);
+    setTimeout(() => chan.stop(), interval * 5e3);
 
     await chan.start();
 
@@ -85,7 +85,7 @@ describe("channel", () => {
     const batches: Event[][] = [];
 
     const maxBatchSize = 2;
-    const interval = 100;
+    const interval = 0.1;
     const ttl = Number.MAX_SAFE_INTEGER;
 
     const chan = await channel.create(
@@ -98,7 +98,7 @@ describe("channel", () => {
       { maxBatchSize, ttl, interval }
     );
 
-    setTimeout(() => chan.stop(), interval * 5);
+    setTimeout(() => chan.stop(), interval * 5e3);
 
     await chan.start();
 
@@ -112,7 +112,7 @@ describe("channel", () => {
     const batches: Event[][] = [];
 
     const maxBatchSize = 50;
-    const interval = 100;
+    const interval = 0.1;
     const ttl = 4 * 60;
 
     const chan = await channel.create(
@@ -125,7 +125,7 @@ describe("channel", () => {
       { maxBatchSize, ttl, interval }
     );
 
-    setTimeout(() => chan.stop(), interval * 5);
+    setTimeout(() => chan.stop(), interval * 5e3);
 
     await chan.start();
 
@@ -139,7 +139,7 @@ describe("channel", () => {
     const batches: Event[][] = [];
 
     const maxBatchSize = 3;
-    const interval = 100;
+    const interval = 0.1;
     const ttl = Number.MAX_SAFE_INTEGER;
 
     let attempt = 0;
@@ -156,7 +156,7 @@ describe("channel", () => {
       { maxBatchSize, ttl, interval }
     );
 
-    setTimeout(() => chan.stop(), interval * 5);
+    setTimeout(() => chan.stop(), interval * 5e3);
 
     await chan.start();
 

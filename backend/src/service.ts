@@ -23,7 +23,7 @@ export const create = (
   const isInterrupted = () => !shouldRun;
 
   const start = async () => {
-    log.info(`starting...`);
+    log.info(`starting at interval ${interval}ms ...`);
     try {
       while (shouldRun) {
         count++;
