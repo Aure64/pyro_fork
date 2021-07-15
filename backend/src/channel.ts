@@ -7,17 +7,20 @@ import * as storage from "./storage";
 
 export type Channel = service.Service & EventLogConsumer;
 
-type Seconds = number;
-type Milliseconds = number;
+export type Seconds = number;
+
+export type NotificationsConfig = {
+  maxBatchSize: number;
+  ttl: Seconds;
+  interval: Seconds;
+};
 
 export const create = async (
   name: string,
   send: Sender,
   storageDirectory: string,
   eventLog: EventLog<Event>,
-  maxBatchSize = 100,
-  ttl: Seconds = 24 * 60 * 60,
-  interval: Milliseconds = 60 * 1e3
+  { maxBatchSize, ttl, interval }: NotificationsConfig
 ): Promise<Channel> => {
   const log = getLogger(name);
 
@@ -51,7 +54,7 @@ export const create = async (
     }
   };
 
-  const srv = service.create(name, task, interval);
+  const srv = service.create(name, task, interval * 1e3);
 
   return {
     name,

@@ -1,5 +1,5 @@
 //import { TezosNodeEvent } from "./types";
-import { Event } from "./types2";
+import { Event, Sender } from "./types2";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
 import * as channel from "./channel";
@@ -72,62 +72,51 @@ const run = async (config: Config.Config) => {
   await writeJson(pidFile, pid);
 
   const eventLog = await EventLog.open<Event>(storageDir);
+  const notificationsConfig = config.getNotificationsConfig();
+
+  const createChannel = async (
+    name: string,
+    sender: Sender
+  ): Promise<channel.Channel> => {
+    return await channel.create(
+      name,
+      sender,
+      storageDir,
+      eventLog,
+      notificationsConfig
+    );
+  };
 
   const channels: channel.Channel[] = [];
 
   const emailConfig = config.getEmailConfig();
   if (emailConfig?.enabled) {
-    const emailChannel = await channel.create(
-      "email",
-      EmailSender(emailConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(emailChannel);
+    channels.push(await createChannel("email", EmailSender(emailConfig)));
   }
 
   const desktopConfig = config.getDesktopConfig();
   if (desktopConfig?.enabled) {
-    const desktopChannel = await channel.create(
-      "desktop",
-      DesktopSender(desktopConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(desktopChannel);
+    channels.push(await createChannel("desktop", DesktopSender(desktopConfig)));
   }
 
   const webhookConfig = config.getWebhookConfig();
   if (webhookConfig?.enabled) {
-    const webhookChannel = await channel.create(
-      "webhook",
-      HttpSender(webhookConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(webhookChannel);
+    channels.push(await createChannel("webhook", HttpSender(webhookConfig)));
   }
 
   const telegramConfig = config.getTelegramConfig();
   if (telegramConfig?.enabled) {
-    const telegramChannel = await channel.create(
-      "telegram",
-      await TelegramSender(telegramConfig, storageDir),
-      storageDir,
-      eventLog
+    channels.push(
+      await createChannel(
+        "telegram",
+        await TelegramSender(telegramConfig, storageDir)
+      )
     );
-    channels.push(telegramChannel);
   }
 
   const slackConfig = config.getSlackConfig();
   if (slackConfig?.enabled) {
-    const slackChannel = await channel.create(
-      "slack",
-      SlackSender(slackConfig),
-      storageDir,
-      eventLog
-    );
-    channels.push(slackChannel);
+    channels.push(await createChannel("slack", SlackSender(slackConfig)));
   }
 
   const excludedEvents = config.getExcludedEvents();

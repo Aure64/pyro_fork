@@ -13,6 +13,7 @@ import { TelegramConfig } from "./senders/telegram";
 import { EmailConfig } from "./senders/email";
 import { DesktopConfig } from "./senders/desktop";
 import { WebhookConfig } from "./senders/http";
+import { NotificationsConfig } from "./channel";
 import * as FS from "fs";
 import * as Path from "path";
 import * as yargs from "yargs";
@@ -301,25 +302,39 @@ const CONFIG_FILE: UserPref = {
   validationRule: "string",
 };
 
-// queue config
-const QUEUE_GROUP = "Notification Queues:";
-const QUEUE_RETRIES: UserPref = {
-  key: "queue:max_retries",
-  default: 10,
-  description: "Maximum number of times to retry notifications",
+const NOTIFICATIONS_GROUP = "Notifications:";
+const NOTIFICATIONS_KEY = "notifications";
+
+const NOTIFICATIONS_MAX_BATCH_SIZE: UserPref = {
+  key: `${NOTIFICATIONS_KEY}:max_batch_size`,
+  default: 100,
+  description: "Maximum number of events to process in one batch",
   alias: undefined,
   type: "number",
-  group: QUEUE_GROUP,
+  group: NOTIFICATIONS_GROUP,
   isArray: false,
   validationRule: "numeric",
 };
-const QUEUE_DELAY: UserPref = {
-  key: "queue:retry_delay",
-  default: 60000,
-  description: "Delay between retries in milliseconds",
+
+const NOTIFICATIONS_INTERVAL: UserPref = {
+  key: `${NOTIFICATIONS_KEY}:interval`,
+  default: 60,
+  description:
+    "Post notifications for accumulated events at this interval (in seconds)",
   alias: undefined,
   type: "number",
-  group: QUEUE_GROUP,
+  group: NOTIFICATIONS_GROUP,
+  isArray: false,
+  validationRule: "numeric",
+};
+
+const NOTIFICATIONS_TTL: UserPref = {
+  key: `${NOTIFICATIONS_KEY}:ttl`,
+  default: 24 * 60 * 60,
+  description: "Time to live for queued up events (in seconds)",
+  alias: undefined,
+  type: "number",
+  group: NOTIFICATIONS_GROUP,
   isArray: false,
   validationRule: "numeric",
 };
@@ -348,8 +363,9 @@ const userPrefs = [
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
   CONFIG_FILE,
-  QUEUE_RETRIES,
-  QUEUE_DELAY,
+  NOTIFICATIONS_INTERVAL,
+  NOTIFICATIONS_MAX_BATCH_SIZE,
+  NOTIFICATIONS_TTL,
 ];
 
 /**
@@ -493,6 +509,7 @@ export type Config = {
   getWebhookConfig: GetWebhookConfig;
   storageDirectory: string;
   getBakerCatchupLimit: GetBakerCatchupLimit;
+  getNotificationsConfig: () => NotificationsConfig;
   asObject: () => any;
 };
 
@@ -569,6 +586,7 @@ export const load = async (
     getWebhookConfig,
     storageDirectory: dataDirectory,
     getBakerCatchupLimit,
+    getNotificationsConfig,
     asObject,
   };
   return config;
@@ -668,4 +686,8 @@ type GetBakerCatchupLimit = () => number;
 
 const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
   return nconf.get(BAKER_CATCHUP_LIMIT.key);
+};
+
+const getNotificationsConfig = () => {
+  return nconf.get("notifications") as NotificationsConfig;
 };
