@@ -6,7 +6,7 @@ export enum Kind {
   MissedEndorsement = "missed_endorsement",
   DoubleEndorsed = "double_endorsed",
   BakeScheduled = "bake_scheduled",
-  EndorsementScheduled = "endosement_scheduled",
+  EndorsementScheduled = "endorsement_scheduled",
   Deactivated = "deactivated",
   DeactivationRisk = "deactivation_risk",
   NodeBehind = "node_behind",
