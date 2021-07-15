@@ -138,7 +138,7 @@ const SLACK_ENABLED: UserPref = {
   type: "boolean",
   group: SLACK_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.slack"],
+  validationRule: ["boolean", "required_with:slack"],
 };
 
 const SLACK_URL: UserPref = {
@@ -149,7 +149,7 @@ const SLACK_URL: UserPref = {
   type: "string",
   group: SLACK_GROUP,
   isArray: false,
-  validationRule: ["link", "required_with:notifier.slack"],
+  validationRule: ["link", "required_with:slack"],
 };
 
 const TELEGRAM_GROUP = "Telegram Notifications:";
@@ -162,7 +162,7 @@ const TELEGRAM_ENABLED: UserPref = {
   type: "boolean",
   group: TELEGRAM_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.telegram"],
+  validationRule: ["boolean", "required_with:telegram"],
 };
 
 const TELEGRAM_TOKEN: UserPref = {
@@ -173,7 +173,7 @@ const TELEGRAM_TOKEN: UserPref = {
   type: "string",
   group: TELEGRAM_GROUP,
   isArray: false,
-  validationRule: ["string", "required_with:notifier.telegram"],
+  validationRule: ["string", "required_with:telegram"],
 };
 
 const EMAIL_GROUP = "Email Notifications:";
@@ -186,7 +186,7 @@ const EMAIL_ENABLED: UserPref = {
   type: "boolean",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.email"],
+  validationRule: ["boolean", "required_with:email"],
 };
 
 const EMAIL_HOST: UserPref = {
@@ -197,7 +197,7 @@ const EMAIL_HOST: UserPref = {
   type: "string",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["string", "required_with:notifier.email"],
+  validationRule: ["string", "required_with:email"],
 };
 
 const EMAIL_PORT: UserPref = {
@@ -208,7 +208,7 @@ const EMAIL_PORT: UserPref = {
   type: "number",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["numeric", "required_with:notifier.email"],
+  validationRule: ["numeric", "required_with:email"],
 };
 
 const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
@@ -221,7 +221,7 @@ const EMAIL_PROTOCOL: UserPref = {
   type: "string",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["email_protocol", "required_with:notifier.email"],
+  validationRule: ["email_protocol", "required_with:email"],
 };
 
 const EMAIL_USERNAME: UserPref = {
@@ -254,7 +254,7 @@ const EMAIL_TO: UserPref = {
   type: "string",
   group: EMAIL_GROUP,
   isArray: true,
-  validationRule: ["email", "required_with:notifier.email"],
+  validationRule: ["email", "required_with:email"],
 };
 
 const DESKTOP_GROUP = "Desktop Notifications:";
@@ -267,7 +267,7 @@ const DESKTOP_ENABLED: UserPref = {
   type: "boolean",
   group: DESKTOP_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.desktop"],
+  validationRule: ["boolean", "required_with:desktop"],
 };
 
 const DESKTOP_SOUND: UserPref = {
@@ -278,7 +278,7 @@ const DESKTOP_SOUND: UserPref = {
   type: "boolean",
   group: DESKTOP_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.desktop"],
+  validationRule: ["boolean", "required_with:desktop"],
 };
 
 const WEBHOOK_GROUP = "Webhook Notifications:";
@@ -291,7 +291,7 @@ const WEBHOOK_ENABLED: UserPref = {
   type: "boolean",
   group: WEBHOOK_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:notifier.webhook"],
+  validationRule: ["boolean", "required_with:webhook"],
 };
 
 const WEBHOOK_URL: UserPref = {
@@ -302,7 +302,7 @@ const WEBHOOK_URL: UserPref = {
   type: "string",
   group: WEBHOOK_GROUP,
   isArray: false,
-  validationRule: ["link", "required_with:notifier.webhook"],
+  validationRule: ["link", "required_with:webhook"],
 };
 
 const CONFIG_FILE: UserPref = {

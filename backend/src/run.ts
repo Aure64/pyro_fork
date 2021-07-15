@@ -72,7 +72,7 @@ const run = async (config: Config.Config) => {
   await writeJson(pidFile, pid);
 
   const eventLog = await EventLog.open<Event>(storageDir);
-  const notificationsConfig = config.getNotificationsConfig();
+  const notificationsConfig = config.notifications;
 
   const createChannel = async (
     name: string,
