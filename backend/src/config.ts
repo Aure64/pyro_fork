@@ -43,7 +43,7 @@ const BAKER_GROUP = "Baker Monitor:";
 const BAKER: UserPref = {
   key: "baker_monitor:baker",
   default: undefined,
-  description: "Node to watch for baking events.",
+  description: "Baker address to monitor",
   alias: ["b", "baker"],
   type: "string",
   group: BAKER_GROUP,
