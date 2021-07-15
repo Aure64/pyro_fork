@@ -71,6 +71,7 @@ const main = async () => {
         .command(
           "sample [path]",
           "Print sample config or write it to a file",
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           () => {},
           ({ path }: { path: string }) => {
             writeSampleConfig(path);
@@ -81,6 +82,7 @@ const main = async () => {
     .command(
       "reset",
       "Clear state data, including notifications queues and block history.",
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
       () => {
         clearData({ dataDirectory });
