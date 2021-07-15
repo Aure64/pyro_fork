@@ -59,6 +59,7 @@ describe("channel", () => {
 
     const maxBatchSize = 1;
     const interval = 100;
+    const ttl = Number.MAX_SAFE_INTEGER;
 
     const chan = await channel.create(
       "test",
@@ -67,9 +68,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      maxBatchSize,
-      Number.MAX_SAFE_INTEGER,
-      interval
+      { maxBatchSize, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5);
@@ -87,6 +86,7 @@ describe("channel", () => {
 
     const maxBatchSize = 2;
     const interval = 100;
+    const ttl = Number.MAX_SAFE_INTEGER;
 
     const chan = await channel.create(
       "test",
@@ -95,9 +95,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      maxBatchSize,
-      Number.MAX_SAFE_INTEGER,
-      interval
+      { maxBatchSize, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5);
@@ -124,9 +122,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      maxBatchSize,
-      ttl,
-      interval
+      { maxBatchSize, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5);
@@ -144,6 +140,7 @@ describe("channel", () => {
 
     const maxBatchSize = 3;
     const interval = 100;
+    const ttl = Number.MAX_SAFE_INTEGER;
 
     let attempt = 0;
 
@@ -156,9 +153,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      maxBatchSize,
-      Number.MAX_SAFE_INTEGER,
-      interval
+      { maxBatchSize, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5);

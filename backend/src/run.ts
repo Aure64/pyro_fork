@@ -53,7 +53,7 @@ const run = async (config: Config.Config) => {
     throw err;
   });
 
-  setupLogging(config.getLogLevel());
+  setupLogging(config.logLevel);
 
   const storageDir = normalizePath(config.storageDirectory);
 
