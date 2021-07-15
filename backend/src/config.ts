@@ -22,7 +22,6 @@ import { Kind as Events } from "./types2";
 
 import setPath from "./setPath";
 
-// user prefs
 type UserPref = {
   key: string;
   default: unknown;
@@ -129,103 +128,110 @@ const EXCLUDED_EVENTS: UserPref = {
 };
 
 const SLACK_GROUP = "Slack Notifications:";
+const SLACK_KEY = "slack";
 
 const SLACK_ENABLED: UserPref = {
-  key: "slack:enabled",
-  default: undefined,
+  key: `${SLACK_KEY}:enabled`,
+  default: false,
   description: "Whether slack notifier is enabled",
   alias: undefined,
   type: "boolean",
   group: SLACK_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:slack"],
+  validationRule: "boolean",
 };
 
 const SLACK_URL: UserPref = {
-  key: "slack:url",
+  key: `${SLACK_KEY}:url`,
   default: undefined,
   description: "Webhook URL for Slack notifications",
   alias: undefined,
   type: "string",
   group: SLACK_GROUP,
   isArray: false,
-  validationRule: ["link", "required_with:slack"],
+  validationRule: ["link", { required_if: [`${SLACK_KEY}.enabled`, true] }],
 };
 
 const TELEGRAM_GROUP = "Telegram Notifications:";
+const TELEGRAM_KEY = "telegram";
 
 const TELEGRAM_ENABLED: UserPref = {
-  key: "telegram:enabled",
-  default: undefined,
+  key: `${TELEGRAM_KEY}:enabled`,
+  default: false,
   description: "Whether telegram notifier is enabled",
   alias: undefined,
   type: "boolean",
   group: TELEGRAM_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:telegram"],
+  validationRule: ["boolean"],
 };
 
 const TELEGRAM_TOKEN: UserPref = {
-  key: "telegram:token",
+  key: `${TELEGRAM_KEY}:token`,
   default: undefined,
   description: "API token for Telegram notification channel",
   alias: undefined,
   type: "string",
   group: TELEGRAM_GROUP,
   isArray: false,
-  validationRule: ["string", "required_with:telegram"],
+  validationRule: [
+    "string",
+    { required_if: [`${TELEGRAM_KEY}.enabled`, true] },
+  ],
 };
 
 const EMAIL_GROUP = "Email Notifications:";
+const EMAIL_KEY = "email";
+const EMAIL_REQUIRED = { required_if: [`${EMAIL_KEY}.enabled`, true] };
 
 const EMAIL_ENABLED: UserPref = {
-  key: "email:enabled",
+  key: `${EMAIL_KEY}:enabled`,
   default: undefined,
   description: "Whether email notifier is enabled",
   alias: undefined,
   type: "boolean",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:email"],
+  validationRule: ["boolean"],
 };
 
 const EMAIL_HOST: UserPref = {
-  key: "email:host",
+  key: `${EMAIL_KEY}:host`,
   default: undefined,
   description: "Host for email notification channel",
   alias: undefined,
   type: "string",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["string", "required_with:email"],
+  validationRule: ["string", EMAIL_REQUIRED],
 };
 
 const EMAIL_PORT: UserPref = {
-  key: "email:port",
+  key: `${EMAIL_KEY}:port`,
   default: undefined,
   description: "Port for email notification channel",
   alias: undefined,
   type: "number",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["numeric", "required_with:email"],
+  validationRule: ["numeric", EMAIL_REQUIRED],
 };
 
 const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
 
 const EMAIL_PROTOCOL: UserPref = {
-  key: "email:protocol",
+  key: `${EMAIL_KEY}:protocol`,
   default: undefined,
   description: `Protocol for email notification channel [${PROTOCOL_OPTIONS}]`,
   alias: undefined,
   type: "string",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["email_protocol", "required_with:email"],
+  validationRule: ["email_protocol", EMAIL_REQUIRED],
 };
 
 const EMAIL_USERNAME: UserPref = {
-  key: "email:username",
+  key: `${EMAIL_KEY}:username`,
   default: undefined,
   description: "Username for email notification channel",
   alias: undefined,
@@ -236,7 +242,7 @@ const EMAIL_USERNAME: UserPref = {
 };
 
 const EMAIL_PASSWORD: UserPref = {
-  key: "email:password",
+  key: `${EMAIL_KEY}:password`,
   default: undefined,
   description: "Password for email notification channel",
   alias: undefined,
@@ -247,62 +253,64 @@ const EMAIL_PASSWORD: UserPref = {
 };
 
 const EMAIL_TO: UserPref = {
-  key: "email:to",
+  key: `${EMAIL_KEY}:to`,
   default: undefined,
   description: "Address for email notifier channel",
   alias: undefined,
   type: "string",
   group: EMAIL_GROUP,
   isArray: true,
-  validationRule: ["email", "required_with:email"],
+  validationRule: ["email", EMAIL_REQUIRED],
 };
 
 const DESKTOP_GROUP = "Desktop Notifications:";
+const DESKTOP_KEY = "desktop";
 
 const DESKTOP_ENABLED: UserPref = {
-  key: "desktop:enabled",
-  default: true,
+  key: `${DESKTOP_KEY}:enabled`,
+  default: false,
   description: "Whether desktop notifier is enabled",
   alias: undefined,
   type: "boolean",
   group: DESKTOP_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:desktop"],
+  validationRule: "boolean",
 };
 
 const DESKTOP_SOUND: UserPref = {
-  key: "desktop:sound",
+  key: `${DESKTOP_KEY}:sound`,
   default: false,
   description: "Whether desktop notifier should use sound",
   alias: undefined,
   type: "boolean",
   group: DESKTOP_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:desktop"],
+  validationRule: "boolean",
 };
 
 const WEBHOOK_GROUP = "Webhook Notifications:";
+const WEBHOOK_KEY = "webhook";
 
 const WEBHOOK_ENABLED: UserPref = {
-  key: "webhook:enabled",
-  default: undefined,
+  key: `${WEBHOOK_KEY}:enabled`,
+  default: false,
   description: "Whether webhook notifier is enabled",
   alias: undefined,
   type: "boolean",
   group: WEBHOOK_GROUP,
   isArray: false,
-  validationRule: ["boolean", "required_with:webhook"],
+  validationRule: "boolean",
 };
 
 const WEBHOOK_URL: UserPref = {
-  key: "webhook:url",
+  key: `${WEBHOOK_KEY}:url`,
   default: undefined,
   description: "URL for posting raw JSON notifications",
   alias: undefined,
   type: "string",
   group: WEBHOOK_GROUP,
   isArray: false,
-  validationRule: ["link", "required_with:webhook"],
+  validationRule: ["link", { required_if: [`${WEBHOOK_KEY}.enabled`, true] }],
 };
 
 const CONFIG_FILE: UserPref = {
@@ -512,20 +520,20 @@ const makeConfigValidations = (): Validator.Rules => {
 const makeConfigPath = (path: string) => Path.join(path, "pyrometer.toml");
 
 export type Config = {
-  getBakers: GetBakers;
-  getRpc: GetRpc;
-  getReferenceNode: GetReferenceNode;
-  getNodes: GetNodes;
-  getLogLevel: GetLogLevel;
-  getExcludedEvents: GetExcludedEvents;
-  getSlackConfig: GetSlackConfig;
-  getTelegramConfig: GetTelegramConfig;
-  getEmailConfig: GetEmailConfig;
-  getDesktopConfig: GetDesktopConfig;
-  getWebhookConfig: GetWebhookConfig;
+  bakers: string[];
+  rpc: string;
+  referenceNode?: string;
+  nodes: string[];
+  logLevel: LogLevelDesc;
+  excludedEvents: Events[];
+  slack: SlackConfig;
+  telegram: TelegramConfig;
+  email: EmailConfig;
+  desktop: DesktopConfig;
+  webhook: WebhookConfig;
   storageDirectory: string;
-  getBakerCatchupLimit: GetBakerCatchupLimit;
-  getNotificationsConfig: () => NotificationsConfig;
+  bakerCatchupLimit: number;
+  notifications: NotificationsConfig;
   asObject: () => any;
 };
 
@@ -589,121 +597,47 @@ export const load = async (
   };
 
   const config: Config = {
-    getBakers,
-    getRpc,
-    getReferenceNode,
-    getNodes,
-    getLogLevel,
-    getExcludedEvents,
-    getSlackConfig,
-    getTelegramConfig,
-    getEmailConfig,
-    getDesktopConfig,
-    getWebhookConfig,
+    get bakers() {
+      return nconf.get(BAKER.key) || [];
+    },
+    get rpc() {
+      return nconf.get(RPC.key);
+    },
+    get referenceNode() {
+      return nconf.get(REFERENCE_NODE.key);
+    },
+    get nodes() {
+      return nconf.get(NODE.key) || [];
+    },
+    get logLevel() {
+      return nconf.get(LOGGING.key) as LogLevelDesc;
+    },
+    get excludedEvents() {
+      return nconf.get(EXCLUDED_EVENTS.key) || [];
+    },
+    get telegram() {
+      return nconf.get(TELEGRAM_KEY) as TelegramConfig;
+    },
+    get email() {
+      return nconf.get(EMAIL_KEY) as EmailConfig;
+    },
+    get desktop() {
+      return nconf.get(DESKTOP_KEY) as DesktopConfig;
+    },
+    get webhook() {
+      return nconf.get(WEBHOOK_KEY) as WebhookConfig;
+    },
+    get slack() {
+      return nconf.get(SLACK_KEY) as SlackConfig;
+    },
+    get bakerCatchupLimit() {
+      return nconf.get(BAKER_CATCHUP_LIMIT.key);
+    },
+    get notifications() {
+      return nconf.get(NOTIFICATIONS_KEY) as NotificationsConfig;
+    },
     storageDirectory: dataDirectory,
-    getBakerCatchupLimit,
-    getNotificationsConfig,
     asObject,
   };
   return config;
-};
-
-type GetBakers = () => string[];
-
-const getBakers: GetBakers = () => {
-  return nconf.get(BAKER.key) || [];
-};
-
-type GetRpc = () => string;
-
-const getRpc: GetRpc = () => {
-  return nconf.get(RPC.key);
-};
-
-type GetReferenceNode = () => string | undefined;
-
-const getReferenceNode: GetReferenceNode = () => {
-  return nconf.get(REFERENCE_NODE.key);
-};
-
-type GetNodes = () => string[];
-const getNodes: GetNodes = () => {
-  return nconf.get(NODE.key) || [];
-};
-
-type GetLogLevel = () => LogLevelDesc;
-
-const getLogLevel: GetLogLevel = () => {
-  const value = nconf.get(LOGGING.key);
-  return logLevelFromString(value);
-};
-
-const logLevelFromString = (value: string): LogLevelDesc => {
-  return value as LogLevelDesc;
-};
-
-type GetExcludedEvents = () => string[];
-
-const getExcludedEvents: GetExcludedEvents = () => {
-  return nconf.get(EXCLUDED_EVENTS.key) || [];
-};
-
-type GetSlackConfig = () => SlackConfig | undefined;
-
-const getSlackConfig: GetSlackConfig = () => {
-  const enabled = nconf.get(SLACK_ENABLED.key);
-  const url = nconf.get(SLACK_URL.key);
-  if (url) return { enabled, url };
-  return undefined;
-};
-
-type GetTelegramConfig = () => TelegramConfig | undefined;
-
-const getTelegramConfig: GetTelegramConfig = () => {
-  const enabled = nconf.get(TELEGRAM_ENABLED.key);
-  const token = nconf.get(TELEGRAM_TOKEN.key);
-  if (token) return { enabled, token };
-  return undefined;
-};
-
-type GetEmailConfig = () => EmailConfig | undefined;
-
-const getEmailConfig: GetEmailConfig = () => {
-  const enabled = nconf.get(EMAIL_ENABLED.key);
-  const host = nconf.get(EMAIL_HOST.key);
-  const port = nconf.get(EMAIL_PORT.key);
-  const protocol = nconf.get(EMAIL_PROTOCOL.key);
-  const username = nconf.get(EMAIL_USERNAME.key);
-  const password = nconf.get(EMAIL_PASSWORD.key);
-  const to = nconf.get(EMAIL_TO.key);
-  if (host && port && protocol && to)
-    return { enabled, host, port, protocol, username, password, to };
-  return undefined;
-};
-
-type GetDesktopConfig = () => DesktopConfig;
-
-const getDesktopConfig: GetDesktopConfig = () => {
-  const enableSound = nconf.get(DESKTOP_SOUND.key);
-  const enabled = nconf.get(DESKTOP_ENABLED.key);
-  return { enabled, enableSound };
-};
-
-type GetWebhookConfig = () => WebhookConfig | undefined;
-
-const getWebhookConfig: GetWebhookConfig = () => {
-  const enabled = nconf.get(WEBHOOK_ENABLED.key);
-  const url = nconf.get(WEBHOOK_URL.key);
-  if (url) return { enabled, url };
-  return undefined;
-};
-
-type GetBakerCatchupLimit = () => number;
-
-const getBakerCatchupLimit: GetBakerCatchupLimit = () => {
-  return nconf.get(BAKER_CATCHUP_LIMIT.key);
-};
-
-const getNotificationsConfig = () => {
-  return nconf.get("notifications") as NotificationsConfig;
 };

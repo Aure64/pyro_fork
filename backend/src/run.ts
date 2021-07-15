@@ -89,22 +89,22 @@ const run = async (config: Config.Config) => {
 
   const channels: channel.Channel[] = [];
 
-  const emailConfig = config.getEmailConfig();
+  const emailConfig = config.email;
   if (emailConfig?.enabled) {
     channels.push(await createChannel("email", EmailSender(emailConfig)));
   }
 
-  const desktopConfig = config.getDesktopConfig();
+  const desktopConfig = config.desktop;
   if (desktopConfig?.enabled) {
     channels.push(await createChannel("desktop", DesktopSender(desktopConfig)));
   }
 
-  const webhookConfig = config.getWebhookConfig();
+  const webhookConfig = config.webhook;
   if (webhookConfig?.enabled) {
     channels.push(await createChannel("webhook", HttpSender(webhookConfig)));
   }
 
-  const telegramConfig = config.getTelegramConfig();
+  const telegramConfig = config.telegram;
   if (telegramConfig?.enabled) {
     channels.push(
       await createChannel(
@@ -114,12 +114,12 @@ const run = async (config: Config.Config) => {
     );
   }
 
-  const slackConfig = config.getSlackConfig();
+  const slackConfig = config.slack;
   if (slackConfig?.enabled) {
     channels.push(await createChannel("slack", SlackSender(slackConfig)));
   }
 
-  const excludedEvents = config.getExcludedEvents();
+  const excludedEvents = config.excludedEvents;
 
   const onEvent = async (event: Event) => {
     if ("kind" in event && excludedEvents.includes(event.kind)) {
@@ -129,12 +129,12 @@ const run = async (config: Config.Config) => {
     await eventLog.add(event);
   };
 
-  const bakers = config.getBakers();
-  const rpcNode = config.getRpc();
-  const referenceNode = config.getReferenceNode();
+  const bakers = config.bakers;
+  const rpcNode = config.rpc;
+  const referenceNode = config.referenceNode;
 
   //always monitor rpc node
-  const nodes = [...new Set([...config.getNodes(), rpcNode])];
+  const nodes = [...new Set([...config.nodes, rpcNode])];
 
   if (bakers.length === 0 && nodes.length === 0) {
     console.error("You must specify nodes or bakers to watch.");
@@ -147,7 +147,7 @@ const run = async (config: Config.Config) => {
           storageDir,
           bakers,
           rpcNode,
-          config.getBakerCatchupLimit(),
+          config.bakerCatchupLimit,
           onEvent
         )
       : null;
