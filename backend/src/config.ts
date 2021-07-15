@@ -568,7 +568,7 @@ export const load = async (
   const loadedConfig = nconf.get();
   const validation = new Validator(loadedConfig, makeConfigValidations());
   if (validation.fails()) {
-    console.log("Your config is invalid. Pyrometer cannot start.");
+    console.error("Invalid config");
     const errors = validation.errors.all();
     console.log(formatValidationErrors(errors));
     process.exit(1);
