@@ -11,6 +11,7 @@ const LOGGER_NAME = "telegram-sender";
 export type TelegramConfig = {
   enabled: boolean;
   token: string;
+  emoji: boolean;
 };
 
 const MAX_MESSAGE_LENGTH = 4096;
@@ -76,7 +77,7 @@ export const create = async (
     if (!chatId) {
       throw new Error("Telegram notification channel is missing chatId");
     }
-    const lines = format(events);
+    const lines = format(events, config.emoji);
     let message = "";
     let count = 0;
     for (const line of lines) {

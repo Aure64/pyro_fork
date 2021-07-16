@@ -3,7 +3,11 @@ import format from "../format2";
 
 import { Event, Sender } from "../types2";
 
-export type DesktopConfig = { enableSound: boolean; enabled: boolean };
+export type DesktopConfig = {
+  enableSound: boolean;
+  enabled: boolean;
+  emoji: boolean;
+};
 
 const post = async (message: string, sound: boolean): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -27,7 +31,7 @@ const post = async (message: string, sound: boolean): Promise<void> => {
 export const create = (config: DesktopConfig): Sender => {
   return async (events: Event[]) => {
     //doesn't support multiline messages, must post one by one
-    const lines = format(events);
+    const lines = format(events, config.emoji);
     for (const line of lines) {
       await post(line, config.enableSound);
     }

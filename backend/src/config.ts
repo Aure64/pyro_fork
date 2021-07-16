@@ -40,12 +40,6 @@ type UserPref = {
     | Validator.Rules;
 };
 
-type Group = {
-  key: string;
-  label: string;
-  items: UserPref[];
-};
-
 const BAKER_GROUP = "Baker Monitor:";
 
 const BAKER: UserPref = {
@@ -181,6 +175,17 @@ const SLACK_URL: UserPref = {
   validationRule: ["link", { required_if: [`${SLACK_KEY}.enabled`, true] }],
 };
 
+const SLACK_EMOJI: UserPref = {
+  key: `${SLACK_KEY}:emoji`,
+  default: true,
+  description: "Use emoji in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: SLACK_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
+};
+
 const TELEGRAM_GROUP = "Telegram Notifications:";
 const TELEGRAM_KEY = "telegram";
 
@@ -208,6 +213,17 @@ const TELEGRAM_TOKEN: UserPref = {
     "string",
     { required_if: [`${TELEGRAM_KEY}.enabled`, true] },
   ],
+};
+
+const TELEGRAM_EMOJI: UserPref = {
+  key: `${TELEGRAM_KEY}:emoji`,
+  default: true,
+  description: "Use emoji in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: TELEGRAM_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
 };
 
 const EMAIL_GROUP = "Email Notifications:";
@@ -299,6 +315,17 @@ const EMAIL_TO: UserPref = {
   validationRule: ["email", EMAIL_REQUIRED],
 };
 
+const EMAIL_EMOJI: UserPref = {
+  key: `${EMAIL_KEY}:emoji`,
+  default: true,
+  description: "Use emoji in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: EMAIL_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
+};
+
 const DESKTOP_GROUP = "Desktop Notifications:";
 const DESKTOP_KEY = "desktop";
 
@@ -322,6 +349,17 @@ const DESKTOP_SOUND: UserPref = {
   group: DESKTOP_GROUP,
   isArray: false,
   validationRule: "boolean",
+};
+
+const DESKTOP_EMOJI: UserPref = {
+  key: `${DESKTOP_KEY}:emoji`,
+  default: true,
+  description: "Use emoji in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: DESKTOP_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
 };
 
 const WEBHOOK_GROUP = "Webhook Notifications:";
@@ -413,8 +451,10 @@ const userPrefs = [
   EXCLUDED_EVENTS,
   SLACK_ENABLED,
   SLACK_URL,
+  SLACK_EMOJI,
   TELEGRAM_ENABLED,
   TELEGRAM_TOKEN,
+  TELEGRAM_EMOJI,
   EMAIL_ENABLED,
   EMAIL_HOST,
   EMAIL_PORT,
@@ -422,8 +462,10 @@ const userPrefs = [
   EMAIL_TO,
   EMAIL_USERNAME,
   EMAIL_PASSWORD,
+  EMAIL_EMOJI,
   DESKTOP_ENABLED,
   DESKTOP_SOUND,
+  DESKTOP_EMOJI,
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
   CONFIG_FILE,

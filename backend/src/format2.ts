@@ -154,7 +154,7 @@ export const email = (
     subject = lines[0];
     text = "";
   } else {
-    subject = summary(events, true);
+    subject = summary(events, useEmoji);
     text = lines.join("\n");
   }
 
