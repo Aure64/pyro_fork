@@ -468,10 +468,6 @@ const makeConfigDefaults = () => {
   return defaults;
 };
 
-/**
- * Creates a sample config, with the proper structure.  The values will be populated with defaults where
- * present, otherwise placeholder text with the option's description and type.
- */
 export const makeSampleConfig = (): Record<string, string> => {
   const sampleConfig = userPrefs.reduce(
     (accumulator: Record<string, string>, userPref: UserPref) => {
