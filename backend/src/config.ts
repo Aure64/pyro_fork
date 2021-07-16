@@ -477,7 +477,6 @@ export const makeSampleConfig = (): Record<string, string> => {
     (accumulator: Record<string, string>, userPref: UserPref) => {
       // ignore user prefs that are only supported by the command line
       if (!userPref.cliOnly) {
-        const fieldType = userPref.isArray ? "array" : userPref.type;
         const value =
           userPref.default !== undefined
             ? userPref.default
