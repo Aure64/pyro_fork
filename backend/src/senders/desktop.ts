@@ -7,6 +7,7 @@ export type DesktopConfig = {
   enableSound: boolean;
   enabled: boolean;
   emoji: boolean;
+  short_address: boolean;
 };
 
 const post = async (message: string, sound: boolean): Promise<void> => {
@@ -31,7 +32,7 @@ const post = async (message: string, sound: boolean): Promise<void> => {
 export const create = (config: DesktopConfig): Sender => {
   return async (events: Event[]) => {
     //doesn't support multiline messages, must post one by one
-    const lines = format(events, config.emoji);
+    const lines = format(events, config.emoji, config.short_address);
     for (const line of lines) {
       await post(line, config.enableSound);
     }

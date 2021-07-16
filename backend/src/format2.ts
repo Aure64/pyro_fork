@@ -8,10 +8,18 @@ const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
 
 const nonBakerEvent = (e: eventTypes.Event) => !isBakerEvent(e);
 
-const format = (events: eventTypes.Event[], useEmoji = false): string[] => {
+const format = (
+  events: eventTypes.Event[],
+  useEmoji = false,
+  abbreviateAddress = false
+): string[] => {
   const bakerEvents = events.filter(isBakerEvent);
   const otherEvents = events.filter(nonBakerEvent);
-  const formattedBakerEvents = aggregateByBaker(bakerEvents, useEmoji);
+  const formattedBakerEvents = aggregateByBaker(
+    bakerEvents,
+    useEmoji,
+    abbreviateAddress
+  );
   const formattedOtherEvents = otherEvents.map(toString);
   return [...formattedOtherEvents, ...formattedBakerEvents];
 };
@@ -81,12 +89,16 @@ const Formatters: {
   [E.Notification]: (e) => `${e.message}`,
 };
 
+export const abbreviateBakerAddress = (addr: string) =>
+  `${addr.substr(0, 4)}..${addr.substr(-4)}`;
+
 export const toString = (e: eventTypes.Event): string =>
   (Formatters[e.kind] as (v: eventTypes.Event) => string)(e);
 
 export const aggregateByBaker = (
   events: eventTypes.BakerEvent[],
-  useEmoji = false
+  useEmoji = false,
+  abbreviateAddress = false
 ): string[] => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const eventsByBaker = groupBy(events, "baker");
@@ -121,7 +133,10 @@ export const aggregateByBaker = (
       } @ ${formattedRange}`;
       formattedWithCounts.push(formattedKind);
     }
-    const line = `${baker}: ${formattedWithCounts.join(", ")}`;
+    const formattedBaker = abbreviateAddress
+      ? abbreviateBakerAddress(baker)
+      : baker;
+    const line = `${formattedBaker} ${formattedWithCounts.join(", ")}`;
     lines.push(line);
   }
   return lines;
@@ -143,9 +158,10 @@ export const summary = (
 
 export const email = (
   events: eventTypes.Event[],
-  useEmoji = false
+  useEmoji = false,
+  abbreviateAddress = false
 ): [string, string] => {
-  const lines = format(events, useEmoji);
+  const lines = format(events, useEmoji, abbreviateAddress);
 
   let subject;
   let text;

@@ -186,6 +186,17 @@ const SLACK_EMOJI: UserPref = {
   validationRule: ["boolean"],
 };
 
+const SLACK_SHORT_ADDRESS: UserPref = {
+  key: `${SLACK_KEY}:short_address`,
+  default: true,
+  description: "Abbreviate baker addresses in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: SLACK_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
+};
+
 const TELEGRAM_GROUP = "Telegram Notifications:";
 const TELEGRAM_KEY = "telegram";
 
@@ -226,6 +237,17 @@ const TELEGRAM_EMOJI: UserPref = {
   validationRule: ["boolean"],
 };
 
+const TELEGRAM_SHORT_ADDRESS: UserPref = {
+  key: `${TELEGRAM_KEY}:short_address`,
+  default: true,
+  description: "Abbreviate baker addresses in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: TELEGRAM_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
+};
+
 const EMAIL_GROUP = "Email Notifications:";
 const EMAIL_KEY = "email";
 const EMAIL_REQUIRED = { required_if: [`${EMAIL_KEY}.enabled`, true] };
@@ -256,7 +278,7 @@ const EMAIL_HOST: UserPref = {
 const EMAIL_PORT: UserPref = {
   key: `${EMAIL_KEY}:port`,
   default: undefined,
-  sampleValue: "25",
+  sampleValue: 25,
   description: "Port for email notification channel",
   alias: undefined,
   type: "number",
@@ -326,6 +348,17 @@ const EMAIL_EMOJI: UserPref = {
   validationRule: ["boolean"],
 };
 
+const EMAIL_SHORT_ADDRESS: UserPref = {
+  key: `${EMAIL_KEY}:short_address`,
+  default: true,
+  description: "Abbreviate baker addresses in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: EMAIL_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
+};
+
 const DESKTOP_GROUP = "Desktop Notifications:";
 const DESKTOP_KEY = "desktop";
 
@@ -355,6 +388,17 @@ const DESKTOP_EMOJI: UserPref = {
   key: `${DESKTOP_KEY}:emoji`,
   default: true,
   description: "Use emoji in notification text",
+  alias: undefined,
+  type: "boolean",
+  group: DESKTOP_GROUP,
+  isArray: false,
+  validationRule: ["boolean"],
+};
+
+const DESKTOP_SHORT_ADDRESS: UserPref = {
+  key: `${DESKTOP_KEY}:short_address`,
+  default: true,
+  description: "Abbreviate baker addresses in notification text",
   alias: undefined,
   type: "boolean",
   group: DESKTOP_GROUP,
@@ -394,7 +438,7 @@ const CONFIG_FILE: UserPref = {
   key: "config",
   default: Path.join(configDirectory, "pyrometer.toml"),
   description: "Path to configuration file.",
-  alias: undefined,
+  alias: "c",
   type: "string",
   group: undefined,
   isArray: false,
@@ -452,9 +496,11 @@ const userPrefs = [
   SLACK_ENABLED,
   SLACK_URL,
   SLACK_EMOJI,
+  SLACK_SHORT_ADDRESS,
   TELEGRAM_ENABLED,
   TELEGRAM_TOKEN,
   TELEGRAM_EMOJI,
+  TELEGRAM_SHORT_ADDRESS,
   EMAIL_ENABLED,
   EMAIL_HOST,
   EMAIL_PORT,
@@ -463,9 +509,11 @@ const userPrefs = [
   EMAIL_USERNAME,
   EMAIL_PASSWORD,
   EMAIL_EMOJI,
+  EMAIL_SHORT_ADDRESS,
   DESKTOP_ENABLED,
   DESKTOP_SOUND,
   DESKTOP_EMOJI,
+  DESKTOP_SHORT_ADDRESS,
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
   CONFIG_FILE,

@@ -100,11 +100,11 @@ describe("format", () => {
   it("multiple events of same kind", async () => {
     expect(format.aggregateByBaker(events)).toMatchInlineSnapshot(`
       Array [
-        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk: baked 2 @ 10001-10004, endorsed 2 @ 10002-10005, missed endorsement @ 10003",
-        "tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV: baked @ 10006, endorsed 2 @ 10007-10009, missed endorsement @ 10008",
-        "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9: deactivated @ cycle 13",
-        "tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m: deactivated @ cycle 15",
-        "tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA: deactivated @ cycle 17",
+        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk baked 2 @ 10001-10004, endorsed 2 @ 10002-10005, missed endorsement @ 10003",
+        "tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV baked @ 10006, endorsed 2 @ 10007-10009, missed endorsement @ 10008",
+        "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9 deactivated @ cycle 13",
+        "tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m deactivated @ cycle 15",
+        "tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA deactivated @ cycle 17",
       ]
     `);
   });
@@ -112,7 +112,7 @@ describe("format", () => {
   it("no more than one event of each kind", async () => {
     expect(format.aggregateByBaker(events.slice(0, 3))).toMatchInlineSnapshot(`
       Array [
-        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk: baked @ 10001, endorsed @ 10002, missed endorsement @ 10003",
+        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk baked @ 10001, endorsed @ 10002, missed endorsement @ 10003",
       ]
     `);
   });
@@ -120,20 +120,32 @@ describe("format", () => {
   it("multiple events of same kind (emoji)", async () => {
     expect(format.aggregateByBaker(events, true)).toMatchInlineSnapshot(`
       Array [
-        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk: 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003",
-        "tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV: 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008",
-        "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9: 😴 @ cycle 13",
-        "tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m: 😴 @ cycle 15",
-        "tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA: 😴 @ cycle 17",
+        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003",
+        "tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008",
+        "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9 😴 @ cycle 13",
+        "tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m 😴 @ cycle 15",
+        "tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA 😴 @ cycle 17",
       ]
     `);
+  });
+
+  it("can abbreviate baker address", async () => {
+    expect(format.aggregateByBaker(events, true, true)).toMatchInlineSnapshot(`
+Array [
+  "tz1i..4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003",
+  "tz3N..MAaV 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008",
+  "tz3R..CxD9 😴 @ cycle 13",
+  "tz2T..9K9m 😴 @ cycle 15",
+  "tz2Q..6LmA 😴 @ cycle 17",
+]
+`);
   });
 
   it("no more than one event of each kind (emoji)", async () => {
     expect(format.aggregateByBaker(events.slice(0, 3), true))
       .toMatchInlineSnapshot(`
       Array [
-        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk: 🥖 @ 10001, 👍 @ 10002, 😕 @ 10003",
+        "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk 🥖 @ 10001, 👍 @ 10002, 😕 @ 10003",
       ]
     `);
   });
@@ -141,7 +153,7 @@ describe("format", () => {
   it("just email subject if one line", async () => {
     const [subject, text] = format.email(events.slice(0, 5), true);
     expect(subject).toMatchInlineSnapshot(
-      `"tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk: 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003"`
+      `"tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003"`
     );
     expect(text).toBe("");
   });
@@ -150,11 +162,11 @@ describe("format", () => {
     const [subject, text] = format.email(events, true);
     expect(subject).toMatchInlineSnapshot(`"🥖 3 👍 4 😕 2 😴 3"`);
     expect(text).toMatchInlineSnapshot(`
-"tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk: 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003
-tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV: 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008
-tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9: 😴 @ cycle 13
-tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m: 😴 @ cycle 15
-tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA: 😴 @ cycle 17"
-`);
+      "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003
+      tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008
+      tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9 😴 @ cycle 13
+      tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m 😴 @ cycle 15
+      tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA 😴 @ cycle 17"
+    `);
   });
 });
