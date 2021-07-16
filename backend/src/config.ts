@@ -40,6 +40,12 @@ type UserPref = {
     | Validator.Rules;
 };
 
+type Group = {
+  key: string;
+  label: string;
+  items: UserPref[];
+};
+
 const BAKER_GROUP = "Baker Monitor:";
 
 const BAKER: UserPref = {
@@ -118,7 +124,7 @@ const RPC: UserPref = {
 };
 
 const REFERENCE_NODE: UserPref = {
-  key: "reference-node",
+  key: "reference_node",
   default: undefined,
   sampleValue: "https://mainnet-tezos.giganode.io/",
   description:
@@ -403,6 +409,7 @@ const userPrefs = [
   LOGGING,
   NODE,
   RPC,
+  REFERENCE_NODE,
   EXCLUDED_EVENTS,
   SLACK_ENABLED,
   SLACK_URL,
