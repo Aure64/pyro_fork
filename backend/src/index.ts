@@ -14,11 +14,7 @@ import run from "./run";
  * Calls makeConfigFile and writes the result to the specified path.
  */
 const writeSampleConfig = (path: string | null) => {
-  console.log(`Creating User Config file at ${path}`);
-  console.log(
-    "Note: config has invalid placeholder data that must be replaced before this config can be used."
-  );
-  const sampleConfig = Config.makeConfigFile();
+  const sampleConfig = Config.makeSampleConfig();
   const serialized = TOML.stringify(sampleConfig);
   if (path) {
     FS.writeFileSync(path, serialized);

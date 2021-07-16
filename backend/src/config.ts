@@ -28,6 +28,7 @@ type UserPref = {
   key: string;
   default: unknown;
   description: string;
+  sampleValue?: any;
   type: yargs.PositionalOptionsType | undefined;
   alias: string | string[] | undefined;
   group: string | undefined;
@@ -44,6 +45,11 @@ const BAKER_GROUP = "Baker Monitor:";
 const BAKER: UserPref = {
   key: "baker_monitor:baker",
   default: undefined,
+  sampleValue: [
+    "tz1S8MNvuFEUsWgjHvi3AxibRBf388NhT1q2",
+    "tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM",
+    "tz2FCNBrERXtaTtNX6iimR1UJ5JSDxvdHM93",
+  ],
   description: "Baker address to monitor",
   alias: ["b", "baker"],
   type: "string",
@@ -91,6 +97,7 @@ const DATA_DIR: UserPref = {
 const NODE: UserPref = {
   key: "node",
   default: undefined,
+  sampleValue: ["http://localhost:8732"],
   description: "Node URLs to watch for node events.",
   alias: "n",
   type: "string",
@@ -113,6 +120,7 @@ const RPC: UserPref = {
 const REFERENCE_NODE: UserPref = {
   key: "reference-node",
   default: undefined,
+  sampleValue: "https://mainnet-tezos.giganode.io/",
   description:
     "Node to compare to when detecting if monitored node is on a branch",
   alias: "R",
@@ -157,6 +165,8 @@ const SLACK_ENABLED: UserPref = {
 const SLACK_URL: UserPref = {
   key: `${SLACK_KEY}:url`,
   default: undefined,
+  sampleValue:
+    "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
   description: "Webhook URL for Slack notifications",
   alias: undefined,
   type: "string",
@@ -182,6 +192,7 @@ const TELEGRAM_ENABLED: UserPref = {
 const TELEGRAM_TOKEN: UserPref = {
   key: `${TELEGRAM_KEY}:token`,
   default: undefined,
+  sampleValue: "1234567890:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
   description: "API token for Telegram notification channel",
   alias: undefined,
   type: "string",
@@ -212,6 +223,7 @@ const EMAIL_HOST: UserPref = {
   key: `${EMAIL_KEY}:host`,
   default: undefined,
   description: "Host for email notification channel",
+  sampleValue: "localhost",
   alias: undefined,
   type: "string",
   group: EMAIL_GROUP,
@@ -222,6 +234,7 @@ const EMAIL_HOST: UserPref = {
 const EMAIL_PORT: UserPref = {
   key: `${EMAIL_KEY}:port`,
   default: undefined,
+  sampleValue: "25",
   description: "Port for email notification channel",
   alias: undefined,
   type: "number",
@@ -235,6 +248,7 @@ const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
 const EMAIL_PROTOCOL: UserPref = {
   key: `${EMAIL_KEY}:protocol`,
   default: undefined,
+  sampleValue: "Plain",
   description: `Protocol for email notification channel [${PROTOCOL_OPTIONS}]`,
   alias: undefined,
   type: "string",
@@ -246,6 +260,7 @@ const EMAIL_PROTOCOL: UserPref = {
 const EMAIL_USERNAME: UserPref = {
   key: `${EMAIL_KEY}:username`,
   default: undefined,
+  sampleValue: "",
   description: "Username for email notification channel",
   alias: undefined,
   type: "string",
@@ -257,6 +272,7 @@ const EMAIL_USERNAME: UserPref = {
 const EMAIL_PASSWORD: UserPref = {
   key: `${EMAIL_KEY}:password`,
   default: undefined,
+  sampleValue: "",
   description: "Password for email notification channel",
   alias: undefined,
   type: "string",
@@ -268,6 +284,7 @@ const EMAIL_PASSWORD: UserPref = {
 const EMAIL_TO: UserPref = {
   key: `${EMAIL_KEY}:to`,
   default: undefined,
+  sampleValue: ["me@example.org"],
   description: "Address for email notifier channel",
   alias: undefined,
   type: "string",
@@ -318,6 +335,7 @@ const WEBHOOK_ENABLED: UserPref = {
 const WEBHOOK_URL: UserPref = {
   key: `${WEBHOOK_KEY}:url`,
   default: undefined,
+  sampleValue: "http://192.168.1.10/mywebhook",
   description: "URL for posting raw JSON notifications",
   alias: undefined,
   type: "string",
@@ -454,7 +472,7 @@ const makeConfigDefaults = () => {
  * Creates a sample config, with the proper structure.  The values will be populated with defaults where
  * present, otherwise placeholder text with the option's description and type.
  */
-export const makeConfigFile = (): Record<string, string> => {
+export const makeSampleConfig = (): Record<string, string> => {
   const sampleConfig = userPrefs.reduce(
     (accumulator: Record<string, string>, userPref: UserPref) => {
       // ignore user prefs that are only supported by the command line
@@ -463,7 +481,7 @@ export const makeConfigFile = (): Record<string, string> => {
         const value =
           userPref.default !== undefined
             ? userPref.default
-            : `${userPref.description} [${fieldType}]`;
+            : userPref.sampleValue;
         return setPath(userPref.key, accumulator, value);
       } else {
         return accumulator;
