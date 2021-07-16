@@ -3,6 +3,8 @@ import { promisify } from "util";
 import { LogLevelDesc } from "loglevel";
 import * as TOML from "@iarna/toml";
 
+import envPaths from "env-paths";
+
 import {
   validateAddress,
   ValidationResult as TzValidationResult,
@@ -73,6 +75,17 @@ const LOGGING: UserPref = {
   group: undefined,
   isArray: false,
   validationRule: "loglevel",
+};
+
+const DATA_DIR: UserPref = {
+  key: "data_dir",
+  default: envPaths("pyrometer", { suffix: "" }).data,
+  description: "Data directory",
+  alias: "d",
+  type: "string",
+  group: undefined,
+  isArray: false,
+  validationRule: "string",
 };
 
 const NODE: UserPref = {
@@ -313,11 +326,12 @@ const WEBHOOK_URL: UserPref = {
   validationRule: ["link", { required_if: [`${WEBHOOK_KEY}.enabled`, true] }],
 };
 
+const { config: configDirectory } = envPaths("pyrometer", { suffix: "" });
+
 const CONFIG_FILE: UserPref = {
   key: "config",
-  default: undefined,
-  description:
-    "Path to config file.  If present, it will override the default user config file.",
+  default: Path.join(configDirectory, "pyrometer.toml"),
+  description: "Path to configuration file.",
   alias: undefined,
   type: "string",
   group: undefined,
@@ -367,6 +381,7 @@ const NOTIFICATIONS_TTL: UserPref = {
 const userPrefs = [
   BAKER,
   BAKER_CATCHUP_LIMIT,
+  DATA_DIR,
   LOGGING,
   NODE,
   RPC,
@@ -396,7 +411,7 @@ const userPrefs = [
  * Iterates through the UserPrefs to create the Yarg settings used for parsing and providing help
  * for argv options.
  */
-const makeYargOptions = () => {
+const makeYargOptions = (userPrefs: UserPref[]) => {
   const options = userPrefs.reduce(
     (accumulator: { [key: string]: yargs.Options }, pref: UserPref) => {
       const defaultDescription =
@@ -416,7 +431,8 @@ const makeYargOptions = () => {
   return options;
 };
 
-export const yargOptions = makeYargOptions();
+export const yargRunOptions = makeYargOptions(userPrefs);
+export const yargResetOptions = makeYargOptions([DATA_DIR, CONFIG_FILE]);
 
 /**
  * Iterates through the UserPrefs to create an object of default config values for Nconf.
@@ -517,8 +533,6 @@ const makeConfigValidations = (): Validator.Rules => {
   return rules;
 };
 
-const makeConfigPath = (path: string) => Path.join(path, "pyrometer.toml");
-
 export type Config = {
   bakers: string[];
   rpc: string;
@@ -552,15 +566,16 @@ const formatValidationErrors = (errors: Validator.ValidationErrors): string => {
  * unless overriden by argv.
  */
 export const load = async (
-  dataDirectory: string,
-  configDirectory: string
+  yargOptions = yargRunOptions,
+  validate = true
 ): Promise<Config> => {
   nconf.argv(yargs.strict().options(yargOptions));
   // user config file from argv overrides default location
-  const configPath = (nconf.get(CONFIG_FILE.key) ||
-    makeConfigPath(configDirectory)) as string;
-  if (configPath && !FS.existsSync(configPath)) {
-    console.info(`No config file at ${configPath}`);
+  const cliConfigPath = nconf.get(CONFIG_FILE.key);
+  const configPath = cliConfigPath || CONFIG_FILE.default;
+  if (cliConfigPath && !FS.existsSync(cliConfigPath)) {
+    console.error(`Specified config file doesn't exist (${configPath})`);
+    process.exit(1);
   }
   if (configPath.endsWith(".json")) {
     nconf.file(configPath);
@@ -574,12 +589,14 @@ export const load = async (
   const loadAsync = promisify(nconf.load.bind(nconf));
   await loadAsync();
   const loadedConfig = nconf.get();
-  const validation = new Validator(loadedConfig, makeConfigValidations());
-  if (validation.fails()) {
-    console.error("Invalid config");
-    const errors = validation.errors.all();
-    console.log(formatValidationErrors(errors));
-    process.exit(1);
+  if (validate) {
+    const validation = new Validator(loadedConfig, makeConfigValidations());
+    if (validation.fails()) {
+      console.error("Invalid config");
+      const errors = validation.errors.all();
+      console.log(formatValidationErrors(errors));
+      process.exit(1);
+    }
   }
 
   const asObject = () => {
@@ -636,7 +653,9 @@ export const load = async (
     get notifications() {
       return nconf.get(NOTIFICATIONS_KEY) as NotificationsConfig;
     },
-    storageDirectory: dataDirectory,
+    get storageDirectory() {
+      return nconf.get(DATA_DIR.key);
+    },
     asObject,
   };
   return config;

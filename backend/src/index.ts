@@ -2,8 +2,8 @@
 process.env["NTBA_FIX_319"] = "1";
 
 import * as FS from "fs";
+import * as readline from "readline";
 
-import envPaths from "env-paths";
 import * as yargs from "yargs";
 import * as TOML from "@iarna/toml";
 
@@ -27,11 +27,7 @@ const writeSampleConfig = (path: string | null) => {
   }
 };
 
-type ClearDataArgs = {
-  dataDirectory: string;
-};
-
-const clearData = ({ dataDirectory }: ClearDataArgs) => {
+const clearData = (dataDirectory: string) => {
   if (FS.existsSync(dataDirectory)) {
     FS.rmdirSync(dataDirectory, { recursive: true });
     console.log(`Data directory deleted: ${dataDirectory}`);
@@ -41,17 +37,6 @@ const clearData = ({ dataDirectory }: ClearDataArgs) => {
 };
 
 const main = async () => {
-  const { data: dataDirectory, config: configDirectory } = envPaths(
-    "pyrometer",
-    { suffix: "" }
-  );
-
-  console.log("Data directory:", dataDirectory);
-  console.log("Config directory:", configDirectory);
-
-  FS.mkdirSync(dataDirectory, { recursive: true });
-  FS.mkdirSync(configDirectory, { recursive: true });
-
   yargs(process.argv.slice(2))
     .strict()
     .command("config", "Commands to view and manage configuration", (yargs) => {
@@ -60,10 +45,10 @@ const main = async () => {
           "show",
           "Show effective config derived from command line and config file",
           async (yargs) => {
-            return yargs.options(Config.yargOptions);
+            return yargs.options(Config.yargRunOptions);
           },
           async () => {
-            const config = await Config.load(dataDirectory, configDirectory);
+            const config = await Config.load();
             const serialized = TOML.stringify(config.asObject());
             console.log(serialized);
           }
@@ -82,20 +67,43 @@ const main = async () => {
     .command(
       "reset",
       "Clear state data, including notifications queues and block history.",
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      () => {},
-      () => {
-        clearData({ dataDirectory });
+      async (yargs) => {
+        return yargs.options(Config.yargResetOptions).option("force", {
+          alias: "f",
+          type: "boolean",
+          description: "Don't prompt for confirmation, just clear state",
+        });
+      },
+      async (args) => {
+        const config = await Config.load(Config.yargResetOptions, false);
+        if (args.force) {
+          clearData(config.storageDirectory);
+        } else {
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+
+          rl.question(
+            `Delete ${config.storageDirectory}?\nEnter y to confirm, anything else to exit: `,
+            (answer) => {
+              rl.close();
+              if (answer === "y") {
+                clearData(config.storageDirectory);
+              }
+            }
+          );
+        }
       }
     )
     .command(
       "run",
       "Starts event monitoring.",
       async (yargs) => {
-        return yargs.options(Config.yargOptions);
+        return yargs.options(Config.yargRunOptions);
       },
       async () => {
-        const config = await Config.load(dataDirectory, configDirectory);
+        const config = await Config.load();
         await run(config);
       }
     )
