@@ -70,15 +70,16 @@ const BAKER_CATCHUP_LIMIT: UserPref = {
   validationRule: "numeric",
 };
 
+const LOG_GROUP = "Logging:";
 const LOG_LEVELS = ["trace", "info", "debug", "warn", "error"];
 
-const LOGGING: UserPref = {
-  key: "logging",
+const LOG_LEVEL: UserPref = {
+  key: "log:level",
   default: "info",
   description: `Level of logging. [${LOG_LEVELS}]`,
   alias: "l",
   type: "string",
-  group: undefined,
+  group: LOG_GROUP,
   isArray: false,
   validationRule: "loglevel",
 };
@@ -488,7 +489,7 @@ const userPrefs = [
   BAKER,
   BAKER_CATCHUP_LIMIT,
   DATA_DIR,
-  LOGGING,
+  LOG_LEVEL,
   NODE,
   RPC,
   REFERENCE_NODE,
@@ -737,7 +738,7 @@ export const load = async (
       return nconf.get(NODE.key) || [];
     },
     get logLevel() {
-      return nconf.get(LOGGING.key) as LogLevelDesc;
+      return nconf.get(LOG_LEVEL.key) as LogLevelDesc;
     },
     get excludedEvents() {
       return nconf.get(EXCLUDED_EVENTS.key) || [];
