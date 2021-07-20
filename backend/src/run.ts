@@ -129,12 +129,15 @@ const run = async (config: Config.Config) => {
     await eventLog.add(event);
   };
 
-  const bakers = config.bakers;
-  const rpcNode = config.rpc;
-  const referenceNode = config.referenceNode;
+  const nodeMonitorConfig = config.nodeMonitor;
+
+  const bakerMonitorConfig = config.bakerMonitor;
+  const { bakers } = bakerMonitorConfig;
 
   //always monitor rpc node
-  const nodes = [...new Set([...config.nodes, rpcNode])];
+  const nodes = [
+    ...new Set([...nodeMonitorConfig.nodes, bakerMonitorConfig.rpc]),
+  ];
 
   if (bakers.length === 0 && nodes.length === 0) {
     console.error("You must specify nodes or bakers to watch.");
@@ -143,21 +146,17 @@ const run = async (config: Config.Config) => {
 
   const bakerMonitor =
     bakers.length > 0
-      ? await BakerMonitor.create(
-          storageDir,
-          bakers,
-          rpcNode,
-          config.bakerCatchupLimit,
-          onEvent
-        )
+      ? await BakerMonitor.create(storageDir, bakerMonitorConfig, onEvent)
       : null;
+
+  const { reference_node: referenceNode } = nodeMonitorConfig;
 
   if (!referenceNode) {
     warn("Reference node is not set, node-on-a-branch detection is off");
   }
 
   const nodeMonitor =
-    nodes.length > 0 ? NodeMonitor.create(onEvent, nodes, referenceNode) : null;
+    nodes.length > 0 ? NodeMonitor.create(onEvent, nodeMonitorConfig) : null;
 
   const gc = EventLog.gc(eventLog, channels);
 

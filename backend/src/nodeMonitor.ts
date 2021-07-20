@@ -11,6 +11,13 @@ import { HttpResponseError } from "@taquito/http-utils";
 import * as service from "./service";
 import now from "./now";
 
+type URL = string;
+
+export type NodeMonitorConfig = {
+  nodes: URL[];
+  reference_node?: URL;
+};
+
 type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
 
 type Sub = service.Service & NodeInfoProvider;
@@ -25,8 +32,7 @@ const NoSub: Sub = {
 
 export const create = (
   onEvent: (event: Event) => Promise<void>,
-  nodes: string[],
-  referenceNode?: string
+  { nodes, reference_node: referenceNode }: NodeMonitorConfig
 ): service.Service => {
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)

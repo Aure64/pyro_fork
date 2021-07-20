@@ -39,13 +39,19 @@ import * as format from "./format2";
 
 const name = "bm";
 
+type URL = string;
+
+export type BakerMonitorConfig = {
+  bakers: string[];
+  rpc: URL;
+  max_catchup_blocks: number;
+};
+
 type ChainPositionInfo = { blockLevel: number; blockCycle: number };
 
 export const create = async (
   storageDirectory: string,
-  bakers: string[],
-  rpcUrl: string,
-  catchupLimit: number,
+  { bakers, rpc: rpcUrl, max_catchup_blocks: catchupLimit }: BakerMonitorConfig,
   onEvent: (event: Event) => Promise<void>
 ): Promise<service.Service> => {
   const log = getLogger(name);

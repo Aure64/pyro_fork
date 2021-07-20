@@ -16,6 +16,8 @@ import { EmailConfig } from "./senders/email";
 import { DesktopConfig } from "./senders/desktop";
 import { WebhookConfig } from "./senders/http";
 import { NotificationsConfig } from "./channel";
+import { BakerMonitorConfig } from "./bakerMonitor";
+import { NodeMonitorConfig } from "./nodeMonitor";
 import * as FS from "fs";
 import * as Path from "path";
 import * as yargs from "yargs";
@@ -40,34 +42,47 @@ type UserPref = {
     | Validator.Rules;
 };
 
-const BAKER_GROUP = "Baker Monitor:";
+type Group = { key: string; label: string };
 
-const BAKER: UserPref = {
-  key: "baker_monitor:baker",
-  default: undefined,
+const BAKER_GROUP: Group = { key: "baker_monitor", label: "Baker Monitor:" };
+
+const BAKERS: UserPref = {
+  key: `${BAKER_GROUP.key}:bakers`,
+  default: [],
   sampleValue: [
     "tz1S8MNvuFEUsWgjHvi3AxibRBf388NhT1q2",
     "tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM",
     "tz2FCNBrERXtaTtNX6iimR1UJ5JSDxvdHM93",
   ],
   description: "Baker address to monitor",
-  alias: ["b", "baker"],
+  alias: ["b", "bakers"],
   type: "string",
-  group: BAKER_GROUP,
+  group: BAKER_GROUP.label,
   isArray: true,
   validationRule: "baker",
 };
 
 const BAKER_CATCHUP_LIMIT: UserPref = {
-  key: "baker_monitor:catchup_limit",
+  key: `${BAKER_GROUP.key}:max_catchup_blocks`,
   default: 120,
   description:
     "The maximum number of blocks to catch up on after reconnecting.",
   alias: undefined,
   type: "number",
-  group: BAKER_GROUP,
+  group: BAKER_GROUP.label,
   isArray: false,
   validationRule: "numeric",
+};
+
+const RPC: UserPref = {
+  key: `${BAKER_GROUP.key}:rpc`,
+  default: "https://mainnet-tezos.giganode.io/",
+  description: "Tezos RPC URL to query for baker and chain info",
+  alias: ["r", "rpc"],
+  type: "string",
+  group: BAKER_GROUP.label,
+  isArray: false,
+  validationRule: "link",
 };
 
 const LOG_GROUP = "Logging:";
@@ -88,45 +103,39 @@ const DATA_DIR: UserPref = {
   key: "data_dir",
   default: envPaths("pyrometer", { suffix: "" }).data,
   description: "Data directory",
-  alias: "d",
+  alias: ["d", "data-dir"],
   type: "string",
   group: undefined,
   isArray: false,
   validationRule: "string",
 };
 
-const NODE: UserPref = {
-  key: "node",
-  default: undefined,
+const NODE_MONITOR_GROUP: Group = {
+  key: "node_monitor",
+  label: "Node Monitor:",
+};
+
+const NODES: UserPref = {
+  key: `${NODE_MONITOR_GROUP.key}:nodes`,
+  default: [],
   sampleValue: ["http://localhost:8732"],
-  description: "Node URLs to watch for node events.",
-  alias: "n",
+  description: "Node RPC URLs to watch for node events.",
+  alias: ["n", "nodes"],
   type: "string",
-  group: undefined,
+  group: NODE_MONITOR_GROUP.label,
   isArray: true,
   validationRule: "link",
 };
 
-const RPC: UserPref = {
-  key: "rpc",
-  default: "https://mainnet-tezos.giganode.io/",
-  description: "Tezos RPC URL to query for baker and chain info",
-  alias: "r",
-  type: "string",
-  group: undefined,
-  isArray: false,
-  validationRule: "link",
-};
-
 const REFERENCE_NODE: UserPref = {
-  key: "reference_node",
+  key: `${NODE_MONITOR_GROUP.key}:reference_node`,
   default: undefined,
   sampleValue: "https://mainnet-tezos.giganode.io/",
   description:
     "Node to compare to when detecting if monitored node is on a branch",
-  alias: "R",
+  alias: ["R", "reference-node"],
   type: "string",
-  group: undefined,
+  group: NODE_MONITOR_GROUP.label,
   isArray: false,
   validationRule: "link",
 };
@@ -486,11 +495,11 @@ const NOTIFICATIONS_TTL: UserPref = {
 
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
-  BAKER,
+  BAKERS,
   BAKER_CATCHUP_LIMIT,
   DATA_DIR,
   LOG_LEVEL,
-  NODE,
+  NODES,
   RPC,
   REFERENCE_NODE,
   EXCLUDED_EVENTS,
@@ -645,10 +654,8 @@ const makeConfigValidations = (): Validator.Rules => {
 };
 
 export type Config = {
-  bakers: string[];
-  rpc: string;
-  referenceNode?: string;
-  nodes: string[];
+  bakerMonitor: BakerMonitorConfig;
+  nodeMonitor: NodeMonitorConfig;
   logLevel: LogLevelDesc;
   excludedEvents: Events[];
   slack: SlackConfig;
@@ -657,7 +664,6 @@ export type Config = {
   desktop: DesktopConfig;
   webhook: WebhookConfig;
   storageDirectory: string;
-  bakerCatchupLimit: number;
   notifications: NotificationsConfig;
   asObject: () => any;
 };
@@ -725,17 +731,11 @@ export const load = async (
   };
 
   const config: Config = {
-    get bakers() {
-      return nconf.get(BAKER.key) || [];
+    get bakerMonitor() {
+      return nconf.get(BAKER_GROUP.key) as BakerMonitorConfig;
     },
-    get rpc() {
-      return nconf.get(RPC.key);
-    },
-    get referenceNode() {
-      return nconf.get(REFERENCE_NODE.key);
-    },
-    get nodes() {
-      return nconf.get(NODE.key) || [];
+    get nodeMonitor() {
+      return nconf.get(NODE_MONITOR_GROUP.key) as NodeMonitorConfig;
     },
     get logLevel() {
       return nconf.get(LOG_LEVEL.key) as LogLevelDesc;
@@ -757,9 +757,6 @@ export const load = async (
     },
     get slack() {
       return nconf.get(SLACK_KEY) as SlackConfig;
-    },
-    get bakerCatchupLimit() {
-      return nconf.get(BAKER_CATCHUP_LIMIT.key);
     },
     get notifications() {
       return nconf.get(NOTIFICATIONS_KEY) as NotificationsConfig;
