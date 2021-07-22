@@ -76,14 +76,19 @@ rpc = "https://mainnet-tezos.giganode.io/"
 level = "debug"
 
 [email]
+enabled = true
 host = "mailhog"
 port = 1025
 protocol = "Plain"
+username = "aaa"
+password = "bbb"
 to = [ "me@example.org" ]
 emoji = true
 short_address = true
 
 ```
+
+> MailHog accepts any username and password, they just need to be not empty
 
 Now start Pyrometer:
 

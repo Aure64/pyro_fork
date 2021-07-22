@@ -264,7 +264,7 @@ const EMAIL_REQUIRED = { required_if: [`${EMAIL_KEY}.enabled`, true] };
 
 const EMAIL_ENABLED: UserPref = {
   key: `${EMAIL_KEY}:enabled`,
-  default: undefined,
+  default: false,
   description: "Whether email notifier is enabled",
   alias: undefined,
   type: "boolean",
