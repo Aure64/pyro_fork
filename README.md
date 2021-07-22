@@ -11,56 +11,124 @@ Pyrometer is a tool for monitoring events on
 
 - [backend](/backend/README.md): monitor and API server
 
-## Getting Started
+## Run with Docker
 
-### Docker
+Log in to Gitlab Docker Registry:
 
-Start Pyrometer from Docker with arguments:
-
-```bash
+```
 docker login registry.gitlab.com/tezos-kiln/pyrometer -u <username> -p <token>
-docker run registry.gitlab.com/tezos-kiln/pyrometer:main --baker tz1Z1tMai15JWUWeN2PKL9faXXVPMuWamzJj
 ```
 
-Starting Pyrometer with no arguments will fail, as it needs either
-bakers or nodes to monitor. Use `--help` to see all the available
-options.
+Lets define shell alias so that following example commands are concise
+and clear:
 
-If your setup is more complex (e.g. email notifier, custom
-notifications, lots of bakers), it's easier to just mount your config
-from your local filesystem.
+```
+docker network create pyrometer
+alias pyrometer="docker run --network pyrometer --rm -v $PWD:$PWD registry.gitlab.com/tezos-kiln/pyrometer:main"
+```
+
+Lets also create a directory for pyrometer configuration and data:
+
+```
+mkdir -p ./pyrometer/data
+cd pyrometer
+```
+
+Generate sample Pyrometer configuration and save it as `pyrometer.toml`:
+
+```
+pyrometer config sample > pyrometer.toml
+```
+
+> ℹ️ Pyrometer configuration file uses [TOML](https://toml.io) syntax
+
+Edit `pyrometer.toml` as necessary.
+
+For example, lets say we would like to monitor some of the Foundation
+Bakers and receive email notifications for all the events except
+future bakes and endorsements.
+
+For illustration purposes we will use
+[MailHog](https://github.com/mailhog/MailHog) as our SMTP
+server. Start MailHog:
+
+```
+docker run --rm --name mailhog --network pyrometer -d -p 8025:8025 mailhog/mailhog
+```
+
+WebHog's web interface should now be available at <http://localhost:8025/>
+
+Edit `pyrometer.toml` to look like this:
+
+```toml
+
+exclude = [
+  "bake_scheduled",
+  "endorsement_scheduled",
+]
+
+[baker_monitor]
+bakers = ["tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9", "tz3bvNMQ95vfAYtG8193ymshqjSvmxiCUuR5"]
+max_catchup_blocks = 120
+rpc = "https://mainnet-tezos.giganode.io/"
+
+[log]
+level = "debug"
+
+[email]
+host = "mailhog"
+port = 1025
+protocol = "Plain"
+to = [ "me@example.org" ]
+emoji = true
+short_address = true
+
+```
+
+Now start Pyrometer:
 
 ```bash
-docker run -v /absolute/path/to/your/config/folder:/home/node/.config/pyrometer-nodejs registry.gitlab.com/tezos-kiln/pyrometer
+pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 ```
 
-Note: the Docker image will only notify you of events via the console
-output.  See [Notification Channels](#notification-channels) for other
-options.
+and watch log output
 
-### Using Node
+```
+docker logs pyrometer -f
+```
 
-This method requires [Node](https://nodejs.org/en/) and
-[Yarn](https://yarnpkg.com/).
+All configuration parameters can be specified or overriden from the
+command line. Run `pyrometer --help` to see available commands and
+global options, `pyrometer <command> --help` to see command-specific
+parameters.
+
+### Run Natively
+
+Install NodeJS 14 or later. For Linux, follow instructions at
+<https://github.com/nodesource/distributions>. For other operating
+systems, download from <https://nodejs.org>.
 
 ⚠️ While this repository is private, you'll need to authenticate to the
-registry before connecting. Follow [Gitlab's
-Instructions](https://docs.gitlab.com/ee/user/packages/npm_registry/index.html#authenticate-to-the-package-registry)
-before trying the following commands.
+registry before connecting.
 
-```bash
-npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
-yarn global add @tezos-kiln/pyrometer
-npx pyrometer
+```
+GITLAB_API_TOKEN="<your token>"
+PROJECT_ID=22897259
+npm config set @tezos-kiln:registry https://gitlab.com/api/v4/projects/$PROJECT_ID/packages/npm/
+npm config set -- '//gitlab.com/api/v4/projects/$PROJECT_ID/packages/npm/:_authToken' $GITLAB_API_TOKEN
+
 ```
 
-Like the Docker setup, Pyrometer will fail unless you provide either
-bakers or nodes to monitor.  Use `--help` to see all the available
-options.
+See [Gitlab's
+Instructions](https://docs.gitlab.com/ee/user/packages/npm_registry/index.html#authenticate-to-the-package-registry)
+for details.
 
-Pyrometer will automatically notify you of any events via desktop
-notifications.  See [Notification Channels](#notification-channels)
-for other options.
+Assuming we have `./pyrometer.toml` config file and `./data`
+directory, start Pyrometer:
+
+```bash
+npx @tezos-kiln/pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
+```
 
 ## Docker Build
 
@@ -72,14 +140,16 @@ docker build -t tezos-kiln/Pyrometer .
 
 ### Notification Channels
 
-Run Pyrometer with `--help` to see the CLI and config key names for
-the channel settings.
+Run Pyrometer with `pyrometer run --help` to see the CLI and config
+key names for the channel settings.
 
 #### Desktop
 
-This channel is enabled by default, but won't work for Docker setups.
+Shows desktop notifications (not available when running in Docker)
 
 #### Telegram
+
+Sends notifications via Telegram. To enable:
 
 1. Send `/newbot` to the Telegram BotFather bot and follow the
    instructions to create a bot that Pyrometer will use to send
@@ -101,7 +171,8 @@ This channel is enabled by default, but won't work for Docker setups.
 The email notification channel uses SMTP settings that you provide to
 send your notifications to an email address. See Pyrometer's help for
 the settings. We recommend using
-[MailCatcher](https://mailcatcher.me/) to try this out locally while
+[MailCatcher](https://mailcatcher.me/) or
+[MailHog](https://github.com/mailhog/MailHog) to try this out locally while
 you're fine-tuning the volume of events you want to receive.
 
 #### Slack
@@ -110,7 +181,7 @@ This channel will post your notifications to a Slack webhook. Follow
 [the instructions here](https://api.slack.com/messaging/webhooks) to
 configure your webhook, and provide the URL to Pyrometer.
 
-#### Endpoint
+#### Webhook
 
 This channel will post the raw JSON of an event to a webhook.  We
 recommend this for creating custom apps and visualizations using
