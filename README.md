@@ -79,7 +79,6 @@ level = "debug"
 enabled = true
 host = "mailhog"
 port = 1025
-protocol = "Plain"
 username = "aaa"
 password = "bbb"
 to = [ "me@example.org" ]
