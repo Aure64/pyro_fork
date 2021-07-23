@@ -20,10 +20,23 @@ export type EmailConfig = {
 };
 
 export const create = (config: EmailConfig): Sender => {
+  //From https://nodemailer.com/smtp/#tls-options:
+  // * secure – if true the connection will use TLS when connecting to
+  //   server. If false (the default) then TLS is used if server
+  //   supports the STARTTLS extension. In most cases set this value
+  //   to true if you are connecting to port 465. For port 587 or 25
+  //   keep it false
+  // * requireTLS – if this is true and secure is false then Nodemailer
+  //   tries to use STARTTLS even if the server does not advertise
+  //   support for it. If the connection can not be encrypted then
+  //   message is not sent
+  const secure = config.protocol === "SSL" ? true : false;
+  const requireTLS = config.protocol === "STARTTLS" ? true : false;
   const transporter = createTransport({
     host: config.host,
     port: config.port,
-    secure: false,
+    secure,
+    requireTLS,
     auth: {
       user: config.username,
       pass: config.password,
