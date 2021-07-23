@@ -156,7 +156,11 @@ const run = async (config: Config.Config) => {
   }
 
   const nodeMonitor =
-    nodes.length > 0 ? NodeMonitor.create(onEvent, nodeMonitorConfig) : null;
+    nodes.length > 0
+      ? NodeMonitor.create(onEvent, { ...nodeMonitorConfig, nodes })
+      : null;
+
+  console.log("nodeMonitor", nodeMonitor);
 
   const gc = EventLog.gc(eventLog, channels);
 
