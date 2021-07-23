@@ -75,7 +75,7 @@ const subscribeToNode = (
     ({ block }: { block: string }) => `${block}`
   );
 
-  const log = getLogger(node);
+  const log = getLogger(`nm|${node}`);
   let nodeData: NodeInfo | undefined;
   let previousEvents: Set<string> = new Set();
   //let halted = false;
