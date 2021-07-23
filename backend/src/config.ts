@@ -297,18 +297,17 @@ const EMAIL_PORT: UserPref = {
   validationRule: ["numeric", EMAIL_REQUIRED],
 };
 
-const PROTOCOL_OPTIONS = ["Plain", "SSL", "STARTTLS"];
+const PROTOCOL_OPTIONS = ["PLAIN", "SSL", "STARTTLS"];
 
 const EMAIL_PROTOCOL: UserPref = {
   key: `${EMAIL_KEY}:protocol`,
-  default: undefined,
-  sampleValue: "Plain",
+  default: "PLAIN",
   description: `Protocol for email notification channel [${PROTOCOL_OPTIONS}]`,
   alias: undefined,
   type: "string",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["email_protocol", EMAIL_REQUIRED],
+  validationRule: ["email_protocol"],
 };
 
 const EMAIL_USERNAME: UserPref = {

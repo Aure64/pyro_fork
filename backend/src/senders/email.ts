@@ -5,7 +5,7 @@ import { Event, Sender } from "../types2";
 
 import { email as formatEmail } from "../format2";
 
-export type Protocol = "Plain" | "SSL" | "STARTTLS";
+export type Protocol = "PLAIN" | "SSL" | "STARTTLS";
 
 export type EmailConfig = {
   enabled: boolean;
