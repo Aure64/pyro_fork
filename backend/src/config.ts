@@ -347,6 +347,19 @@ const EMAIL_TO: UserPref = {
   validationRule: ["email", EMAIL_REQUIRED],
 };
 
+const EMAIL_FROM: UserPref = {
+  key: `${EMAIL_KEY}:from`,
+  default: undefined,
+  sampleValue: ["Pyrometer <me@example.org>"],
+  description:
+    "Email's 'Form:' address, by default same as the first 'To:' address",
+  alias: undefined,
+  type: "string",
+  group: EMAIL_GROUP,
+  isArray: false,
+  validationRule: ["string"],
+};
+
 const EMAIL_EMOJI: UserPref = {
   key: `${EMAIL_KEY}:emoji`,
   default: true,
@@ -516,6 +529,7 @@ const userPrefs = [
   EMAIL_PORT,
   EMAIL_PROTOCOL,
   EMAIL_TO,
+  EMAIL_FROM,
   EMAIL_USERNAME,
   EMAIL_PASSWORD,
   EMAIL_EMOJI,

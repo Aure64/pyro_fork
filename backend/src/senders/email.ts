@@ -15,6 +15,7 @@ export type EmailConfig = {
   username: string | undefined;
   password: string | undefined;
   to: string | string[];
+  from?: string;
   emoji: boolean;
   short_address: boolean;
 };
@@ -54,8 +55,10 @@ export const create = (config: EmailConfig): Sender => {
       config.short_address
     );
 
+    const fromAddr =
+      config.from || (Array.isArray(config.to) ? config.to[0] : config.to);
     const result = await transporter.sendMail({
-      from: `Pyrometer ${config.to}`,
+      from: fromAddr,
       to: config.to,
       subject,
       text,
