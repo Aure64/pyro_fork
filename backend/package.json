@@ -4,6 +4,8 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
+    "version": "echo $npm_package_version",
+    "name": "echo $npm_package_name",
     "preinstall": "if command -v git; then git config core.hooksPath githooks; fi",
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
