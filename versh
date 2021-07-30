@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+CMD=$1
+VERSION=$2
+BRANCH=${3-main}
+
+ROOT_DIR=$(git rev-parse --show-toplevel)
+
+DOCKER_IMAGE=registry.gitlab.com/tezos-kiln/pyrometer
+DOCKER_IMAGE_TAG=$DOCKER_IMAGE:$VERSION
+DOCKER_IMAGE_LATEST=$DOCKER_IMAGE:latest
+
+create() {
+    git checkout $BRANCH
+    git pull
+    git tag | grep $VERSION
+    if [ $? -eq 0 ]; then
+        echo "Git tag for version $VERSION already exists"
+        exit 1
+    fi
+    echo "here"
+    ($ROOT_DIR/githooks/pre-push && \
+         cd $ROOT_DIR/backend && \
+         NPM_TOKEN="" npm version $VERSION && \
+         git commit -m "set version to $VERSION" ./package.json && \
+         git tag $VERSION && \
+         git push origin HEAD --no-verify && \
+         git push origin $VERSION --no-verify)
+}
+
+
+build-npm() {
+    git checkout $VERSION && \
+        (cd $ROOT_DIR/backend && npm publish --tag=dev)
+}
+
+build-docker() {
+    git checkout $VERSION && \
+        (cd $ROOT_DIR && docker build -t $DOCKER_IMAGE_TAG . \
+             && docker push $DOCKER_IMAGE_TAG)
+}
+
+build() {
+    build-docker && build-npm
+}
+
+release() {
+    docker tag $DOCKER_IMAGE_TAG $DOCKER_IMAGE_LATEST
+    docker push $DOCKER_IMAGE_LATEST
+    NPM_NAME=$(cd $ROOT_DIR/backend && npm run --silent name)
+    (cd $ROOT_DIR/backend && npm dist-tag add $NPM_NAME@$VERSION latest)
+}
+
+main() {
+    if [ -z "$CMD" ]
+    then
+        echo "Command is not specified"
+        exit 1
+    fi
+
+    if [ -z "$VERSION" ]
+    then
+        echo "Version is not specified"
+        exit 1
+    fi
+
+    case $CMD in
+
+        create)
+            echo "Creating version $VERSION"
+            create
+            ;;
+
+        build)
+            echo "Build version $VERSION"
+            build
+            ;;
+
+        release)
+            echo "Release version $VERSION"
+            release
+            ;;
+
+        *)
+            echo "unknown command $CMD"
+            ;;
+    esac
+}
+
+main
