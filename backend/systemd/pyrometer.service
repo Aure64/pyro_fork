@@ -1,0 +1,13 @@
+[Unit]
+Description=Tezos node and baking monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/pyrometer run -c /etc/pyrometer.toml -d /run/pyrometer
+Restart=on-failure
+PIDFile=/run/pyrometer/pid
+User=pyrometer
+
+[Install]
+WantedBy=multi-user.target
