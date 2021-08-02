@@ -1,6 +1,6 @@
 {
   "name": "@tezos-kiln/pyrometer",
-  "version": "0.1.0-rc14",
+  "version": "0.1.0-rc15",
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
