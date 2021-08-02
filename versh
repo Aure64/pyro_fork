@@ -20,27 +20,77 @@ create() {
     echo "here"
     ($ROOT_DIR/githooks/pre-push && \
          cd $ROOT_DIR/backend && \
-         NPM_TOKEN="" npm version $VERSION && \
+         npm version $VERSION && \
          git commit -m "set version to $VERSION" ./package.json && \
-         git tag $VERSION && \
-         git push origin HEAD --no-verify && \
-         git push origin $VERSION --no-verify)
-}
-
-
-build-npm() {
-    git checkout $VERSION && \
-        (cd $ROOT_DIR/backend && npm publish --tag=dev)
+         git tag $VERSION)
 }
 
 build-docker() {
     git checkout $VERSION && \
-        (cd $ROOT_DIR && docker build -t $DOCKER_IMAGE_TAG . \
-             && docker push $DOCKER_IMAGE_TAG)
+        (cd $ROOT_DIR && docker build -t pyrometer:$VERSION . \
+             && docker tag pyrometer:$VERSION $DOCKER_IMAGE_TAG)
 }
 
 build() {
-    build-docker && build-npm
+    build-docker && build-deb-in-docker
+}
+
+build-deb-in-docker() {
+    docker build --build-arg VERSION=$VERSION -t pyrometer-builddeb:$VERSION -f builddeb.dockerfile .
+    OUTDIR=$PWD/out
+    mkdir -p $OUTDIR
+    docker run --rm -it -v $OUTDIR:/out pyrometer-builddeb:$VERSION /bin/bash -c "cp /build/*.deb /out"
+}
+
+build-deb() {
+    cd $ROOT_DIR/backend
+    BUILDDIR=.build-deb/pyrometer-$VERSION
+    APPDIR=/opt/pyrometer
+    rm -rf $BUILDDIR
+    mkdir -p $BUILDDIR
+    cp -a DEBIAN $BUILDDIR/
+    sed -i "s/@VERSION@/$VERSION/g" $BUILDDIR/DEBIAN/control
+    mkdir -p $BUILDDIR/$APPDIR
+    mkdir -p $BUILDDIR/usr/bin
+    echo "copying dist"
+    cp -al ./dist $BUILDDIR/$APPDIR/
+    echo "copying node modules"
+    cp -al ./node_modules $BUILDDIR/$APPDIR/
+    echo "writing run script"
+    cat > $BUILDDIR/usr/bin/pyrometer<< EOF
+#!/bin/sh
+cd $APPDIR
+node ./dist/index.js
+EOF
+    chmod 775 $BUILDDIR/DEBIAN/postinst
+    dpkg-deb --build $BUILDDIR
+    cd -
+}
+
+publish-version() {
+    git push origin HEAD --no-verify && \
+        git push origin $VERSION --no-verify
+}
+
+publish-docker-image() {
+    docker push $DOCKER_IMAGE_TAG
+}
+
+publish-deb() {
+    #TODO
+    echo
+}
+
+publish-npm() {
+    git checkout $VERSION && \
+        (cd $ROOT_DIR/backend && npm publish --tag=dev)
+}
+
+publish() {
+    pubish-version && \
+        publish-docker-image && \
+        publish-npm && \
+        publish-deb
 }
 
 release() {
@@ -74,6 +124,12 @@ main() {
             echo "Build version $VERSION"
             build
             ;;
+
+        publish)
+            echo "Publish version $VERSION"
+            publish
+            ;;
+
 
         release)
             echo "Release version $VERSION"
