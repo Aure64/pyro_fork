@@ -1,51 +1,82 @@
 #!/usr/bin/env bash
 CMD=$1
 VERSION=$2
-BRANCH=${3-main}
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
+echo "Current branch: $CURRENT_BRANCH"
+
+if [ "$CURRENT_BRANCH" != "main" ]
+then
+    echo "WARNING: not on branch 'main'"
+    if [ "$PYRODEV_ALLOW_BRANCH_VER" != "1" ]
+    then
+        echo "set PYRODEV_ALLOW_BRANCH_VER=1 to allow versions from non-main branches"
+        exit 1
+    fi
+fi
+
+BRANCH=${3-$CURRENT_BRANCH}
 ROOT_DIR=$(git rev-parse --show-toplevel)
-
-DOCKER_IMAGE=registry.gitlab.com/tezos-kiln/pyrometer
+WORK_DIR=$ROOT_DIR/.versh
+mkdir -p $WORK_DIR
+NAME=pyrometer
+DOCKER_IMAGE=registry.gitlab.com/tezos-kiln/$NAME
 DOCKER_IMAGE_TAG=$DOCKER_IMAGE:$VERSION
 DOCKER_IMAGE_LATEST=$DOCKER_IMAGE:latest
 
+mk-work-copy() {
+    git pull
+    git clone $ROOT_DIR $WORK_DIR/$NAME
+}
+
 create() {
-    git checkout $BRANCH
     git pull
     git tag | grep $VERSION
     if [ $? -eq 0 ]; then
         echo "Git tag for version $VERSION already exists"
         exit 1
     fi
-    echo "here"
-    ($ROOT_DIR/githooks/pre-push && \
-         cd $ROOT_DIR/backend && \
-         npm version $VERSION && \
-         git commit -m "set version to $VERSION" ./package.json && \
-         git tag $VERSION)
+    mk-work-copy
+    (: \
+         && cd $WORK_DIR/$NAME \
+         && git checkout $BRANCH \
+         && $ROOT_DIR/githooks/pre-push \
+         && cd ./backend \
+         && npm version $VERSION \
+         && git commit -m "set version to $VERSION" ./package.json \
+         && git tag $VERSION
+    )
+}
+
+checkout-version() {
+    (cd $WORK_DIR/$NAME && git checkout $VERSION)
 }
 
 build-docker() {
-    git checkout $VERSION && \
-        (cd $ROOT_DIR && docker build -t pyrometer:$VERSION . \
-             && docker tag pyrometer:$VERSION $DOCKER_IMAGE_TAG)
+    checkout-version && \
+        (: \
+             && cd $WORK_DIR/$NAME \
+             && docker build -t $NAME:$VERSION . \
+             && docker tag $NAME:$VERSION $DOCKER_IMAGE_TAG)
 }
 
 build() {
-    build-docker && build-deb-in-docker
+    build-deb-in-docker
 }
 
 build-deb-in-docker() {
-    docker build --build-arg VERSION=$VERSION -t pyrometer-builddeb:$VERSION -f builddeb.dockerfile .
-    OUTDIR=$PWD/out
-    mkdir -p $OUTDIR
-    docker run --rm -it -v $OUTDIR:/out pyrometer-builddeb:$VERSION /bin/bash -c "cp /build/*.deb /out"
+    (: \
+         && build-docker \
+         && cd $WORK_DIR/$NAME \
+         && docker build --build-arg VERSION=$VERSION -t $NAME-builddeb:$VERSION -f builddeb.dockerfile . \
+         && docker run --rm -it -v $WORK_DIR:/out $NAME-builddeb:$VERSION /bin/bash -c "cp /build/*.deb /out" \
+         && ls -lhs $WORK_DIR/*.deb)
 }
 
 build-deb() {
     cd $ROOT_DIR/backend
-    BUILDDIR=.build-deb/pyrometer-$VERSION
-    APPDIR=/opt/pyrometer
+    BUILDDIR=.build-deb/$NAME-$VERSION
+    APPDIR=/opt/$NAME
     rm -rf $BUILDDIR
     mkdir -p $BUILDDIR
     cp -a DEBIAN $BUILDDIR/
@@ -57,7 +88,7 @@ build-deb() {
     echo "copying node modules"
     cp -al ./node_modules $BUILDDIR/$APPDIR/
     echo "writing run script"
-    cat > $BUILDDIR/usr/bin/pyrometer<< EOF
+    cat > $BUILDDIR/usr/bin/$NAME<< EOF
 #!/bin/sh
 cd $APPDIR
 node ./dist/index.js
@@ -68,8 +99,11 @@ EOF
 }
 
 publish-version() {
-    git push origin HEAD --no-verify && \
-        git push origin $VERSION --no-verify
+    (: \
+         && checkout-version \
+         && cd $WORK_DIR/$NAME \
+         && git push origin HEAD --no-verify \
+         && git push origin $VERSION --no-verify)
 }
 
 publish-docker-image() {
@@ -82,15 +116,18 @@ publish-deb() {
 }
 
 publish-npm() {
-    git checkout $VERSION && \
-        (cd $ROOT_DIR/backend && npm publish --tag=dev)
+    (: \
+         && checkout-version \
+         && cd $WORK_DIR/$NAME/backend \
+         && npm publish --tag=dev)
 }
 
 publish() {
-    pubish-version && \
-        publish-docker-image && \
-        publish-npm && \
-        publish-deb
+    (: \
+         && pubish-version \
+         && publish-docker-image \
+         && publish-npm \
+         && publish-deb)
 }
 
 release() {
