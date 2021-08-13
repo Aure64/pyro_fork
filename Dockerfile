@@ -11,8 +11,16 @@ RUN yarn build
 
 FROM node:16-alpine
 ENV NODE_ENV production
-WORKDIR /app
+ENV APP_DIR /opt/pyrometer
+ENV RUN_SCRIPT /usr/bin/pyrometer
+WORKDIR $APP_DIR
 COPY --from=builder /usr/src/app/node_modules node_modules
 COPY --from=app-builder /usr/src/app/dist dist
+
+RUN echo -e "#!/usr/bin/env node\n\
+'use strict';\n\
+require('$APP_DIR/dist/index');\n" \
+    >> $RUN_SCRIPT
+RUN chmod +x $RUN_SCRIPT
 USER node
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT [$RUN_SCRIPT]

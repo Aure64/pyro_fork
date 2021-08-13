@@ -349,7 +349,7 @@ const EMAIL_TO: UserPref = {
 const EMAIL_FROM: UserPref = {
   key: `${EMAIL_KEY}:from`,
   default: undefined,
-  sampleValue: ["Pyrometer <me@example.org>"],
+  sampleValue: "Pyrometer <me@example.org>",
   description:
     "Email's 'Form:' address, by default same as the first 'To:' address",
   alias: undefined,

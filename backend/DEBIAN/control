@@ -1,0 +1,8 @@
+Package: pyrometer
+Version: @VERSION@
+Section: net
+Priority: optional
+Architecture: all
+Depends: nodejs (>= 14)
+Maintainer: maintainer@tezos-kiln.org
+Description: Tezos node and baker monitoring tool
