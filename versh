@@ -73,31 +73,6 @@ build-deb-in-docker() {
          && ls -lhs $WORK_DIR/*.deb)
 }
 
-build-deb() {
-    cd $ROOT_DIR/backend
-    BUILDDIR=.build-deb/$NAME-$VERSION
-    APPDIR=/opt/$NAME
-    rm -rf $BUILDDIR
-    mkdir -p $BUILDDIR
-    cp -a DEBIAN $BUILDDIR/
-    sed -i "s/@VERSION@/$VERSION/g" $BUILDDIR/DEBIAN/control
-    mkdir -p $BUILDDIR/$APPDIR
-    mkdir -p $BUILDDIR/usr/bin
-    echo "copying dist"
-    cp -al ./dist $BUILDDIR/$APPDIR/
-    echo "copying node modules"
-    cp -al ./node_modules $BUILDDIR/$APPDIR/
-    echo "writing run script"
-    cat > $BUILDDIR/usr/bin/$NAME<< EOF
-#!/bin/sh
-cd $APPDIR
-node ./dist/index.js
-EOF
-    chmod 775 $BUILDDIR/DEBIAN/postinst
-    dpkg-deb --build $BUILDDIR
-    cd -
-}
-
 publish-version() {
     (: \
          && checkout-version \
