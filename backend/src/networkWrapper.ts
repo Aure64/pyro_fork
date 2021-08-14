@@ -1,4 +1,4 @@
-import { debug } from "loglevel";
+import { debug, warn } from "loglevel";
 import { HttpResponseError } from "@taquito/http-utils";
 import { delay } from "./delay";
 
@@ -27,6 +27,26 @@ export const wrap2: Wrap2 = async (apiCall) => {
       } else {
         throw err;
       }
+    }
+  }
+};
+
+type Millisecond = number;
+
+type TryForever = <T>(
+  call: () => Promise<T>,
+  interval: Millisecond,
+  label: string
+) => Promise<T>;
+
+export const tryForever: TryForever = async (call, interval, label = "") => {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      return await call();
+    } catch (err) {
+      warn(`${label} failed, will retry in ${interval} ms`, err);
+      await delay(interval);
     }
   }
 };

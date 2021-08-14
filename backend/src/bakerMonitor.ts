@@ -25,7 +25,7 @@ import {
   RpcClient,
   DelegatesResponse,
 } from "@taquito/rpc";
-import { wrap2 } from "./networkWrapper";
+import { wrap2, tryForever } from "./networkWrapper";
 
 import { makeMemoizedAsyncFunction } from "./memoization";
 
@@ -68,8 +68,20 @@ export const create = async (
     10
   );
 
-  const constants = await wrap2(() => rpc.getConstants());
-  const chainId = await wrap2(() => rpc.getChainId());
+  const chainId = await tryForever(
+    () => rpc.getChainId(),
+    60e3,
+    "get chain id"
+  );
+
+  log.info(`Chain: ${chainId}`);
+  const constants = await tryForever(
+    () => rpc.getConstants(),
+    60e3,
+    "get protocol constants"
+  );
+
+  log.info("Protocol constants", constants);
 
   const CHAIN_POSITION_KEY = "position";
 
