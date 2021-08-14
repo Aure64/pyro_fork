@@ -25,7 +25,7 @@ import {
   RpcClient,
   DelegatesResponse,
 } from "@taquito/rpc";
-import { wrap2, tryForever } from "./networkWrapper";
+import { retry404, tryForever } from "./networkWrapper";
 
 import { makeMemoizedAsyncFunction } from "./memoization";
 
@@ -299,7 +299,7 @@ export const loadBlockData = async ({
 }: LoadBlockDataArgs): Promise<BlockData> => {
   const log = getLogger(name);
   log.debug(`Fetching block ${blockId}`);
-  const blockPromise = wrap2(() => rpc.getBlock({ block: blockId }));
+  const blockPromise = retry404(() => rpc.getBlock({ block: blockId }));
   const block = await blockPromise;
 
   if (block === undefined) throw new Error(`Block ${blockId} not found`);
@@ -311,7 +311,7 @@ export const loadBlockData = async ({
   log.debug(`Block ${blockId} is at level`, block.metadata.level_info);
   const cycle = block.metadata.level_info.cycle;
 
-  const bakingRightsPromise = wrap2(() =>
+  const bakingRightsPromise = retry404(() =>
     rpc.getBakingRights(
       {
         max_priority: 0,
@@ -321,8 +321,7 @@ export const loadBlockData = async ({
       { block: blockId }
     )
   );
-
-  const endorsingRightsPromise = wrap2(() =>
+  const endorsingRightsPromise = retry404(() =>
     rpc.getEndorsingRights(
       {
         cycle,
@@ -331,7 +330,6 @@ export const loadBlockData = async ({
       { block: blockId }
     )
   );
-
   const [bakingRights, endorsingRights] = await Promise.all([
     bakingRightsPromise,
     endorsingRightsPromise,
@@ -485,7 +483,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
         const accusedLevel = contentsItem.op1.operations.level;
         const accusedSignature = contentsItem.op1.signature;
         try {
-          const block = await wrap2(() =>
+          const block = await retry404(() =>
             rpc.getBlock({ block: `${accusedLevel}` })
           );
           const endorsementOperations = block.operations[0];
@@ -565,7 +563,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
         const accusedLevel = contentsItem.bh1.level;
         const accusedPriority = contentsItem.bh1.priority;
         try {
-          const bakingRights = await wrap2(() =>
+          const bakingRights = await retry404(() =>
             rpc.getBakingRights(
               { delegate: baker, level: accusedLevel },
               { block: `${accusedLevel}` }
@@ -709,7 +707,7 @@ const getDeactivationEvent = async ({
 }: GetDeactivationEventsArgs): Promise<
   Deactivated | DeactivationRisk | null
 > => {
-  const delegatesResponse = await wrap2(() => rpc.getDelegates(baker));
+  const delegatesResponse = await retry404(() => rpc.getDelegates(baker));
   return checkForDeactivations({ baker, cycle, delegatesResponse });
 };
 

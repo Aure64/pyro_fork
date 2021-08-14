@@ -8,9 +8,9 @@ import { delay } from "./delay";
  * behind another and not know about a block or delegate yet.
  */
 
-type Wrap2 = <T>(apiCall: () => Promise<T>) => Promise<T>;
+type RpcRetry = <T>(apiCall: () => Promise<T>) => Promise<T>;
 
-export const wrap2: Wrap2 = async (apiCall) => {
+export const retry404: RpcRetry = async (apiCall) => {
   let attempts = 0;
   // eslint-disable-next-line no-constant-condition
   while (true) {

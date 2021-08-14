@@ -3,7 +3,7 @@ import { Event, Kind as Events, RpcEvent, NodeEvent } from "./types2";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
-import { wrap2 } from "./networkWrapper";
+import { retry404 } from "./networkWrapper";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { HttpResponseError } from "@taquito/http-utils";
@@ -189,7 +189,7 @@ const updateNodeInfo = async ({
 
   if (fetchBootstrappedStatus) {
     try {
-      bootstrappedStatus = await wrap2(() => getBootstrappedStatus(node));
+      bootstrappedStatus = await retry404(() => getBootstrappedStatus(node));
       log.debug(`bootstrap status:`, bootstrappedStatus);
     } catch (err) {
       log.warn(`Unable to get bootsrap status`, err);
@@ -201,7 +201,7 @@ const updateNodeInfo = async ({
   let peerCount;
   if (fetchNetworkConnections) {
     try {
-      const connections = await wrap2(() => getNetworkConnections(node));
+      const connections = await retry404(() => getNetworkConnections(node));
       peerCount = connections.length;
       log.debug(`Node has ${peerCount} peers`);
     } catch (err) {
@@ -380,7 +380,9 @@ const fetchBlockHeaders = async ({
   let nextHash = blockHash;
   // very primitive approach: we simply iterate up our chain to find the most recent blocks
   while (history.length < BRANCH_HISTORY_LENGTH) {
-    const header = await wrap2(() => rpc.getBlockHeader({ block: nextHash }));
+    const header = await retry404(() =>
+      rpc.getBlockHeader({ block: nextHash })
+    );
     nextHash = header.predecessor;
     history.push(header);
   }
