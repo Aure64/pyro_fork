@@ -100,6 +100,7 @@ const LOG_TIMESTAMP: UserPref = {
   default: true,
   sampleValue: false,
   description: `Include timestamp when formatting log messages`,
+  alias: undefined,
   type: "boolean",
   group: LOG_GROUP.label,
   isArray: false,
