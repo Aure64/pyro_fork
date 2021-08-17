@@ -96,7 +96,6 @@ describe("loadBlockData", () => {
     } as unknown as RpcClient;
 
     await loadBlockData({
-      bakers: [delegate],
       blockId: "some_hash",
       rpc,
     });
@@ -126,7 +125,6 @@ describe("loadBlockData", () => {
 
     await expect(
       loadBlockData({
-        bakers: [delegate],
         blockId,
         rpc,
       })

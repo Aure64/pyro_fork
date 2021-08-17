@@ -12,13 +12,10 @@ import {
 } from "./types2";
 import { getLogger } from "loglevel";
 import {
-  BakingRightsQueryArguments,
   BakingRightsResponse,
   BlockMetadata,
   BlockResponse,
-  // BlockHeaderResponse,
   ConstantsResponse,
-  EndorsingRightsQueryArguments,
   EndorsingRightsResponse,
   OperationEntry,
   OpKind,
@@ -26,8 +23,6 @@ import {
   DelegatesResponse,
 } from "@taquito/rpc";
 import { retry404, tryForever } from "./networkWrapper";
-
-import { makeMemoizedAsyncFunction } from "./memoization";
 
 import { delay } from "./delay";
 
@@ -56,17 +51,6 @@ export const create = async (
 ): Promise<service.Service> => {
   const log = getLogger(name);
   const rpc = new RpcClient(rpcUrl);
-
-  rpc.getBakingRights = makeMemoizedAsyncFunction(
-    rpc.getBakingRights.bind(rpc),
-    (args: BakingRightsQueryArguments) => `${args.cycle}`,
-    10
-  );
-  rpc.getEndorsingRights = makeMemoizedAsyncFunction(
-    rpc.getEndorsingRights.bind(rpc),
-    (args: EndorsingRightsQueryArguments) => `${args.cycle}`,
-    10
-  );
 
   const chainId = await tryForever(
     () => rpc.getChainId(),
@@ -105,6 +89,7 @@ export const create = async (
       const chainPosition = await getPosition();
       const lastBlockLevel = chainPosition.blockLevel;
       const lastBlockCycle = chainPosition.blockCycle;
+      log.debug("Getting head block header");
       const headHeader = await rpc.getBlockHeader();
       const { level, hash } = headHeader;
       log.debug(
@@ -193,7 +178,6 @@ const checkBlock = async ({
 
   const { metadata, block, bakingRights, endorsingRights } =
     await loadBlockData({
-      bakers,
       blockId,
       rpc,
     });
@@ -279,7 +263,6 @@ const checkBlock = async ({
 type LoadBlockDataArgs = {
   blockId: string;
   rpc: RpcClient;
-  bakers: string[];
 };
 
 type BlockData = {
@@ -293,7 +276,6 @@ type BlockData = {
  * Fetches block data needed to identify baking events for all bakers.
  */
 export const loadBlockData = async ({
-  bakers,
   blockId,
   rpc,
 }: LoadBlockDataArgs): Promise<BlockData> => {
@@ -310,22 +292,26 @@ export const loadBlockData = async ({
 
   log.debug(`Block ${blockId} is at level`, block.metadata.level_info);
   const cycle = block.metadata.level_info.cycle;
+  const level = block.metadata.level_info.level;
 
+  log.debug(
+    `Getting baking rights (cycle=${cycle}, level=${level}, block=${blockId})`
+  );
+  const t0 = new Date().getTime();
   const bakingRightsPromise = retry404(() =>
     rpc.getBakingRights(
       {
         max_priority: 0,
-        cycle,
-        delegate: bakers,
+        level,
       },
       { block: blockId }
     )
   );
+  log.debug(`Getting endorsement rights: cycle=${cycle}, block=${blockId}`);
   const endorsingRightsPromise = retry404(() =>
     rpc.getEndorsingRights(
       {
-        cycle,
-        delegate: bakers,
+        level: level - 1,
       },
       { block: blockId }
     )
@@ -334,6 +320,13 @@ export const loadBlockData = async ({
     bakingRightsPromise,
     endorsingRightsPromise,
   ]);
+
+  const dt = new Date().getTime() - t0;
+  log.debug(
+    `Got rights in ${dt} ms (cycle=${cycle}, level=${level}, block=${blockId})`,
+    bakingRights,
+    endorsingRights
+  );
 
   return { metadata: block.metadata, bakingRights, endorsingRights, block };
 };
