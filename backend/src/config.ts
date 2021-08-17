@@ -18,6 +18,7 @@ import { WebhookConfig } from "./senders/http";
 import { NotificationsConfig } from "./channel";
 import { BakerMonitorConfig } from "./bakerMonitor";
 import { NodeMonitorConfig } from "./nodeMonitor";
+import { LoggingConfig } from "./logging";
 import * as FS from "fs";
 import * as Path from "path";
 import * as yargs from "yargs";
@@ -49,11 +50,6 @@ const BAKER_GROUP: Group = { key: "baker_monitor", label: "Baker Monitor:" };
 const BAKERS: UserPref = {
   key: `${BAKER_GROUP.key}:bakers`,
   default: [],
-  sampleValue: [
-    "tz1S8MNvuFEUsWgjHvi3AxibRBf388NhT1q2",
-    "tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM",
-    "tz2FCNBrERXtaTtNX6iimR1UJ5JSDxvdHM93",
-  ],
   description: "Baker address to monitor",
   alias: ["b", "bakers"],
   type: "string",
@@ -85,18 +81,29 @@ const RPC: UserPref = {
   validationRule: "link",
 };
 
-const LOG_GROUP = "Logging:";
+const LOG_GROUP: Group = { key: "log", label: "Logging:" };
 const LOG_LEVELS = ["trace", "info", "debug", "warn", "error"];
 
 const LOG_LEVEL: UserPref = {
-  key: "log:level",
+  key: `${LOG_GROUP.key}:level`,
   default: "info",
   description: `Level of logging. [${LOG_LEVELS}]`,
   alias: "l",
   type: "string",
-  group: LOG_GROUP,
+  group: LOG_GROUP.label,
   isArray: false,
   validationRule: "loglevel",
+};
+
+const LOG_TIMESTAMP: UserPref = {
+  key: `${LOG_GROUP.key}:timestamp`,
+  default: true,
+  sampleValue: false,
+  description: `Include timestamp when formatting log messages`,
+  type: "boolean",
+  group: LOG_GROUP.label,
+  isArray: false,
+  validationRule: "boolean",
 };
 
 const DATA_DIR: UserPref = {
@@ -118,7 +125,6 @@ const NODE_MONITOR_GROUP: Group = {
 const NODES: UserPref = {
   key: `${NODE_MONITOR_GROUP.key}:nodes`,
   default: [],
-  sampleValue: ["http://localhost:8732"],
   description: "Node RPC URLs to watch for node events.",
   alias: ["n", "nodes"],
   type: "string",
@@ -511,6 +517,7 @@ const userPrefs = [
   BAKER_CATCHUP_LIMIT,
   DATA_DIR,
   LOG_LEVEL,
+  LOG_TIMESTAMP,
   NODES,
   RPC,
   REFERENCE_NODE,
@@ -594,9 +601,9 @@ export const makeSampleConfig = (): Record<string, string> => {
       // ignore user prefs that are only supported by the command line
       if (!userPref.cliOnly) {
         const value =
-          userPref.default !== undefined
-            ? userPref.default
-            : userPref.sampleValue;
+          userPref.sampleValue !== undefined
+            ? userPref.sampleValue
+            : userPref.default;
         return setPath(userPref.key, accumulator, value);
       } else {
         return accumulator;
@@ -669,7 +676,7 @@ const makeConfigValidations = (): Validator.Rules => {
 export type Config = {
   bakerMonitor: BakerMonitorConfig;
   nodeMonitor: NodeMonitorConfig;
-  logLevel: LogLevelDesc;
+  logging: LoggingConfig;
   excludedEvents: Events[];
   slack: SlackConfig;
   telegram: TelegramConfig;
@@ -750,8 +757,8 @@ export const load = async (
     get nodeMonitor() {
       return nconf.get(NODE_MONITOR_GROUP.key) as NodeMonitorConfig;
     },
-    get logLevel() {
-      return nconf.get(LOG_LEVEL.key) as LogLevelDesc;
+    get logging() {
+      return nconf.get(LOG_GROUP.key) as LoggingConfig;
     },
     get excludedEvents() {
       return nconf.get(EXCLUDED_EVENTS.key) || [];

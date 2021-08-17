@@ -1,4 +1,3 @@
-//import { TezosNodeEvent } from "./types";
 import { Event, Sender } from "./events";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
@@ -9,43 +8,13 @@ import { create as HttpSender } from "./senders/http";
 import { create as TelegramSender } from "./senders/telegram";
 import { create as SlackSender } from "./senders/slack";
 import * as EventLog from "./eventlog";
-import { debug, info, warn, error, setLevel } from "loglevel";
-import loglevel, { LogLevelDesc } from "loglevel";
-import * as prefix from "loglevel-plugin-prefix";
+import { debug, info, warn, error } from "loglevel";
 import * as Config from "./config";
-import { format } from "date-fns";
-import * as Chalk from "chalk";
 import { writeJson, ensureExists } from "./fs-utils";
 import { lock } from "proper-lockfile";
 import { join as joinPath, normalize as normalizePath } from "path";
 
-const setupLogging = (logLevel: LogLevelDesc) => {
-  const colors: Record<string, Chalk.Chalk> = {
-    TRACE: Chalk.magenta,
-    DEBUG: Chalk.cyan,
-    INFO: Chalk.blue,
-    WARN: Chalk.yellow,
-    ERROR: Chalk.red,
-  };
-  const colorizeLevel = (level: string): string => {
-    const color = colors[level.toUpperCase()] || Chalk.black;
-    return color(level[0]);
-  };
-
-  // Register prefix plug with loglevel.  This adds timestamp and level to logs.
-  const timestampFormatter = (date: Date) => format(date, "yyyy-MM-dd H:mm:ss");
-  const logger = loglevel.noConflict();
-  prefix.reg(logger);
-  prefix.apply(logger, { timestampFormatter });
-  // colorize output
-  prefix.apply(loglevel, {
-    format(level, name, timestamp) {
-      return `${Chalk.gray(`${timestamp}`)} ${colorizeLevel(level)} [${name}]`;
-    },
-  });
-
-  setLevel(logLevel);
-};
+import { setup as setupLogging } from "./logging";
 
 const run = async (config: Config.Config) => {
   // Makes the script crash on unhandled rejections instead of silently ignoring them.
@@ -53,7 +22,7 @@ const run = async (config: Config.Config) => {
     throw err;
   });
 
-  setupLogging(config.logLevel);
+  setupLogging(config.logging);
 
   const storageDir = normalizePath(config.storageDirectory);
 
