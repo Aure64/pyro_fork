@@ -39,8 +39,8 @@ create() {
     mk-work-copy
     (: \
          && cd $WORK_DIR/$NAME \
-         && git pull \
          && git checkout $BRANCH \
+         && git pull \
          && $ROOT_DIR/githooks/pre-push \
          && cd ./backend \
          && npm version $VERSION \
