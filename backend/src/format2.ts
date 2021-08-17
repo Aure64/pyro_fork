@@ -148,9 +148,12 @@ export const summary = (
 ): string => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const counts = countBy(events, "kind");
+  const allEventNames = Object.values(eventTypes.Kind);
   const parts: string[] = [];
-  for (const kind in counts) {
-    parts.push(`${formatKind(kind as E)} ${counts[kind]}`);
+  for (const kind of allEventNames) {
+    if (counts[kind]) {
+      parts.push(`${formatKind(kind as E)} ${counts[kind]}`);
+    }
   }
 
   return parts.join(" ");

@@ -1,3 +1,5 @@
+import { shuffle } from "lodash";
+
 import { BakerEvent, Kind as Events } from "./types2";
 import * as format from "./format2";
 
@@ -168,5 +170,21 @@ Array [
       tz2TSvNTh2epDMhZHrw73nV9piBX7kLZ9K9m 😴 @ cycle 15
       tz2Q7Km98GPzV1JLNpkrQrSo5YUhPfDp6LmA 😴 @ cycle 17"
     `);
+  });
+
+  it("order of events in summary is fixed", async () => {
+    const events1 = events;
+    const events2 = shuffle(events);
+    const events3 = shuffle(events);
+
+    expect(events1).not.toEqual(events2);
+    expect(events2).not.toEqual(events3);
+
+    const [subject1, _text1] = format.email(events1, true);
+    const [subject2, _text2] = format.email(events2, true);
+    const [subject3, _text3] = format.email(events3, true);
+
+    expect(subject1).toEqual(subject2);
+    expect(subject2).toEqual(subject3);
   });
 });
