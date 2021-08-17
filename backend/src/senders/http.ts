@@ -2,7 +2,7 @@ import { Server } from "net";
 import fetch from "cross-fetch";
 import { createServer } from "http";
 import { getLogger } from "loglevel";
-import { Event, Sender } from "../types2";
+import { Event, Sender } from "../events";
 
 export type WebhookConfig = {
   enabled: boolean;

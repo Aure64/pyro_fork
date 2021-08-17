@@ -1,4 +1,4 @@
-import { Kind as Events } from "./types2";
+import { Kind as Events } from "./events";
 import { checkBlockInfo, BootstrappedStatus } from "./nodeMonitor";
 import { history } from "./testFixtures/nodeMonitoring";
 

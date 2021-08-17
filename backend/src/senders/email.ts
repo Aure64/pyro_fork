@@ -1,7 +1,7 @@
 import { getLogger } from "loglevel";
 import { createTransport } from "nodemailer";
 
-import { Event, Sender } from "../types2";
+import { Event, Sender } from "../events";
 
 import { email as formatEmail } from "../format";
 

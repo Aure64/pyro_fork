@@ -9,7 +9,7 @@ import {
   DeactivationRisk,
   Event,
   Kind as Events,
-} from "./types2";
+} from "./events";
 import { getLogger } from "loglevel";
 import {
   BakingRightsResponse,

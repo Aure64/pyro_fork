@@ -22,7 +22,7 @@ import * as FS from "fs";
 import * as Path from "path";
 import * as yargs from "yargs";
 import * as Validator from "validatorjs";
-import { Kind as Events } from "./types2";
+import { Kind as Events } from "./events";
 
 import setPath from "./setPath";
 

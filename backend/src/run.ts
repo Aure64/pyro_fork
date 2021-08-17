@@ -1,5 +1,5 @@
 //import { TezosNodeEvent } from "./types";
-import { Event, Sender } from "./types2";
+import { Event, Sender } from "./events";
 import * as NodeMonitor from "./nodeMonitor";
 import * as BakerMonitor from "./bakerMonitor";
 import * as channel from "./channel";

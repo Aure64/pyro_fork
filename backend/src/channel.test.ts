@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import { sep } from "path";
 
-import { Event, Kind as Events } from "./types2";
+import { Event, Kind as Events } from "./events";
 import * as eventlog from "./eventlog";
 import * as channel from "./channel";
 

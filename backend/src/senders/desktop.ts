@@ -1,7 +1,7 @@
 import { notify } from "node-notifier";
 import format from "../format";
 
-import { Event, Sender } from "../types2";
+import { Event, Sender } from "../events";
 
 export type DesktopConfig = {
   enableSound: boolean;

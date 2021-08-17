@@ -1,4 +1,4 @@
-import { Event, Sender } from "./types2";
+import { Event, Sender } from "./events";
 import { getLogger } from "loglevel";
 import { EventLog, EventLogConsumer } from "./eventlog";
 

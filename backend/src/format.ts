@@ -1,5 +1,5 @@
-import * as eventTypes from "./types2";
-import { Kind as E } from "./types2";
+import * as eventTypes from "./events";
+import { Kind as E } from "./events";
 import { format as formatDate, parseISO } from "date-fns";
 import { groupBy, sortBy, countBy, first, last } from "lodash";
 

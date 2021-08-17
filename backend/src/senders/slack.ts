@@ -1,5 +1,5 @@
 import { IncomingWebhook } from "@slack/webhook";
-import { Event, Sender } from "../types2";
+import { Event, Sender } from "../events";
 import format from "../format";
 
 export type SlackConfig = {
