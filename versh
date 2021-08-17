@@ -39,6 +39,7 @@ create() {
     mk-work-copy
     (: \
          && cd $WORK_DIR/$NAME \
+         && git pull \
          && git checkout $BRANCH \
          && $ROOT_DIR/githooks/pre-push \
          && cd ./backend \
