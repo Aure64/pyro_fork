@@ -123,7 +123,7 @@ const run = async (config: Config.Config) => {
 
   const onEvent = async (event: Event) => {
     if ("kind" in event && excludedEvents.includes(event.kind)) {
-      debug(`Event excluded because type ${event.kind} is filtered`);
+      debug(`Event excluded because type ${event.kind} is filtered`, event);
       return;
     }
     await eventLog.add(event);

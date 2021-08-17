@@ -1,7 +1,7 @@
 import * as TelegramBot from "node-telegram-bot-api";
 import { getLogger } from "loglevel";
 import { Event, Sender } from "../types2";
-import format from "../format2";
+import format from "../format";
 import { delay } from "../delay";
 
 import { open as openStorage } from "../storage";

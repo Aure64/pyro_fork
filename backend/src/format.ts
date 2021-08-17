@@ -34,7 +34,7 @@ const dateToString = (date: Date | string): string => {
 const KindEmojiFormatters: {
   [K in eventTypes.Event["kind"]]: string;
 } = {
-  [E.MissedBake]: "😭",
+  [E.MissedBake]: "😭‍",
   [E.Baked]: "🥖",
   [E.DoubleBaked]: "☠️☠️🥖️",
   [E.MissedEndorsement]: "😕",

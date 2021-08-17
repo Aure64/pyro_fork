@@ -1,6 +1,6 @@
 import { IncomingWebhook } from "@slack/webhook";
 import { Event, Sender } from "../types2";
-import format from "../format2";
+import format from "../format";
 
 export type SlackConfig = {
   enabled: boolean;

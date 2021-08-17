@@ -3,7 +3,7 @@ import { createTransport } from "nodemailer";
 
 import { Event, Sender } from "../types2";
 
-import { email as formatEmail } from "../format2";
+import { email as formatEmail } from "../format";
 
 export type Protocol = "PLAIN" | "SSL" | "STARTTLS";
 

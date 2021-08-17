@@ -30,7 +30,7 @@ import * as service from "./service";
 import * as storage from "./storage";
 
 import now from "./now";
-import * as format from "./format2";
+import * as format from "./format";
 
 const name = "bm";
 

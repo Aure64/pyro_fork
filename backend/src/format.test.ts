@@ -1,7 +1,7 @@
 import { shuffle } from "lodash";
 
 import { BakerEvent, Kind as Events } from "./types2";
-import * as format from "./format2";
+import * as format from "./format";
 
 describe("format", () => {
   const baker1 = `tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk`;

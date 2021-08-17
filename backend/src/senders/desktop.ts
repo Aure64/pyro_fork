@@ -1,5 +1,5 @@
 import { notify } from "node-notifier";
-import format from "../format2";
+import format from "../format";
 
 import { Event, Sender } from "../types2";
 
