@@ -27,7 +27,7 @@ setLevel("SILENT");
 import { DelegatesResponse, RpcClient } from "@taquito/rpc";
 import { BigNumber } from "bignumber.js";
 
-import { Kind as Events } from "./events";
+import { Events } from "./events";
 
 const { delegate, level } = priorityZero;
 

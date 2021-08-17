@@ -1,6 +1,6 @@
 import { shuffle } from "lodash";
 
-import { BakerEvent, Kind as Events } from "./events";
+import { BakerEvent, Events } from "./events";
 import * as format from "./format";
 
 describe("format", () => {

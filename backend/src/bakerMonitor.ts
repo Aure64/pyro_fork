@@ -8,7 +8,7 @@ import {
   Deactivated,
   DeactivationRisk,
   Event,
-  Kind as Events,
+  Events,
 } from "./events";
 import { getLogger } from "loglevel";
 import {

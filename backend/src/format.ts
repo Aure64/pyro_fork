@@ -1,5 +1,5 @@
 import * as eventTypes from "./events";
-import { Kind as E } from "./events";
+import { Events as E } from "./events";
 import { format as formatDate, parseISO } from "date-fns";
 import { groupBy, sortBy, countBy, first, last } from "lodash";
 
@@ -148,7 +148,7 @@ export const summary = (
 ): string => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const counts = countBy(events, "kind");
-  const allEventNames = Object.values(eventTypes.Kind);
+  const allEventNames = Object.values(eventTypes.Events);
   const parts: string[] = [];
   for (const kind of allEventNames) {
     if (counts[kind]) {

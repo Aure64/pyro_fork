@@ -1,5 +1,5 @@
 //import { PeerEvent, TezosNodeEvent } from "./types";
-import { Event, Kind as Events, RpcEvent, NodeEvent } from "./events";
+import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
 import fetch from "cross-fetch";
