@@ -2,5 +2,6 @@
 chmod +x /usr/bin/pyrometer
 adduser --system pyrometer
 chown pyrometer /run/pyrometer
-/usr/bin/pyrometer config sample > /etc/pyrometer.toml
+config_file=/etc/pyrometer.toml
+[ ! -f $config_file ] && /usr/bin/pyrometer config sample > $config_file
 exit 0
