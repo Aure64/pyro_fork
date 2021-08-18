@@ -25,12 +25,12 @@ DOCKER_IMAGE_TAG=$DOCKER_IMAGE:$VERSION
 DOCKER_IMAGE_LATEST=$DOCKER_IMAGE:latest
 
 mk-work-copy() {
-    git pull
+    git pull || :
     git clone $ROOT_DIR $WORK_DIR/$NAME
 }
 
 create() {
-    git pull
+    git pull || :
     git tag | grep $VERSION
     if [ $? -eq 0 ]; then
         echo "Git tag for version $VERSION already exists"

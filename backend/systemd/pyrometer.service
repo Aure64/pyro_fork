@@ -4,7 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/pyrometer run -c /etc/pyrometer.toml -d /run/pyrometer
+StateDirectory=pyrometer
+#systemd is supposed to set STATE_DIRECTORY env variable
+#but it does not as of systemd 245
+ExecStart=/usr/bin/pyrometer run -c /etc/pyrometer.toml -d /var/lib/pyrometer
 Restart=on-failure
 PIDFile=/run/pyrometer/pid
 User=pyrometer

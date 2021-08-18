@@ -1,7 +1,0 @@
-#!/bin/sh
-chmod +x /usr/bin/pyrometer
-adduser --system pyrometer
-chown pyrometer /run/pyrometer
-config_file=/etc/pyrometer.toml
-[ ! -f $config_file ] && /usr/bin/pyrometer config sample > $config_file
-exit 0

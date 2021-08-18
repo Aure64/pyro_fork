@@ -1,8 +1,10 @@
-Package: pyrometer
-Version: @VERSION@
+Source: pyrometer
 Section: net
 Priority: optional
+Maintainer: maintainer@tezos-kiln.org
+Build-Depends: dh-systemd
+
+Package: pyrometer
 Architecture: all
 Depends: nodejs (>= 14)
-Maintainer: maintainer@tezos-kiln.org
 Description: Tezos node and baker monitoring tool

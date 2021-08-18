@@ -2,19 +2,29 @@ ARG VERSION
 FROM pyrometer:$VERSION as pyrometer
 
 FROM ubuntu
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt update -y
+RUN apt install -y dpkg-dev dh-systemd
 ARG VERSION
 ENV BUILDDIR /build/pyrometer-$VERSION
 ENV APPDIR /opt/pyrometer
 WORKDIR $BUILDDIR
-RUN mkdir -p opt/pyrometer && \
-    mkdir -p usr/bin && \
-    mkdir -p run/pyrometer && \
-    mkdir -p etc/systemd/system
-COPY --from=pyrometer $APPDIR/dist ./$APPDIR/dist
-COPY --from=pyrometer $APPDIR/node_modules ./$APPDIR/node_modules
-COPY --from=pyrometer /usr/bin/pyrometer ./usr/bin/
-COPY backend/DEBIAN DEBIAN
-COPY backend/systemd/pyrometer.service etc/systemd/system/
-RUN sed -i "s/@VERSION@/$VERSION/g" ./DEBIAN/control
-RUN chmod 775 ./DEBIAN/postinst
-RUN dpkg-deb --build $BUILDDIR
+
+COPY --from=pyrometer $APPDIR/node_modules node_modules
+COPY --from=pyrometer /usr/bin/pyrometer .
+COPY --from=pyrometer $APPDIR/dist dist
+COPY --from=pyrometer $APPDIR/package.json .
+
+RUN mkdir -p debian
+WORKDIR $BUILDDIR/debian
+
+COPY backend/debian/changelog .
+COPY backend/debian/control .
+COPY backend/debian/install .
+COPY backend/debian/rules .
+COPY backend/debian/pyrometer.postinst .
+COPY backend/debian/source source
+COPY backend/debian/compat .
+COPY backend/systemd/pyrometer.service .
+WORKDIR $BUILDDIR
+RUN dpkg-buildpackage -b

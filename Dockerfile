@@ -16,11 +16,12 @@ ENV RUN_SCRIPT /usr/bin/pyrometer
 WORKDIR $APP_DIR
 COPY --from=builder /usr/src/app/node_modules node_modules
 COPY --from=app-builder /usr/src/app/dist dist
+COPY --from=app-builder /usr/src/app/package.json .
 
-RUN echo -e "#!/usr/bin/env node\n\
-'use strict';\n\
-require('$APP_DIR/dist/index');\n" \
-    >> $RUN_SCRIPT
+#this allows node to read package.json
+#so that version is available for app's version command
+RUN echo "#!/usr/bin/env -S node -r $APP_DIR" > $RUN_SCRIPT
+
 RUN chmod +x $RUN_SCRIPT
 USER node
 ENTRYPOINT [$RUN_SCRIPT]

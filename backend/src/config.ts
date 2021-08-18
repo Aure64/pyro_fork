@@ -109,7 +109,8 @@ const LOG_TIMESTAMP: UserPref = {
 
 const DATA_DIR: UserPref = {
   key: "data_dir",
-  default: envPaths("pyrometer", { suffix: "" }).data,
+  default:
+    process.env.STATE_DIRECTORY || envPaths("pyrometer", { suffix: "" }).data,
   description: "Data directory",
   alias: ["d", "data-dir"],
   type: "string",
@@ -461,7 +462,9 @@ const WEBHOOK_URL: UserPref = {
   validationRule: ["link", { required_if: [`${WEBHOOK_KEY}.enabled`, true] }],
 };
 
-const { config: configDirectory } = envPaths("pyrometer", { suffix: "" });
+const configDirectory =
+  process.env.CONFIGURATION_DIRECTORY ||
+  envPaths("pyrometer", { suffix: "" }).config;
 
 const CONFIG_FILE: UserPref = {
   key: "config",

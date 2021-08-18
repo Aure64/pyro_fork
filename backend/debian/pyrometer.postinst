@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e
+
+# chmod +x /usr/bin/pyrometer
+# adduser --system pyrometer
+# chown pyrometer /run/pyrometer
+# config_file=/etc/pyrometer.toml
+# [ ! -f $config_file ] && /usr/bin/pyrometer config sample > $config_file
+# exit 0
+
+case "$1" in
+    configure)
+        adduser --system --disabled-password \
+                --disabled-login --home /var/empty \
+                --no-create-home --quiet pyrometer
+        #chown pyrometer /run/pyrometer
+        config_file=/etc/pyrometer.toml
+        [ ! -f $config_file ] && /usr/bin/pyrometer config sample > $config_file
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
