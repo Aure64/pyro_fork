@@ -86,7 +86,7 @@ export const create = async (
     try {
       const chainPosition = await getPosition();
       const lastBlockLevel = chainPosition.blockLevel;
-      const lastBlockCycle = chainPosition.blockCycle;
+      let lastBlockCycle = chainPosition.blockCycle;
       log.debug("Getting head block header");
       const headHeader = await rpc.getBlockHeader();
       const { level, hash } = headHeader;
@@ -128,6 +128,7 @@ export const create = async (
         }
         await setPosition({ blockLevel: currentLevel, blockCycle });
         currentLevel++;
+        lastBlockCycle = blockCycle;
         await delay(1000);
       }
     } catch (err) {
