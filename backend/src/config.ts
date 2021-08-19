@@ -150,12 +150,7 @@ const REFERENCE_NODE: UserPref = {
 
 const EXCLUDED_EVENTS: UserPref = {
   key: "exclude",
-  default: [
-    Events.BakeScheduled,
-    Events.EndorsementScheduled,
-    Events.Baked,
-    Events.Endorsed,
-  ],
+  default: [Events.Baked, Events.Endorsed],
   description: `Events to omit from notifications\nAvailable options: ${Object.values(
     Events
   ).join(", ")}`,

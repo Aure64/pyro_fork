@@ -3,8 +3,6 @@ import {
   BakerEvent,
   DoubleBaked,
   DoubleEndorsed,
-  BakeScheduled,
-  EndorsementScheduled,
   Deactivated,
   DeactivationRisk,
   Event,
@@ -210,32 +208,16 @@ const checkBlock = async ({
       endorsingRights,
     });
     if (endorsingEvent) events.push(endorsingEvent);
-    // only check future rights once per block
     if (!lastCycle || blockCycle > lastCycle) {
-      const futureBakingEvent = checkFutureBlockBakingRights({
-        baker,
-        bakingRights,
-        blockBaker: metadata.baker,
-        blockLevel: blockLevel,
-        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
-      });
-      if (futureBakingEvent) events.push(futureBakingEvent);
-      const futureEndorsingEvent = checkFutureBlockEndorsingRights({
-        baker,
-        endorsingRights,
-        blockLevel: blockLevel,
-        timeBetweenBlocks: constants.time_between_blocks[0].toNumber(),
-      });
       const deactivationEvent = await getDeactivationEvent({
         baker,
         rpc,
         cycle: blockCycle,
       });
       if (deactivationEvent) events.push(deactivationEvent);
-      if (futureEndorsingEvent) events.push(futureEndorsingEvent);
     } else {
       log.debug(
-        `Not checking for future rights or deactivations as this cycle (${blockCycle}) was already checked`
+        `Not checking deactivations as this cycle (${blockCycle}) was already checked`
       );
     }
     const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
@@ -588,102 +570,6 @@ export const checkBlockAccusationsForDoubleBake = async ({
     }
   }
 
-  return null;
-};
-
-type CheckFutureBlockBakingRightsArgs = {
-  baker: string;
-  blockBaker: string;
-  blockLevel: number;
-  bakingRights: BakingRightsResponse;
-  timeBetweenBlocks: number;
-};
-/**
- * Check the baking rights for a future baking opportunity.  Returns the earliest opportunity found or null if
- * there are none.
- */
-export const checkFutureBlockBakingRights = ({
-  baker,
-  blockLevel,
-  bakingRights,
-  timeBetweenBlocks,
-}: CheckFutureBlockBakingRightsArgs): BakeScheduled | null => {
-  const log = getLogger(name);
-  for (const bakingRight of bakingRights) {
-    if (bakingRight.level > blockLevel && bakingRight.priority === 0) {
-      const delegate = bakingRight.delegate;
-      log.trace(
-        `found future baking slot for priority 0 for baker ${delegate}`
-      );
-      // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
-      if (delegate === baker) {
-        const numBlocksUntilBake = bakingRight.level - blockLevel;
-        const secondsUntilBake = numBlocksUntilBake * timeBetweenBlocks;
-        const date = new Date(Date.now() + secondsUntilBake * 1000);
-        const level = bakingRight.level;
-        log.info(
-          `Future bake opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`
-        );
-        return {
-          kind: Events.BakeScheduled,
-          baker,
-          level,
-          estimatedTime: date,
-          createdAt: now(),
-          priority: 0,
-        };
-      } else {
-        log.trace(
-          `Other delegate ${delegate} has priority 0, not monitored baker ${baker}`
-        );
-      }
-    }
-  }
-
-  log.debug(`No future baking opportunties for baker ${baker}`);
-  return null;
-};
-
-type CheckFutureBlockEndorsingRightsArgs = {
-  baker: string;
-  blockLevel: number;
-  endorsingRights: EndorsingRightsResponse;
-  timeBetweenBlocks: number;
-};
-/**
- * Check the endorsing rights for a future endorsing opportunity.  Returns the earliest opportunity found or
- * null if there are none.
- */
-export const checkFutureBlockEndorsingRights = ({
-  baker,
-  blockLevel,
-  endorsingRights,
-  timeBetweenBlocks,
-}: CheckFutureBlockEndorsingRightsArgs): EndorsementScheduled | null => {
-  const log = getLogger(name);
-  for (const endorsingRight of endorsingRights) {
-    if (
-      endorsingRight.level > blockLevel &&
-      endorsingRight.delegate === baker
-    ) {
-      const numBlocksUntilBake = endorsingRight.level - blockLevel;
-      const secondsUntilBake = numBlocksUntilBake * timeBetweenBlocks;
-      const date = new Date(Date.now() + secondsUntilBake * 1000);
-      const level = endorsingRight.level;
-      log.info(
-        `Future endorse opportunity for baker ${baker} at level ${level} in ${numBlocksUntilBake} blocks on ${date}`
-      );
-      return {
-        kind: Events.EndorsementScheduled,
-        baker,
-        level,
-        estimatedTime: date,
-        createdAt: now(),
-      };
-    }
-  }
-
-  log.debug(`No future endorsing opportunties for baker ${baker}`);
   return null;
 };
 

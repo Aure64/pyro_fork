@@ -3,8 +3,6 @@ import {
   checkBlockAccusationsForDoubleEndorsement,
   checkBlockBakingRights,
   checkBlockEndorsingRights,
-  checkFutureBlockBakingRights,
-  checkFutureBlockEndorsingRights,
   checkForDeactivations,
   loadBlockData,
 } from "./bakerMonitor";
@@ -260,60 +258,6 @@ describe("checkBlockAccusationsForDoubleBake", () => {
     });
     expect(result).toEqual(null);
     expect(getBlock.mock.calls.length).toEqual(0);
-  });
-});
-
-describe("checkFutureBlockBakingRights", () => {
-  it("returns event when baker has baking rights for future blocks", () => {
-    const result = checkFutureBlockBakingRights({
-      baker: delegate,
-      blockBaker: delegate,
-      blockLevel: level - 10,
-      bakingRights: responseWithPriorityZero,
-      timeBetweenBlocks: 60,
-    });
-    expect(result).toMatchObject({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      kind: Events.BakeScheduled,
-      createdAt,
-    });
-  });
-
-  it("returns null when baker has no future baking opportunities", () => {
-    const result = checkFutureBlockBakingRights({
-      baker: delegate,
-      blockBaker: "other_baker",
-      blockLevel: level + 1,
-      bakingRights: responseWithPriorityZero,
-      timeBetweenBlocks: 60,
-    });
-    expect(result).toBe(null);
-  });
-});
-
-describe("checkFutureBlockEndorsingRights", () => {
-  it("returns event when endorser has endorsing rights for future blocks", () => {
-    const result = checkFutureBlockEndorsingRights({
-      baker: delegate,
-      blockLevel: 1318220,
-      endorsingRights: endorsingRightsResponse,
-      timeBetweenBlocks: 60,
-    });
-    expect(result).toMatchObject({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      kind: Events.EndorsementScheduled,
-      createdAt,
-    });
-  });
-
-  it("returns null when endorser has no future endorsing opportunities", () => {
-    const result = checkFutureBlockEndorsingRights({
-      baker: delegate,
-      blockLevel: 1318240,
-      endorsingRights: endorsingRightsResponse,
-      timeBetweenBlocks: 60,
-    });
-    expect(result).toBe(null);
   });
 });
 

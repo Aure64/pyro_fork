@@ -5,8 +5,6 @@ export enum Events {
   Endorsed = "endorsed",
   MissedEndorsement = "missed_endorsement",
   DoubleEndorsed = "double_endorsed",
-  BakeScheduled = "bake_scheduled",
-  EndorsementScheduled = "endorsement_scheduled",
   Deactivated = "deactivated",
   DeactivationRisk = "deactivation_risk",
   NodeBehind = "node_behind",
@@ -48,17 +46,6 @@ export type MissedEndorsement = BlockEvent & {
 
 export type DoubleEndorsed = BlockEvent & { kind: Events.DoubleEndorsed };
 
-export type BakeScheduled = BlockEvent & {
-  kind: Events.BakeScheduled;
-  priority: number;
-  estimatedTime: Date;
-};
-
-export type EndorsementScheduled = BlockEvent & {
-  kind: Events.EndorsementScheduled;
-  estimatedTime: Date;
-};
-
 export type Deactivated = CycleEvent & { kind: Events.Deactivated };
 
 export type DeactivationRisk = CycleEvent & { kind: Events.DeactivationRisk };
@@ -70,8 +57,6 @@ export type BakerEvent =
   | Endorsed
   | MissedEndorsement
   | DoubleEndorsed
-  | BakeScheduled
-  | EndorsementScheduled
   | Deactivated
   | DeactivationRisk;
 

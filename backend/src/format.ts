@@ -40,8 +40,6 @@ const KindEmojiFormatters: {
   [E.MissedEndorsement]: "😕",
   [E.Endorsed]: "👍",
   [E.DoubleEndorsed]: "☠️☠️👍",
-  [E.BakeScheduled]: "🗓️🥖",
-  [E.EndorsementScheduled]: "🗓️👍",
   [E.NodeBehind]: "🐌",
   [E.NodeSynced]: "✨",
   [E.NodeLowPeers]: "🤔",
@@ -69,14 +67,6 @@ const Formatters: {
     `${e.baker} missed endorsement of block ${e.level}`,
   [E.Endorsed]: (e) => `${e.baker} endorsed block ${e.level}`,
   [E.DoubleEndorsed]: (e) => `${e.baker} double endorsed block ${e.level}`,
-  [E.BakeScheduled]: (e) =>
-    `${e.baker} will have a baking opportunity on ${dateToString(
-      e.estimatedTime
-    )}`,
-  [E.EndorsementScheduled]: (e) =>
-    `${e.baker} will have an endorsement opportunity on ${dateToString(
-      e.estimatedTime
-    )}`,
   [E.NodeBehind]: (e) => `Node ${e.node} is behind`,
   [E.NodeSynced]: (e) => `Node ${e.node} has caught up`,
   [E.NodeLowPeers]: (e) => `Node ${e.node} has a low peer count`,
