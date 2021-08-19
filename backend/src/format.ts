@@ -1,6 +1,5 @@
 import * as eventTypes from "./events";
 import { Events as E } from "./events";
-import { format as formatDate, parseISO } from "date-fns";
 import { groupBy, sortBy, countBy, first, last } from "lodash";
 
 const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
@@ -25,11 +24,6 @@ const format = (
 };
 
 export default format;
-
-const dateToString = (date: Date | string): string => {
-  const parsedDate = typeof date === "string" ? parseISO(date) : date;
-  return formatDate(parsedDate, "MM/dd/yyyy, H:mm:ss");
-};
 
 const KindEmojiFormatters: {
   [K in eventTypes.Event["kind"]]: string;
