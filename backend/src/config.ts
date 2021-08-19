@@ -67,7 +67,7 @@ const BAKER_CATCHUP_LIMIT: UserPref = {
   type: "number",
   group: BAKER_GROUP.label,
   isArray: false,
-  validationRule: "numeric",
+  validationRule: ["numeric", "min:0"],
 };
 
 const BAKER_HEAD_DISTANCE: UserPref = {
@@ -308,7 +308,7 @@ const EMAIL_PORT: UserPref = {
   type: "number",
   group: EMAIL_GROUP,
   isArray: false,
-  validationRule: ["numeric", EMAIL_REQUIRED],
+  validationRule: ["numeric", "min:1", EMAIL_REQUIRED],
 };
 
 const PROTOCOL_OPTIONS = ["PLAIN", "SSL", "STARTTLS"];
@@ -495,7 +495,7 @@ const NOTIFICATIONS_MAX_BATCH_SIZE: UserPref = {
   type: "number",
   group: NOTIFICATIONS_GROUP,
   isArray: false,
-  validationRule: "numeric",
+  validationRule: ["numeric", "min:0"],
 };
 
 const NOTIFICATIONS_INTERVAL: UserPref = {
@@ -507,7 +507,7 @@ const NOTIFICATIONS_INTERVAL: UserPref = {
   type: "number",
   group: NOTIFICATIONS_GROUP,
   isArray: false,
-  validationRule: "numeric",
+  validationRule: ["numeric", "min:1"],
 };
 
 const NOTIFICATIONS_TTL: UserPref = {
@@ -518,7 +518,7 @@ const NOTIFICATIONS_TTL: UserPref = {
   type: "number",
   group: NOTIFICATIONS_GROUP,
   isArray: false,
-  validationRule: "numeric",
+  validationRule: ["numeric", "min:1"],
 };
 
 // list of all prefs that should be iterated to build yargs options and nconf defaults
