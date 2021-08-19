@@ -133,14 +133,14 @@ describe("format", () => {
 
   it("can abbreviate baker address", async () => {
     expect(format.aggregateByBaker(events, true, true)).toMatchInlineSnapshot(`
-Array [
-  "tz1i..4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003",
-  "tz3N..MAaV 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008",
-  "tz3R..CxD9 😴 @ cycle 13",
-  "tz2T..9K9m 😴 @ cycle 15",
-  "tz2Q..6LmA 😴 @ cycle 17",
-]
-`);
+      Array [
+        "tz1i..4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003",
+        "tz3N..MAaV 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008",
+        "tz3R..CxD9 😴 @ cycle 13",
+        "tz2T..9K9m 😴 @ cycle 15",
+        "tz2Q..6LmA 😴 @ cycle 17",
+      ]
+    `);
   });
 
   it("no more than one event of each kind (emoji)", async () => {
@@ -162,7 +162,9 @@ Array [
 
   it("summary in email subject if multiple lines", async () => {
     const [subject, text] = format.email(events, true);
-    expect(subject).toMatchInlineSnapshot(`"🥖 3 👍 4 😕 2 😴 3"`);
+    expect(subject).toMatchInlineSnapshot(
+      `"🥖 3 👍 4 😕 2 😴 3 @ 10001-10009"`
+    );
     expect(text).toMatchInlineSnapshot(`
       "tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk 🥖 2 @ 10001-10004, 👍 2 @ 10002-10005, 😕 @ 10003
       tz3NExpXn9aPNZPorRE4SdjJ2RGrfbJgMAaV 🥖 @ 10006, 👍 2 @ 10007-10009, 😕 @ 10008
@@ -186,5 +188,22 @@ Array [
 
     expect(subject1).toEqual(subject2);
     expect(subject2).toEqual(subject3);
+  });
+});
+
+describe("range", () => {
+  it("empty string if no start and no end", async () => {
+    expect(format.formatRange(undefined, undefined)).toEqual("");
+  });
+
+  it("one level if only start or end or start and end are same", async () => {
+    const level = 12345;
+    expect(format.formatRange(level, undefined)).toEqual(`${level}`);
+    expect(format.formatRange(undefined, level)).toEqual(`${level}`);
+    expect(format.formatRange(level, level)).toEqual(`${level}`);
+  });
+
+  it("formatted with delimiter if distinct start and end", async () => {
+    expect(format.formatRange(123, 456)).toEqual("123-456");
   });
 });

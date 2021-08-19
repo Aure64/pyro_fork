@@ -1,9 +1,11 @@
 import * as eventTypes from "./events";
 import { Events as E } from "./events";
-import { groupBy, sortBy, countBy, first, last } from "lodash";
+import { groupBy, sortBy, countBy, first, last, minBy, maxBy } from "lodash";
 
 const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
   "baker" in e;
+
+const isBlockEvent = (e: any): e is eventTypes.BlockEvent => "level" in e;
 
 const nonBakerEvent = (e: eventTypes.Event) => !isBakerEvent(e);
 
@@ -79,6 +81,24 @@ export const abbreviateBakerAddress = (addr: string) =>
 export const toString = (e: eventTypes.Event): string =>
   (Formatters[e.kind] as (v: eventTypes.Event) => string)(e);
 
+export const formatRange = (a?: number, b?: number): string => {
+  if (!a && !b) return "";
+  if (a && (!b || b === a)) return `${a}`;
+  if (b && !a) return `${b}`;
+  return `${a}-${b}`;
+};
+
+export const levelRange = (events: eventTypes.Event[]): [number?, number?] => {
+  const sorted = sortBy(events.filter(isBlockEvent), "level");
+  const firstEvent = first(sorted);
+  const lastEvent = last(sorted);
+  const firstLevel =
+    firstEvent && ("level" in firstEvent ? firstEvent.level : undefined);
+  const lastLevel =
+    lastEvent && ("level" in lastEvent ? lastEvent.level : undefined);
+  return [firstLevel, lastLevel];
+};
+
 export const aggregateByBaker = (
   events: eventTypes.BakerEvent[],
   useEmoji = false,
@@ -93,23 +113,13 @@ export const aggregateByBaker = (
     const formattedWithCounts: string[] = [];
     for (const kind in eventsByKind) {
       let formattedRange = "";
-      const events = sortBy(eventsByKind[kind], "level");
+      const events = eventsByKind[kind];
       if (kind === E.Deactivated || kind === E.DeactivationRisk) {
-        const firstEvent = first(eventsByKind[kind]) as eventTypes.CycleEvent;
+        const firstEvent = first(events) as eventTypes.CycleEvent;
         formattedRange = `cycle ${firstEvent.cycle}`;
       } else {
-        const firstEvent = first(events);
-        const lastEvent = last(events);
-        const firstLevel =
-          firstEvent && "level" in firstEvent && firstEvent.level;
-        const lastLevel = lastEvent && "level" in lastEvent && lastEvent.level;
-        if (firstEvent) {
-          if (firstLevel === lastLevel) {
-            formattedRange = `${firstLevel}`;
-          } else {
-            formattedRange = `${firstLevel}-${lastLevel}`;
-          }
-        }
+        const [firstLevel, lastLevel] = levelRange(events);
+        formattedRange = formatRange(firstLevel, lastLevel);
       }
       const count = events.length;
       const formattedKind = `${formatKind(kind as E)}${
@@ -132,14 +142,21 @@ export const summary = (
 ): string => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const counts = countBy(events, "kind");
+
+  const [firstLevel, lastLevel] = levelRange(events);
+  const formattedRange = formatRange(firstLevel, lastLevel);
+
   const allEventNames = Object.values(eventTypes.Events);
   const parts: string[] = [];
+
   for (const kind of allEventNames) {
     if (counts[kind]) {
       parts.push(`${formatKind(kind as E)} ${counts[kind]}`);
     }
   }
-
+  if (formattedRange) {
+    parts.push(`@ ${formattedRange}`);
+  }
   return parts.join(" ");
 };
 
