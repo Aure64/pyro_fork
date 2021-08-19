@@ -28,19 +28,19 @@ export default format;
 const KindEmojiFormatters: {
   [K in eventTypes.Event["kind"]]: string;
 } = {
-  [E.MissedBake]: "😭",
+  [E.MissedBake]: "😡",
   [E.Baked]: "🥖",
-  [E.DoubleBaked]: "☠️☠️🥖️",
+  [E.DoubleBaked]: "🛑️️",
   [E.MissedEndorsement]: "😕",
   [E.Endorsed]: "👍",
-  [E.DoubleEndorsed]: "☠️☠️👍",
+  [E.DoubleEndorsed]: "🛑️",
   [E.NodeBehind]: "🐌",
   [E.NodeSynced]: "✨",
   [E.NodeLowPeers]: "🤔",
   [E.NodeOnBranch]: "🍂",
   [E.Deactivated]: "😴",
   [E.DeactivationRisk]: "😪",
-  [E.RpcError]: "🙀",
+  [E.RpcError]: "⚠️",
   [E.RpcErrorResolved]: "😺",
   [E.Notification]: "🔔",
 };
