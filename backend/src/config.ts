@@ -70,6 +70,17 @@ const BAKER_CATCHUP_LIMIT: UserPref = {
   validationRule: "numeric",
 };
 
+const BAKER_HEAD_DISTANCE: UserPref = {
+  key: `${BAKER_GROUP.key}:head_distance`,
+  default: 2,
+  description: "Number of blocks to lag behind head",
+  alias: undefined,
+  type: "number",
+  group: BAKER_GROUP.label,
+  isArray: false,
+  validationRule: ["numeric", "min:0"],
+};
+
 const RPC: UserPref = {
   key: `${BAKER_GROUP.key}:rpc`,
   default: "https://mainnet-tezos.giganode.io/",
@@ -514,6 +525,7 @@ const NOTIFICATIONS_TTL: UserPref = {
 const userPrefs = [
   BAKERS,
   BAKER_CATCHUP_LIMIT,
+  BAKER_HEAD_DISTANCE,
   DATA_DIR,
   LOG_LEVEL,
   LOG_TIMESTAMP,

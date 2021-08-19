@@ -8,7 +8,7 @@ import {
   Event,
   Events,
 } from "./events";
-import { getLogger } from "loglevel";
+import { getLogger, LogLevel } from "loglevel";
 import {
   BakingRightsResponse,
   BlockMetadata,
@@ -38,13 +38,19 @@ export type BakerMonitorConfig = {
   bakers: string[];
   rpc: URL;
   max_catchup_blocks: number;
+  head_distance: number;
 };
 
 type ChainPositionInfo = { blockLevel: number; blockCycle: number };
 
 export const create = async (
   storageDirectory: string,
-  { bakers, rpc: rpcUrl, max_catchup_blocks: catchupLimit }: BakerMonitorConfig,
+  {
+    bakers,
+    rpc: rpcUrl,
+    max_catchup_blocks: catchupLimit,
+    head_distance: headDistance,
+  }: BakerMonitorConfig,
   onEvent: (event: Event) => Promise<void>
 ): Promise<service.Service> => {
   const log = getLogger(name);
@@ -87,12 +93,19 @@ export const create = async (
       const chainPosition = await getPosition();
       const lastBlockLevel = chainPosition.blockLevel;
       let lastBlockCycle = chainPosition.blockCycle;
-      log.debug("Getting head block header");
-      const headHeader = await rpc.getBlockHeader();
-      const { level, hash } = headHeader;
-      log.debug(
-        `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}]`
-      );
+      log.debug(`Getting block header for head~${headDistance}`);
+      const headMinusXHeader = await rpc.getBlockHeader({
+        block: `head~${headDistance}`,
+      });
+
+      const { level, hash } = headMinusXHeader;
+      if (log.getLevel() <= 1) {
+        const headHeader = await rpc.getBlockHeader();
+        const { level: headLevel } = headHeader;
+        log.debug(
+          `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}, head is ${headLevel}]`
+        );
+      }
 
       const minLevel = catchupLimit ? level - catchupLimit : level;
       const startLevel = lastBlockLevel
