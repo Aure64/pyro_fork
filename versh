@@ -31,7 +31,7 @@ mk-work-copy() {
 
 create() {
     git pull || :
-    git tag | grep $VERSION
+    git tag | grep "^$VERSION\$"
     if [ $? -eq 0 ]; then
         echo "Git tag for version $VERSION already exists"
         exit 1
