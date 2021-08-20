@@ -45,7 +45,7 @@ create() {
          && cd ./backend \
          && npm version $VERSION \
          && git commit -m "set version to $VERSION" ./package.json \
-         && git tag $VERSION
+         && git tag -a $VERSION -m "version $VERSION"
     )
 }
 
