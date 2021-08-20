@@ -100,7 +100,7 @@ publish-npm() {
 
 publish() {
     (: \
-         && pubish-version \
+         && publish-version \
          && publish-docker-image \
          && publish-npm \
          && publish-deb)
