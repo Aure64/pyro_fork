@@ -18,6 +18,7 @@ fi
 BRANCH=${3-$CURRENT_BRANCH}
 ROOT_DIR=$(git rev-parse --show-toplevel)
 WORK_DIR=$ROOT_DIR/.versh
+WORK_DIR_REPO=$WORK_DIR/${NAME}-${VERSION}
 mkdir -p $WORK_DIR
 NAME=pyrometer
 DOCKER_IMAGE=registry.gitlab.com/tezos-kiln/$NAME
@@ -25,8 +26,7 @@ DOCKER_IMAGE_TAG=$DOCKER_IMAGE:$VERSION
 DOCKER_IMAGE_LATEST=$DOCKER_IMAGE:latest
 
 mk-work-copy() {
-    git pull || :
-    git clone $ROOT_DIR $WORK_DIR/$NAME
+    git clone $ROOT_DIR $WORK_DIR_REPO
 }
 
 create() {
@@ -36,11 +36,9 @@ create() {
         echo "Git tag for version $VERSION already exists"
         exit 1
     fi
-    mk-work-copy
-    (: \
-         && cd $WORK_DIR/$NAME \
+    (: \ && mk-work-copy \
+         && cd $WORK_DIR_REPO \
          && git checkout $BRANCH \
-         && git pull \
          && $ROOT_DIR/githooks/pre-push \
          && cd ./backend \
          && npm version $VERSION \
@@ -50,13 +48,13 @@ create() {
 }
 
 checkout-version() {
-    (cd $WORK_DIR/$NAME && git checkout $VERSION)
+    (cd $WORK_DIR_REPO && git checkout $VERSION)
 }
 
 build-docker() {
     checkout-version && \
         (: \
-             && cd $WORK_DIR/$NAME \
+             && cd $WORK_DIR_REPO \
              && docker build -t $NAME:$VERSION . \
              && docker tag $NAME:$VERSION $DOCKER_IMAGE_TAG)
 }
@@ -68,14 +66,14 @@ build() {
 build-deb-in-docker() {
     (: \
          && build-docker \
-         && cd $WORK_DIR/$NAME \
+         && cd $WORK_DIR_REPO \
          && docker build --build-arg VERSION=$VERSION -t $NAME-builddeb:$VERSION -f builddeb.dockerfile . \
          && docker run --rm -it -v $WORK_DIR:/out $NAME-builddeb:$VERSION /bin/bash -c "cp /build/*.deb /out" \
          && ls -lhs $WORK_DIR/*.deb)
 }
 
 publish-version() {
-    git pull $WORK_DIR/$NAME
+    git pull $WORK_DIR_REPO
     #xargs trims whitespace from grep output
     TAG_BRANCH=$(git branch --contains tags/$VERSION \
                      | grep -v HEAD | tr -d "*" | xargs)
@@ -97,7 +95,7 @@ publish-deb() {
 publish-npm() {
     (: \
          && checkout-version \
-         && cd $WORK_DIR/$NAME/backend \
+         && cd $WORK_DIR_REPO/backend \
          && npm publish --tag=dev)
 }
 
