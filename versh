@@ -141,9 +141,24 @@ main() {
             build
             ;;
 
+        publish-docker-image)
+            echo "Publish docker image version $VERSION"
+            publish-docker-image
+            ;;
+
+        publish-npm)
+            echo "Publish npm package version $VERSION"
+            publish-npm
+            ;;
+
         publish-deb)
             echo "Publish deb version $VERSION"
             publish-deb
+            ;;
+
+        publish-version)
+            echo "Publish source version $VERSION"
+            publish-version
             ;;
 
         publish)
