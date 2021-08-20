@@ -124,12 +124,6 @@ Now start Pyrometer:
 pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 ```
 
-and watch log output
-
-```
-docker logs pyrometer -f
-```
-
 All configuration parameters can be specified or overriden from the
 command line. Run `pyrometer --help` to see available commands and
 global options, `pyrometer <command> --help` to see command-specific
