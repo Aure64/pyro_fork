@@ -22,4 +22,5 @@ RUN printf "%s\n" "#!/usr/bin/env node" "require('$APP_DIR')" > $RUN_SCRIPT
 
 RUN chmod +x $RUN_SCRIPT
 USER node
-ENTRYPOINT [$RUN_SCRIPT]
+#can't use variabl exec form doesn't expand variable
+ENTRYPOINT ["/usr/bin/pyrometer"]
