@@ -63,8 +63,8 @@ Edit `pyrometer.toml` to look like this:
 ```toml
 
 exclude = [
-  "bake_scheduled",
-  "endorsement_scheduled",
+  "baked",
+  "endorsed",
 ]
 
 [baker_monitor]
