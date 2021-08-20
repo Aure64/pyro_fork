@@ -53,7 +53,7 @@ and clear:
 
 ```
 docker network create pyrometer
-alias pyrometer="docker run --network pyrometer --rm -v $PWD:$PWD registry.gitlab.com/tezos-kiln/pyrometer:main"
+alias pyrometer="docker run --network pyrometer --rm -v $PWD:$PWD registry.gitlab.com/tezos-kiln/pyrometer"
 ```
 
 Lets also create a directory for pyrometer configuration and data:
