@@ -75,11 +75,15 @@ build-deb-in-docker() {
 }
 
 publish-version() {
+    ORIGIN=$(git remote get-url --push origin)
+    #checking out tag results in detached HEAD, can't push commits from it
+    #xargs trims whitespace from grep output
+    TAG_BRANCH=$(git branch --contains tags/$VERSION | grep -v HEAD | xargs)
     (: \
          && checkout-version \
          && cd $WORK_DIR/$NAME \
-         && git push origin HEAD --no-verify \
-         && git push origin $VERSION --no-verify)
+         && git push $ORIGIN $TAG_BRANCH --no-verify \
+         && git push $ORIGIN $VERSION --no-verify)
 }
 
 publish-docker-image() {
