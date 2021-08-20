@@ -113,7 +113,9 @@ release() {
     docker tag $DOCKER_IMAGE_TAG $DOCKER_IMAGE_LATEST
     docker push $DOCKER_IMAGE_LATEST
     NPM_NAME=$(cd $ROOT_DIR/backend && npm run --silent name)
-    (cd $ROOT_DIR/backend && npm dist-tag add $NPM_NAME@$VERSION latest)
+    (cd $ROOT_DIR/backend \
+         && npm dist-tag add $NPM_NAME@$VERSION latest \
+         && npm dist-tag remove $NPM_NAME@$VERSION dev)
 }
 
 main() {
