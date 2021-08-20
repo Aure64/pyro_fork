@@ -11,6 +11,35 @@ Pyrometer is a tool for monitoring events on
 
 - [backend](/backend/README.md): monitor and API server
 
+## Run on Ubuntu/Debian
+
+- Install NodeJS 14 or later following instructions at
+  <https://github.com/nodesource/distributions>.
+
+- Download latest .deb from
+  <https://gitlab.com/tezos-kiln/pyrometer/-/releases>
+
+- Install:
+
+```
+sudo dpkg -i pyrometer_0.1.0_all.deb
+```
+
+- Edit config file at `/etc/pyrometer.toml` to specify bakers and
+  nodes to monitor, as well as configure notification channels
+
+- Restart pyrometer service:
+
+```
+sudo systemctl restart pyrometer
+```
+
+- Check log output, e.g.:
+
+```
+journalctl -u pyrometer -f
+```
+
 ## Run with Docker
 
 Log in to Gitlab Docker Registry:
