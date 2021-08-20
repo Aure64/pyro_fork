@@ -87,7 +87,7 @@ publish-docker-image() {
 }
 
 publish-deb() {
-    debfile="$NAME-$VERSION.deb"
+    debifule="$NAME_$VERSION_all.deb"
     glab api projects/:id/packages/generic/pyrometer/$VERSION/$debfile -X PUT --input .versh/$debfile
 }
 
