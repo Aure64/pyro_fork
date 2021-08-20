@@ -73,7 +73,7 @@ build-deb-in-docker() {
 }
 
 publish-version() {
-    git pull $WORK_DIR_REPO
+    git pull --tags $WORK_DIR_REPO
     #xargs trims whitespace from grep output
     TAG_BRANCH=$(git branch --contains tags/$VERSION \
                      | grep -v HEAD | tr -d "*" | xargs)
