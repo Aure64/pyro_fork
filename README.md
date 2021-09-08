@@ -193,6 +193,8 @@ Sends notifications via Telegram. To enable:
    after 24 hours and the chatId cannot be found, simply send another
    message to your bot and try again.
 
+![](doc/telegram-screenshot.png)
+
 #### Email
 
 The email notification channel uses SMTP settings that you provide to
@@ -207,6 +209,8 @@ you're fine-tuning the volume of events you want to receive.
 This channel will post your notifications to a Slack webhook. Follow
 [the instructions here](https://api.slack.com/messaging/webhooks) to
 configure your webhook, and provide the URL to Pyrometer.
+
+![](doc/slack-screenshot.png)
 
 #### Webhook
 
