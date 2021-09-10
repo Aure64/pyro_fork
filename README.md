@@ -133,22 +133,11 @@ parameters.
 
 Install NodeJS 14 or later. For Linux, follow instructions at
 <https://github.com/nodesource/distributions>. For other operating
-systems, download from <https://nodejs.org>.
+systems, download from <https://nodejs.org>. Configure NPM registry:
 
-⚠️ While this repository is private, you'll need to authenticate to the
-registry before connecting.
-
+```bash
+npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
 ```
-GITLAB_API_TOKEN="<your token>"
-PROJECT_ID=22897259
-npm config set @tezos-kiln:registry https://gitlab.com/api/v4/projects/$PROJECT_ID/packages/npm/
-npm config set -- '//gitlab.com/api/v4/projects/$PROJECT_ID/packages/npm/:_authToken' $GITLAB_API_TOKEN
-
-```
-
-See [Gitlab's
-Instructions](https://docs.gitlab.com/ee/user/packages/npm_registry/index.html#authenticate-to-the-package-registry)
-for details.
 
 Assuming we have `./pyrometer.toml` config file and `./data`
 directory, start Pyrometer:
