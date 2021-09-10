@@ -20,9 +20,6 @@
     "tsc:lint": "tsc --noEmit -p .",
     "prepublishOnly": "yarn build"
   },
-  "bin": {
-    "pyrometer": "./bin/pyrometer.js"
-  },
   "devDependencies": {
     "@types/jest": "27.0.1",
     "@types/lodash": "^4.14.172",
