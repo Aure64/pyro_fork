@@ -6,9 +6,9 @@
   "scripts": {
     "version": "echo $npm_package_version",
     "name": "echo $npm_package_name",
-    "preinstall": "if command -v git; then git config core.hooksPath githooks; fi",
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
+    "predev": "if command -v git; then git config core.hooksPath githooks; fi",
     "dev": "ts-node-dev --tree-kill --no-notify --respawn --transpile-only --exit-child src/index.ts",
     "inspect": "ts-node-dev --inspect --tree-kill --no-notify --respawn --transpile-only --exit-child src/index.ts",
     "eslint:fix": "eslint . --ext .ts --fix",
