@@ -4,7 +4,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "bin": {
-    "pyrometer": "dist/index.js"
+    "pyrometer": "./bin/pyrometer.js"
   },
   "scripts": {
     "version": "echo $npm_package_version",
