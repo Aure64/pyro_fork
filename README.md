@@ -22,7 +22,7 @@ Pyrometer is a tool for monitoring events on
 - Install:
 
 ```
-sudo dpkg -i pyrometer_0.1.0_all.deb
+sudo dpkg -i pyrometer_0.1.3_all.deb
 ```
 
 - Edit config file at `/etc/pyrometer.toml` to specify bakers and
