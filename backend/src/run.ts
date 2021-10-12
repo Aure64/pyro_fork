@@ -16,6 +16,8 @@ import { join as joinPath, normalize as normalizePath } from "path";
 
 import { setup as setupLogging } from "./logging";
 
+import { start as startAPIServer } from "./api/server";
+
 const run = async (config: Config.Config) => {
   // Makes the script crash on unhandled rejections instead of silently ignoring them.
   process.on("unhandledRejection", (err) => {
@@ -169,6 +171,7 @@ const run = async (config: Config.Config) => {
     allTasks.push(bakerMonitorTask);
   }
 
+  startAPIServer(nodeMonitor, bakerMonitor, 4000);
   info("Started");
   await Promise.all(allTasks);
   debug(`Releasing file lock on ${pidFile}`);

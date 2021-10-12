@@ -18,9 +18,21 @@ export type NodeMonitorConfig = {
   reference_node?: URL;
 };
 
+export type NodeInfo = {
+  url: string;
+  head: string;
+  bootstrappedStatus: BootstrappedStatus | undefined;
+  history: BlockHeaderResponse[];
+  peerCount: number | undefined;
+};
+
 type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
 
 type Sub = service.Service & NodeInfoProvider;
+
+export type NodeInfoCollection = { info: () => NodeInfo[] };
+
+export type NodeMonitor = service.Service & NodeInfoCollection;
 
 const NoSub: Sub = {
   name: "no-sub",
@@ -33,7 +45,7 @@ const NoSub: Sub = {
 export const create = (
   onEvent: (event: Event) => Promise<void>,
   { nodes, reference_node: referenceNode }: NodeMonitorConfig
-): service.Service => {
+): NodeMonitor => {
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)
     : NoSub;
@@ -54,7 +66,11 @@ export const create = (
     }
   };
 
-  return { name: "nm", start, stop };
+  const info = () => {
+    return allSubs.map((s) => s.nodeInfo()).filter((x): x is NodeInfo => !!x);
+  };
+
+  return { name: "nm", start, stop, info };
 };
 
 const eventKey = (event: RpcEvent | NodeEvent): string => {
@@ -161,13 +177,6 @@ const subscribeToNode = (
   };
 };
 
-export type NodeInfo = {
-  head: string;
-  bootstrappedStatus: BootstrappedStatus | undefined;
-  history: BlockHeaderResponse[];
-  peerCount: number | undefined;
-};
-
 const updateNodeInfo = async ({
   node,
   blockHash,
@@ -210,6 +219,7 @@ const updateNodeInfo = async ({
   }
 
   return {
+    url: node,
     head: blockHash,
     bootstrappedStatus,
     history,

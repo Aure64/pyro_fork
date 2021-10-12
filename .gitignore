@@ -1,1 +1,5 @@
 .versh
+
+#Nexus
+schema.graphql
+nexus-typegen.ts
