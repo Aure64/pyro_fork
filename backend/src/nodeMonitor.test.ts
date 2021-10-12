@@ -15,7 +15,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history, peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history,
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
@@ -41,12 +48,22 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history, peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history,
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
+
     const previousNodeInfo = {
       head: "some other block",
       bootstrappedStatus,
       history,
       peerCount: 3,
+      updatedAt: new Date(),
+      url: node,
     };
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
@@ -66,7 +83,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
@@ -86,7 +110,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
@@ -106,7 +137,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const oldHead = "some_older_block";
     const oldBootstrappedStatus: BootstrappedStatus = {
       bootstrapped: true,
@@ -117,6 +155,8 @@ describe("checkBlockInfo", () => {
       bootstrappedStatus: oldBootstrappedStatus,
       history: [],
       peerCount,
+      updatedAt: new Date(),
+      url: node,
     };
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
@@ -142,7 +182,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
@@ -168,7 +215,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 20;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
@@ -195,6 +249,8 @@ describe("checkBlockInfo", () => {
       bootstrappedStatus,
       history: partialHistory,
       peerCount,
+      updatedAt: new Date(),
+      url: node,
     };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = history;
@@ -215,7 +271,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 9;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
@@ -241,7 +304,14 @@ describe("checkBlockInfo", () => {
     const node = "http://somenode";
     const head = "some_block";
     const peerCount = 9;
-    const nodeInfo = { head, bootstrappedStatus, history: [], peerCount };
+    const nodeInfo = {
+      head,
+      bootstrappedStatus,
+      history: [],
+      peerCount,
+      updatedAt: new Date(),
+      url: node,
+    };
     const previousNodeInfo = nodeInfo;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
