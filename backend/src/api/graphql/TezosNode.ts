@@ -8,9 +8,11 @@ export const TezosNode = objectType({
   definition(t) {
     t.nonNull.string("url");
     t.nonNull.string("head");
+    t.nonNull.int("level");
     t.boolean("bootstrapped");
     t.string("synced");
     t.int("peerCount");
+    t.nonNull.string("updatedAt");
   },
 });
 
@@ -27,6 +29,7 @@ export const TezosNodeQuery = extendType({
           return {
             url: x.url,
             head: x.head,
+            level: x.history[0].level,
             bootstrapped: x.bootstrappedStatus
               ? x.bootstrappedStatus.bootstrapped
               : null,
@@ -34,6 +37,7 @@ export const TezosNodeQuery = extendType({
               ? x.bootstrappedStatus.sync_state
               : null,
             peerCount: x.peerCount,
+            updatedAt: x.updatedAt.toISOString(),
           };
         });
       },

@@ -24,6 +24,7 @@ export type NodeInfo = {
   bootstrappedStatus: BootstrappedStatus | undefined;
   history: BlockHeaderResponse[];
   peerCount: number | undefined;
+  updatedAt: Date;
 };
 
 type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
@@ -224,6 +225,7 @@ const updateNodeInfo = async ({
     bootstrappedStatus,
     history,
     peerCount,
+    updatedAt: new Date(),
   };
 };
 
