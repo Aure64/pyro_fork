@@ -23,18 +23,14 @@ const rootValue = {
 };
 
 //FIXME figure out types
-export const start = (
-  nodeMonitor: NodeInfoCollection,
-  bakerMonitor: any,
-  port = 4000
-) => {
+export const start = (nodeMonitor: NodeInfoCollection | null, port = 4000) => {
   app.use(
     "/gql",
     graphqlHTTP(async (request) => ({
       schema,
       rootValue,
       graphiql: true,
-      context: createContext(nodeMonitor),
+      context: createContext(nodeMonitor || { info: () => [] }),
       customFormatErrorFn: (error) => {
         const params = {
           message: error.message,
