@@ -4,7 +4,7 @@ process.env["NTBA_FIX_319"] = "1";
 import * as FS from "fs";
 import * as readline from "readline";
 
-import * as yargs from "yargs";
+import yargs from "yargs";
 import * as TOML from "@iarna/toml";
 
 import * as Config from "./config";

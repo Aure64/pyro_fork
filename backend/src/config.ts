@@ -1,7 +1,7 @@
-import * as nconf from "nconf";
+import nconf from "nconf";
 import { promisify } from "util";
 import { LogLevelDesc } from "loglevel";
-import * as TOML from "@iarna/toml";
+import TOML from "@iarna/toml";
 
 import envPaths from "env-paths";
 
@@ -19,10 +19,10 @@ import { NotificationsConfig } from "./channel";
 import { BakerMonitorConfig } from "./bakerMonitor";
 import { NodeMonitorConfig } from "./nodeMonitor";
 import { LoggingConfig } from "./logging";
-import * as FS from "fs";
-import * as Path from "path";
-import * as yargs from "yargs";
-import * as Validator from "validatorjs";
+import FS from "fs";
+import Path from "path";
+import yargs from "yargs";
+import Validator from "validatorjs";
 import { Events } from "./events";
 
 import setPath from "./setPath";

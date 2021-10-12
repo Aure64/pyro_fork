@@ -2,7 +2,7 @@ import { setLevel } from "loglevel";
 import loglevel, { LogLevelDesc } from "loglevel";
 import * as prefix from "loglevel-plugin-prefix";
 import { format } from "date-fns";
-import * as Chalk from "chalk";
+import Chalk from "chalk";
 
 export type LoggingConfig = {
   level: LogLevelDesc;
