@@ -1,4 +1,4 @@
-import * as TelegramBot from "node-telegram-bot-api";
+import TelegramBot from "node-telegram-bot-api";
 import { getLogger } from "loglevel";
 import { Event, Sender } from "../events";
 import format from "../format";
