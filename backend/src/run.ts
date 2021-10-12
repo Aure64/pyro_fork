@@ -171,7 +171,7 @@ const run = async (config: Config.Config) => {
     allTasks.push(bakerMonitorTask);
   }
 
-  startAPIServer(nodeMonitor, bakerMonitor, 4000);
+  startAPIServer(nodeMonitor, 4000);
   info("Started");
   await Promise.all(allTasks);
   debug(`Releasing file lock on ${pidFile}`);
