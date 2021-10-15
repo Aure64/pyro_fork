@@ -135,8 +135,11 @@ const run = async (config: Config.Config) => {
 
   const gc = EventLog.gc(eventLog, channels);
 
+  const apiServer = startAPIServer(nodeMonitor, 4000);
+
   const stop = (event: NodeJS.Signals) => {
     info(`Caught signal ${event}, shutting down...`);
+    apiServer.close();
     bakerMonitor?.stop();
     nodeMonitor?.stop();
     for (const ch of channels) {
@@ -171,7 +174,6 @@ const run = async (config: Config.Config) => {
     allTasks.push(bakerMonitorTask);
   }
 
-  startAPIServer(nodeMonitor, 4000);
   info("Started");
   await Promise.all(allTasks);
   debug(`Releasing file lock on ${pidFile}`);
