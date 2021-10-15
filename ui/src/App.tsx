@@ -15,7 +15,7 @@ import {
 import { useGetNodesQuery } from './api';
 
 const takeStart = (str: string | undefined | null) => {
-  return str && `${str.substr(0, 8)}`;
+  return str && `${str.substr(0, 5)}`;
 };
 
 const ellipsifyMiddle = (str: string | undefined | null) => {
