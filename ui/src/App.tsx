@@ -14,6 +14,10 @@ import {
 
 import { useGetNodesQuery } from './api';
 
+const relativeTimeFormat = new Intl.RelativeTimeFormat([], {
+  style: 'short',
+});
+
 const takeStart = (str: string | undefined | null) => {
   return str && `${str.substr(0, 5)}`;
 };
@@ -45,7 +49,20 @@ function App({}: AppProps) {
               </Box>
             </HStack>
             <Box>
-              {node.level} {ellipsifyMiddle(node.head)}
+              {node.recentBlocks.slice(0, 3).map((block) => (
+                <Box>
+                  <code>
+                    {block.level} {block.priority}
+                  </code>{' '}
+                  <code>{ellipsifyMiddle(block.hash)}</code>{' '}
+                  {relativeTimeFormat.format(
+                    Math.round(
+                      (new Date(block.timestamp).getTime() - Date.now()) / 1000,
+                    ),
+                    'seconds',
+                  )}
+                </Box>
+              ))}
             </Box>
             <Box>
               Updated:{' '}

@@ -2,10 +2,15 @@ query getNodes
 {
   nodes {
     url
+    recentBlocks {
+      protocol
+      hash
+      level
+      timestamp
+      priority
+    }
     synced
-    head
-    level
-    peerCount
     updatedAt
+    peerCount
   }
 }
