@@ -1,0 +1,11 @@
+query getNodes
+{
+  nodes {
+    url
+    synced
+    head
+    level
+    peerCount
+    updatedAt
+  }
+}
