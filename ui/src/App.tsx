@@ -103,7 +103,7 @@ function App({}: AppProps) {
                       </code>{' '}
                       <code>{ellipsifyMiddle(block.hash)}</code>{' '}
                     </Box>
-                    <Text fontSize="xs">
+                    <Text fontSize="xs" fontFamily="monospace">
                       {relativeTimeFormat.format(
                         Math.round(
                           (new Date(block.timestamp).getTime() - Date.now()) /
