@@ -96,6 +96,7 @@ function App({}: AppProps) {
                     justifyContent="space-between"
                     alignItems="baseline"
                     fontWeight={index ? 'normal' : 'bold'}
+                    color={index ? 'gray.600' : 'black'}
                   >
                     <Box>
                       <code>
@@ -116,7 +117,7 @@ function App({}: AppProps) {
                 ))}
               </Box>
               <Box w="100%" justifyContent="end" d="flex">
-                <Text fontSize="xs" color="gray.500" as="i" align="end">
+                <Text fontSize="xs" color="gray.400" as="i" align="end">
                   Updated: {timestampFormat.format(new Date(node.updatedAt))}
                 </Text>
               </Box>
