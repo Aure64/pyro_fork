@@ -16,16 +16,11 @@ import {
   AlertDescription,
 } from '@chakra-ui/react';
 
-import {
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
-  StatGroup,
-} from '@chakra-ui/react';
+import { Stat, StatLabel, StatNumber } from '@chakra-ui/react';
 
 import { useGetNodesQuery } from './api';
+
+import useInterval from './use-interval';
 
 const relativeTimeFormat = new Intl.RelativeTimeFormat([], {
   style: 'short',
@@ -48,6 +43,12 @@ interface AppProps {}
 
 function App({}: AppProps) {
   const { data, error, loading } = useGetNodesQuery({ pollInterval: 5000 });
+  const [count, setCount] = React.useState<number>(0);
+
+  useInterval(() => {
+    setCount(count + 1);
+  }, 1000);
+
   return (
     <Box p="20px">
       <Heading>Nodes</Heading>
