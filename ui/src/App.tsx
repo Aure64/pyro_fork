@@ -8,6 +8,10 @@ import { Spinner } from '@chakra-ui/react';
 import { VStack } from '@chakra-ui/react';
 import { Tooltip } from '@chakra-ui/react';
 import { Divider } from '@chakra-ui/react';
+import { Icon } from '@chakra-ui/react';
+
+import { MdSync } from 'react-icons/md';
+import { MdSyncProblem } from 'react-icons/md';
 
 import {
   Alert,
@@ -79,7 +83,14 @@ function App({}: AppProps) {
                   <Tooltip label={node.url}>
                     <Text as="span">{new URL(node.url).hostname}</Text>
                   </Tooltip>
-                  <Text fontSize="sm">{node.synced}</Text>
+                  <Text fontSize="sm">
+                    {node.synced === 'synced' ? (
+                      <Icon as={MdSync} color="green" />
+                    ) : (
+                      <Icon as={MdSyncProblem} color="red" />
+                    )}{' '}
+                    {node.synced}
+                  </Text>
                 </VStack>
                 <Stat paddingLeft="5px">
                   <StatLabel>Peers</StatLabel>
