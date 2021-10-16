@@ -94,7 +94,17 @@ function App({}: AppProps) {
                 </VStack>
                 <Stat paddingLeft="5px">
                   <StatLabel>Peers</StatLabel>
-                  <StatNumber>{node.peerCount || '?'}</StatNumber>
+                  <StatNumber
+                    color={
+                      node.peerCount
+                        ? node.peerCount < 4
+                          ? 'red'
+                          : 'black'
+                        : 'gray.400'
+                    }
+                  >
+                    {node.peerCount || '?'}
+                  </StatNumber>
                 </Stat>
               </Box>
               <Divider />
