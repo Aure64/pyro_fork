@@ -115,7 +115,7 @@ function App({}: AppProps) {
                 ))}
               </Box>
               <Box w="100%" justifyContent="end" d="flex">
-                <Text fontSize="xs" as="i" align="end">
+                <Text fontSize="xs" color="gray.500" as="i" align="end">
                   Updated: {timestampFormat.format(new Date(node.updatedAt))}
                 </Text>
               </Box>
