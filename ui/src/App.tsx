@@ -1,9 +1,13 @@
 import React from 'react';
 
+import { Text } from '@chakra-ui/react';
+import { Heading } from '@chakra-ui/react';
 import { Box } from '@chakra-ui/react';
 import { HStack } from '@chakra-ui/react';
 import { Spinner } from '@chakra-ui/react';
 import { VStack } from '@chakra-ui/react';
+import { Tooltip } from '@chakra-ui/react';
+import { Divider } from '@chakra-ui/react';
 
 import {
   Alert,
@@ -12,10 +16,24 @@ import {
   AlertDescription,
 } from '@chakra-ui/react';
 
+import {
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  StatGroup,
+} from '@chakra-ui/react';
+
 import { useGetNodesQuery } from './api';
 
 const relativeTimeFormat = new Intl.RelativeTimeFormat([], {
   style: 'short',
+});
+
+const timestampFormat = new Intl.DateTimeFormat([], {
+  dateStyle: 'short',
+  timeStyle: 'short',
 });
 
 const takeStart = (str: string | undefined | null) => {
@@ -31,49 +49,80 @@ interface AppProps {}
 function App({}: AppProps) {
   const { data, error, loading } = useGetNodesQuery({ pollInterval: 5000 });
   return (
-    <Box>
-      {loading && <Spinner />}
-      {error && (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle mr={2}>Error</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
-        </Alert>
-      )}
-      {data?.nodes.map((node) => (
-        <Box m="10px" borderWidth="1px" rounded="md" padding="10px">
-          <VStack align="flex-start">
-            <HStack>
-              <Box>
-                {node.url} {node.synced} ({node.peerCount})
+    <Box p="20px">
+      <Heading>Nodes</Heading>
+      <Divider marginBottom="10px" />
+      <HStack shouldWrapChildren wrap="wrap" spacing="0">
+        {loading && <Spinner />}
+        {error && (
+          <Alert status="error">
+            <AlertIcon />
+            <AlertTitle mr={2}>Error</AlertTitle>
+            <AlertDescription>{error.message}</AlertDescription>
+          </Alert>
+        )}
+        {data?.nodes.map((node) => (
+          <Box
+            key={node.url}
+            borderWidth="1px"
+            rounded="md"
+            padding="10px"
+            minW="350px"
+            maxW="350px"
+            marginRight="10px"
+            marginBottom="10px"
+          >
+            <VStack align="flex-start">
+              <Box w="100%" d="flex" justifyContent="space-between">
+                <VStack align="flex-start">
+                  <Tooltip label={node.url}>
+                    <Text as="span">{new URL(node.url).hostname}</Text>
+                  </Tooltip>
+                  <Text fontSize="sm">{node.synced}</Text>
+                </VStack>
+                <Stat paddingLeft="5px">
+                  <StatLabel>Peers</StatLabel>
+                  <StatNumber>{node.peerCount || '?'}</StatNumber>
+                </Stat>
               </Box>
-            </HStack>
-            <Box>
-              {node.recentBlocks.slice(0, 3).map((block) => (
-                <Box>
-                  <code>
-                    {block.level} {block.priority}
-                  </code>{' '}
-                  <code>{ellipsifyMiddle(block.hash)}</code>{' '}
-                  {relativeTimeFormat.format(
-                    Math.round(
-                      (new Date(block.timestamp).getTime() - Date.now()) / 1000,
-                    ),
-                    'seconds',
-                  )}
-                </Box>
-              ))}
-            </Box>
-            <Box>
-              Updated:{' '}
-              {new Intl.DateTimeFormat([], {
-                dateStyle: 'short',
-                timeStyle: 'short',
-              }).format(new Date(node.updatedAt))}
-            </Box>
-          </VStack>
-        </Box>
-      ))}
+              <Divider />
+              <Box w="100%">
+                {node.recentBlocks.slice(0, 3).map((block, index) => (
+                  <Box
+                    key={block.level}
+                    d="flex"
+                    w="100%"
+                    justifyContent="space-between"
+                    alignItems="baseline"
+                    fontWeight={index ? 'normal' : 'bold'}
+                  >
+                    <Box>
+                      <code>
+                        {block.level} {block.priority}
+                      </code>{' '}
+                      <code>{ellipsifyMiddle(block.hash)}</code>{' '}
+                    </Box>
+                    <Text fontSize="xs">
+                      {relativeTimeFormat.format(
+                        Math.round(
+                          (new Date(block.timestamp).getTime() - Date.now()) /
+                            1000,
+                        ),
+                        'seconds',
+                      )}
+                    </Text>
+                  </Box>
+                ))}
+              </Box>
+              <Box w="100%" justifyContent="end" d="flex">
+                <Text fontSize="xs" as="i" align="end">
+                  Updated: {timestampFormat.format(new Date(node.updatedAt))}
+                </Text>
+              </Box>
+            </VStack>
+          </Box>
+        ))}
+      </HStack>
     </Box>
   );
 }
