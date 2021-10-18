@@ -6,27 +6,36 @@ Date.now = jest.fn(() => 1624758855227);
 
 const createdAt = new Date(Date.now());
 
+const createNodeInfo = () => {
+  const bootstrappedStatus: BootstrappedStatus = {
+    bootstrapped: true,
+    sync_state: "unsynced",
+  };
+
+  return {
+    url: "http://somenode",
+    head: "some_block",
+    peerCount: 20,
+    endpoints: {
+      status: true,
+      networkConnections: true,
+      version: true,
+    },
+    unableToReach: false,
+    updatedAt: new Date(),
+    bootstrappedStatus,
+    error: undefined,
+    tezosVersion: undefined,
+    history: [],
+  };
+};
+
 describe("checkBlockInfo", () => {
   test("returns event when node is behind", async () => {
-    const bootstrappedStatus: BootstrappedStatus = {
-      bootstrapped: true,
-      sync_state: "unsynced",
-    };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
-    const nodeInfo = {
-      head,
-      bootstrappedStatus,
-      history,
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
-    };
+    const nodeInfo = createNodeInfo();
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -34,7 +43,7 @@ describe("checkBlockInfo", () => {
     expect(events).toEqual([
       {
         kind: Events.NodeBehind,
-        node: "http://somenode",
+        node: nodeInfo.url,
         createdAt,
       },
     ]);
@@ -45,29 +54,17 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "unsynced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
-    const nodeInfo = {
-      head,
-      bootstrappedStatus,
-      history,
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
-    };
+    const nodeInfo = createNodeInfo();
 
     const previousNodeInfo = {
+      ...createNodeInfo(),
       head: "some other block",
       bootstrappedStatus,
-      history,
       peerCount: 3,
-      updatedAt: new Date(),
-      url: node,
+      url: nodeInfo.url,
     };
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -80,21 +77,13 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
-      history: [],
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -107,21 +96,10 @@ describe("checkBlockInfo", () => {
       bootstrapped: false,
       sync_state: "unsynced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
-    const nodeInfo = {
-      head,
-      bootstrappedStatus,
-      history: [],
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
-    };
+    const nodeInfo = { ...createNodeInfo(), bootstrappedStatus };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -134,33 +112,25 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
+
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
-      history: [],
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
     const oldHead = "some_older_block";
     const oldBootstrappedStatus: BootstrappedStatus = {
       bootstrapped: true,
       sync_state: "unsynced",
     };
+
     const previousNodeInfo = {
+      ...createNodeInfo(),
       head: oldHead,
       bootstrappedStatus: oldBootstrappedStatus,
-      history: [],
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
+
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -179,21 +149,14 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
-      history: [],
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
+
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -212,21 +175,14 @@ describe("checkBlockInfo", () => {
       bootstrapped: false,
       sync_state: "unsynced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
+
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
-      history: [],
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -241,21 +197,16 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
-    const peerCount = 20;
+
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
       history: partialHistory,
-      peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
+
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = history;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -268,21 +219,17 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
     const peerCount = 9;
+
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
-      history: [],
       peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
+
     const previousNodeInfo = undefined;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
@@ -301,21 +248,16 @@ describe("checkBlockInfo", () => {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const node = "http://somenode";
-    const head = "some_block";
     const peerCount = 9;
     const nodeInfo = {
-      head,
+      ...createNodeInfo(),
       bootstrappedStatus,
-      history: [],
       peerCount,
-      updatedAt: new Date(),
-      url: node,
     };
+
     const previousNodeInfo = nodeInfo;
     const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
-      node,
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,

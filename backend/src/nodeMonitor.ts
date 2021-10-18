@@ -18,13 +18,29 @@ export type NodeMonitorConfig = {
   reference_node?: URL;
 };
 
+export type NodeCommunicationError = {
+  message: string;
+  status?: string;
+  statusText?: string;
+};
+
+export type EndpointsAvailability = {
+  status: boolean;
+  networkConnections: boolean;
+  version: boolean;
+};
+
 export type NodeInfo = {
   url: string;
   head: string;
+  endpoints: EndpointsAvailability;
   bootstrappedStatus: BootstrappedStatus | undefined;
   history: BlockHeaderResponse[];
   peerCount: number | undefined;
   updatedAt: Date;
+  unableToReach: boolean;
+  error: NodeCommunicationError | undefined;
+  tezosVersion: TezosVersion | undefined;
 };
 
 type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
@@ -81,6 +97,12 @@ const eventKey = (event: RpcEvent | NodeEvent): string => {
   return event.kind;
 };
 
+const initialEndpointAvailability = {
+  status: true,
+  networkConnections: true,
+  version: true,
+};
+
 const subscribeToNode = (
   node: string,
   onEvent: (event: Event) => Promise<void>,
@@ -95,8 +117,6 @@ const subscribeToNode = (
   const log = getLogger(`nm|${node}`);
   let nodeData: NodeInfo | undefined;
   let previousEvents: Set<string> = new Set();
-  //let halted = false;
-  let unableToReach: boolean | undefined;
 
   const task = async () => {
     let events: (NodeEvent | RpcEvent)[] = [];
@@ -104,35 +124,42 @@ const subscribeToNode = (
       const headHash = await rpc.getBlockHash();
 
       const previousNodeInfo = nodeData;
-      // skip checking boostrapped status if previous check failed
-      const fetchBootstrappedStatus =
-        previousNodeInfo === undefined ||
-        previousNodeInfo.bootstrappedStatus !== undefined;
-      // skip checking  network connections if previous check failed
-      const fetchNetworkConnections =
-        previousNodeInfo === undefined ||
-        previousNodeInfo.peerCount !== undefined;
 
       const nodeInfo = await updateNodeInfo({
         node,
         blockHash: headHash,
         rpc,
-        fetchBootstrappedStatus,
-        fetchNetworkConnections,
+        endpoints: previousNodeInfo?.endpoints || initialEndpointAvailability,
         log,
       });
-      events = checkBlockInfo({
-        node,
-        nodeInfo,
-        previousNodeInfo,
-        referenceNodeBlockHistory: getReference()?.history,
-        log,
-      });
+
+      if (nodeInfo.unableToReach) {
+        log.debug("Unable to reach node");
+        const err = nodeInfo.error;
+        const message = err
+          ? err.status
+            ? `${node} returned ${err.status} ${err.statusText ?? ""}`
+            : err?.message
+          : "Unknown error";
+        events.push({
+          kind: Events.RpcError,
+          message,
+          node,
+          createdAt: now(),
+        });
+      } else {
+        events = checkBlockInfo({
+          nodeInfo,
+          previousNodeInfo,
+          referenceNodeBlockHistory: getReference()?.history,
+          log,
+        });
+      }
+
       // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
       // with other data (eg current block)
       nodeData = nodeInfo;
-      log.debug("Unable to reach?", unableToReach);
-      if (unableToReach) {
+      if (previousNodeInfo?.unableToReach && !nodeInfo.unableToReach) {
         log.debug("Adding reconnected event");
         events.push({
           kind: Events.RpcErrorResolved,
@@ -140,11 +167,8 @@ const subscribeToNode = (
           createdAt: now(),
         });
       }
-      unableToReach = false;
     } catch (err) {
-      unableToReach = true;
       log.warn(`Node subscription error: ${err.message}`);
-      log.debug("Unable to reach?", unableToReach);
       events.push({
         kind: Events.RpcError,
         message: err.status
@@ -178,53 +202,93 @@ const subscribeToNode = (
   };
 };
 
+const UNAVAILABLE_RPC_HTTP_STATUS = [401, 403, 404];
+
 const updateNodeInfo = async ({
   node,
   blockHash,
   rpc,
-  fetchBootstrappedStatus,
-  fetchNetworkConnections,
+  endpoints,
   log,
 }: {
   node: string;
   blockHash: string;
   rpc: RpcClient;
-  fetchBootstrappedStatus: boolean;
-  fetchNetworkConnections: boolean;
+  endpoints: EndpointsAvailability;
   log?: Logger;
 }): Promise<NodeInfo> => {
   if (!log) log = getLogger(__filename);
   log.debug(`Checking block ${blockHash}`);
   let bootstrappedStatus;
+  let hasStatusEndpoint = true;
 
-  if (fetchBootstrappedStatus) {
+  if (endpoints.status) {
     try {
       bootstrappedStatus = await retry404(() => getBootstrappedStatus(node));
       log.debug(`bootstrap status:`, bootstrappedStatus);
     } catch (err) {
       log.warn(`Unable to get bootsrap status`, err);
+      if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
+        hasStatusEndpoint = false;
+      }
     }
   }
 
-  const history = await fetchBlockHeaders({ blockHash, rpc });
+  let unableToReach = false;
+  let history: BlockHeaderResponse[];
+  let error: NodeCommunicationError | undefined;
+  try {
+    history = await fetchBlockHeaders({ blockHash, rpc });
+  } catch (err) {
+    log.warn(`Unable to get block history`, err);
+    unableToReach = true;
+    error = err;
+    history = [];
+  }
 
   let peerCount;
-  if (fetchNetworkConnections) {
+  let hasNetworkConnectionsEndpoint = true;
+  if (endpoints.networkConnections) {
     try {
       const connections = await retry404(() => getNetworkConnections(node));
       peerCount = connections.length;
       log.debug(`Node has ${peerCount} peers`);
     } catch (err) {
       log.warn(`Unable to get network connections info`, err);
+      if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
+        hasNetworkConnectionsEndpoint = false;
+      }
+    }
+  }
+
+  let tezosVersion;
+  let hasVersionEndpoint = true;
+  if (endpoints.version) {
+    try {
+      tezosVersion = await getTezosVersion(node);
+      log.debug(`Tezos version:`, tezosVersion);
+    } catch (err) {
+      log.warn(`Unable to get tezos version info`, err);
+      if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
+        hasVersionEndpoint = false;
+      }
     }
   }
 
   return {
     url: node,
+    endpoints: {
+      status: hasStatusEndpoint,
+      networkConnections: hasNetworkConnectionsEndpoint,
+      version: hasVersionEndpoint,
+    },
     head: blockHash,
     bootstrappedStatus,
     history,
     peerCount,
+    tezosVersion,
+    unableToReach,
+    error,
     updatedAt: new Date(),
   };
 };
@@ -232,7 +296,6 @@ const updateNodeInfo = async ({
 const minimumPeers = 10;
 
 type CheckBlockInfoArgs = {
-  node: string;
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
   referenceNodeBlockHistory: BlockHeaderResponse[] | undefined;
@@ -243,7 +306,6 @@ type CheckBlockInfoArgs = {
  * Analyze the provided node info for any significant events.
  */
 export const checkBlockInfo = ({
-  node,
   nodeInfo,
   previousNodeInfo,
   referenceNodeBlockHistory,
@@ -253,7 +315,7 @@ export const checkBlockInfo = ({
   const events: NodeEvent[] = [];
   type ValueOf<T> = T[keyof T];
   const newEvent = (kind: ValueOf<Pick<NodeEvent, "kind">>): NodeEvent => {
-    return { kind, node, createdAt: now() };
+    return { kind, node: nodeInfo.url, createdAt: now() };
   };
 
   if (nodeInfo.bootstrappedStatus) {
@@ -304,7 +366,7 @@ export const checkBlockInfo = ({
     ) {
       log.debug("Node previously had too few peers, not generating event");
     } else {
-      const message = `Node ${node} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
+      const message = `Node ${nodeInfo.url} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
       log.debug(message);
       events.push(newEvent(Events.NodeLowPeers));
     }
@@ -416,8 +478,22 @@ export type NetworkConnection = {
   remote_metadata: { disable_mempool: boolean; private_node: boolean };
 };
 
+export type TezosVersion = {
+  version: {
+    major: number;
+    minor: number;
+    additional_info: undefined | "release" | "dev" | { rc: number };
+  };
+  network_version: { chain_name: string };
+  commit_info: { commit_hash: string; commit_date: string };
+};
+
 const getNetworkConnections = async (
   node: string
 ): Promise<NetworkConnection[]> => {
   return await rpcFetch(`${node}/network/connections`);
+};
+
+const getTezosVersion = async (node: string): Promise<TezosVersion> => {
+  return await rpcFetch(`${node}/version`);
 };
