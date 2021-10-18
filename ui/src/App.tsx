@@ -139,8 +139,21 @@ function App({}: AppProps) {
                   </Box>
                 ))}
               </Box>
-              <Box w="100%" justifyContent="end" d="flex">
-                <Text fontSize="xs" color="gray.400" as="i" align="end">
+              <Box
+                w="100%"
+                justifyContent="space-between"
+                d="flex"
+                fontSize="xs"
+              >
+                <HStack>
+                  {node.tezosVersion.version && (
+                    <Text>v{node.tezosVersion.version}</Text>
+                  )}
+                  {node.tezosVersion.commitHash && (
+                    <Text>v{takeStart(node.tezosVersion.commitHash)}</Text>
+                  )}
+                </HStack>
+                <Text color="gray.400" as="i" align="end">
                   Updated: {timestampFormat.format(new Date(node.updatedAt))}
                 </Text>
               </Box>

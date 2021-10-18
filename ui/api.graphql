@@ -9,6 +9,11 @@ query getNodes
       timestamp
       priority
     }
+    tezosVersion {
+      version,
+      commitHash
+      chainName
+    }
     synced
     updatedAt
     peerCount
