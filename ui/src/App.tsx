@@ -84,11 +84,13 @@ function App({}: AppProps) {
                     <Text as="span">{new URL(node.url).hostname}</Text>
                   </Tooltip>
                   <Text fontSize="sm">
-                    {node.synced === 'synced' ? (
+                    {node.synced === 'synced' && (
                       <Icon as={MdSync} color="green" />
-                    ) : (
+                    )}
+                    {!!node.synced && node.synced !== 'synced' && (
                       <Icon as={MdSyncProblem} color="red" />
-                    )}{' '}
+                    )}
+                    {!node.synced && <Icon as={MdSync} color="gray" />}{' '}
                     {node.synced}
                   </Text>
                 </VStack>
