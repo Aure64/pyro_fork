@@ -92,7 +92,7 @@ function App({}: AppProps) {
                     {node.synced}
                   </Text>
                 </VStack>
-                <Stat paddingLeft="5px">
+                <Stat paddingLeft="5px" flexGrow={0}>
                   <StatLabel>Peers</StatLabel>
                   <StatNumber
                     color={
