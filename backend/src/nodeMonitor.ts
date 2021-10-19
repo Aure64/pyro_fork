@@ -32,7 +32,7 @@ export type EndpointsAvailability = {
 
 export type NodeInfo = {
   url: string;
-  head: string;
+  head: string | undefined;
   endpoints: EndpointsAvailability;
   bootstrappedStatus: BootstrappedStatus | undefined;
   history: BlockHeaderResponse[];
@@ -115,24 +115,31 @@ const subscribeToNode = (
   );
 
   const log = getLogger(`nm|${node}`);
-  let nodeData: NodeInfo | undefined;
+  let nodeData: NodeInfo = {
+    url: node,
+    endpoints: initialEndpointAvailability,
+    unableToReach: false,
+    head: undefined,
+    peerCount: undefined,
+    bootstrappedStatus: undefined,
+    tezosVersion: undefined,
+    error: undefined,
+    updatedAt: new Date(),
+    history: [],
+  };
   let previousEvents: Set<string> = new Set();
 
   const task = async () => {
     let events: (NodeEvent | RpcEvent)[] = [];
     try {
-      const headHash = await rpc.getBlockHash();
-
       const previousNodeInfo = nodeData;
 
       const nodeInfo = await updateNodeInfo({
         node,
-        blockHash: headHash,
         rpc,
-        endpoints: previousNodeInfo?.endpoints || initialEndpointAvailability,
+        endpoints: previousNodeInfo.endpoints,
         log,
       });
-
       if (nodeInfo.unableToReach) {
         log.debug("Unable to reach node");
         const err = nodeInfo.error;
@@ -159,7 +166,7 @@ const subscribeToNode = (
       // storing previous info in memory for now.  Eventually this will need to be persisted to the DB
       // with other data (eg current block)
       nodeData = nodeInfo;
-      if (previousNodeInfo?.unableToReach && !nodeInfo.unableToReach) {
+      if (previousNodeInfo.unableToReach && !nodeInfo.unableToReach) {
         log.debug("Adding reconnected event");
         events.push({
           kind: Events.RpcErrorResolved,
@@ -206,38 +213,24 @@ const UNAVAILABLE_RPC_HTTP_STATUS = [401, 403, 404];
 
 const updateNodeInfo = async ({
   node,
-  blockHash,
   rpc,
   endpoints,
   log,
 }: {
   node: string;
-  blockHash: string;
   rpc: RpcClient;
   endpoints: EndpointsAvailability;
   log?: Logger;
 }): Promise<NodeInfo> => {
   if (!log) log = getLogger(__filename);
-  log.debug(`Checking block ${blockHash}`);
-  let bootstrappedStatus;
-  let hasStatusEndpoint = true;
-
-  if (endpoints.status) {
-    try {
-      bootstrappedStatus = await retry404(() => getBootstrappedStatus(node));
-      log.debug(`bootstrap status:`, bootstrappedStatus);
-    } catch (err) {
-      log.warn(`Unable to get bootsrap status`, err);
-      if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
-        hasStatusEndpoint = false;
-      }
-    }
-  }
 
   let unableToReach = false;
   let history: BlockHeaderResponse[];
   let error: NodeCommunicationError | undefined;
+  let blockHash;
   try {
+    blockHash = await rpc.getBlockHash();
+    log.debug(`Checking block ${blockHash}`);
     history = await fetchBlockHeaders({ blockHash, rpc });
   } catch (err) {
     log.warn(`Unable to get block history`, err);
@@ -246,35 +239,51 @@ const updateNodeInfo = async ({
     history = [];
   }
 
+  let bootstrappedStatus;
+  let hasStatusEndpoint = true;
   let peerCount;
   let hasNetworkConnectionsEndpoint = true;
-  if (endpoints.networkConnections) {
-    try {
-      const connections = await retry404(() => getNetworkConnections(node));
-      peerCount = connections.length;
-      log.debug(`Node has ${peerCount} peers`);
-    } catch (err) {
-      log.warn(`Unable to get network connections info`, err);
-      if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
-        hasNetworkConnectionsEndpoint = false;
-      }
-    }
-  }
-
   let tezosVersion;
   let hasVersionEndpoint = true;
-  if (endpoints.version) {
-    try {
-      tezosVersion = await getTezosVersion(node);
-      log.debug(`Tezos version:`, tezosVersion);
-    } catch (err) {
-      log.warn(`Unable to get tezos version info`, err);
-      if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
-        hasVersionEndpoint = false;
+
+  if (!unableToReach) {
+    if (endpoints.status) {
+      try {
+        bootstrappedStatus = await retry404(() => getBootstrappedStatus(node));
+        log.debug(`bootstrap status:`, bootstrappedStatus);
+      } catch (err) {
+        log.warn(`Unable to get bootsrap status`, err);
+        if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
+          hasStatusEndpoint = false;
+        }
+      }
+    }
+
+    if (endpoints.networkConnections) {
+      try {
+        const connections = await retry404(() => getNetworkConnections(node));
+        peerCount = connections.length;
+        log.debug(`Node has ${peerCount} peers`);
+      } catch (err) {
+        log.warn(`Unable to get network connections info`, err);
+        if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
+          hasNetworkConnectionsEndpoint = false;
+        }
+      }
+    }
+
+    if (endpoints.version) {
+      try {
+        tezosVersion = await getTezosVersion(node);
+        log.debug(`Tezos version:`, tezosVersion);
+      } catch (err) {
+        log.warn(`Unable to get tezos version info`, err);
+        if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
+          hasVersionEndpoint = false;
+        }
       }
     }
   }
-
   return {
     url: node,
     endpoints: {
