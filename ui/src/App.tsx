@@ -20,7 +20,7 @@ import {
   AlertDescription,
 } from '@chakra-ui/react';
 
-import { Stat, StatLabel, StatNumber } from '@chakra-ui/react';
+import { Stat, StatLabel, StatNumber, StatHelpText } from '@chakra-ui/react';
 
 import { useGetNodesQuery } from './api';
 
@@ -35,8 +35,8 @@ const timestampFormat = new Intl.DateTimeFormat([], {
   timeStyle: 'short',
 });
 
-const takeStart = (str: string | undefined | null) => {
-  return str && `${str.substr(0, 5)}`;
+const takeStart = (str: string | undefined | null, length = 5) => {
+  return str && `${str.substr(0, length)}`;
 };
 
 const ellipsifyMiddle = (str: string | undefined | null) => {
@@ -72,45 +72,75 @@ function App({}: AppProps) {
             borderWidth="1px"
             rounded="md"
             padding="10px"
-            minW="350px"
-            maxW="350px"
+            minW="360px"
+            maxW="360px"
             marginRight="10px"
             marginBottom="10px"
           >
             <VStack align="flex-start">
               <Box w="100%" d="flex" justifyContent="space-between">
-                <VStack align="flex-start">
-                  <Tooltip label={node.url}>
-                    <Text as="span">{new URL(node.url).hostname}</Text>
-                  </Tooltip>
-                  <Text fontSize="sm">
-                    {node.synced === 'synced' && (
-                      <Icon as={MdSync} color="green" />
-                    )}
-                    {!!node.synced && node.synced !== 'synced' && (
-                      <Icon as={MdSyncProblem} color="red" />
-                    )}
-                    {!node.synced && <Icon as={MdSync} color="gray" />}{' '}
-                    {node.synced}
-                  </Text>
+                <VStack align="flex-start" spacing={0}>
+                  <HStack maxW={290}>
+                    <Tooltip label={node.synced}>
+                      <Box>
+                        {node.synced === 'synced' && (
+                          <Icon as={MdSync} color="green" />
+                        )}
+                        {node.synced === 'unsynced' && (
+                          <Spinner color="orange.500" size="xs" />
+                        )}
+                        {node.synced === 'stuck' && (
+                          <Icon as={MdSyncProblem} color="red" />
+                        )}
+
+                        {!node.synced && <Icon as={MdSync} color="gray.400" />}
+                      </Box>
+                    </Tooltip>
+
+                    <Tooltip label={node.url}>
+                      <Text as="span" isTruncated>
+                        {new URL(node.url).hostname}
+                      </Text>
+                    </Tooltip>
+                  </HStack>
+                  {!node.unableToReach && (
+                    <Text fontSize="x-small" isTruncated>
+                      {node.tezosVersion.chainName}
+                    </Text>
+                  )}
+                  {!node.unableToReach && (
+                    <Tooltip label={node.recentBlocks[0]?.protocol}>
+                      <Text fontSize="x-small" isTruncated>
+                        {takeStart(node.recentBlocks[0]?.protocol, 12)}
+                      </Text>
+                    </Tooltip>
+                  )}
                 </VStack>
-                <Stat paddingLeft="5px" flexGrow={0}>
-                  <StatLabel>Peers</StatLabel>
-                  <StatNumber
-                    color={
-                      node.peerCount
-                        ? node.peerCount < 4
-                          ? 'red'
-                          : 'black'
-                        : 'gray.400'
-                    }
-                  >
-                    {node.peerCount || '?'}
-                  </StatNumber>
-                </Stat>
+                {!node.unableToReach && (
+                  <Stat paddingLeft="5px" flexGrow={0} textAlign="center">
+                    <StatNumber
+                      color={
+                        node.peerCount
+                          ? node.peerCount < 4
+                            ? 'red'
+                            : 'black'
+                          : 'gray.400'
+                      }
+                    >
+                      {node.peerCount || '?'}
+                    </StatNumber>
+                    <StatHelpText marginBottom={0}>peers</StatHelpText>
+                  </Stat>
+                )}
               </Box>
               <Divider />
               <Box w="100%">
+                {node.error && (
+                  <Alert status="error">
+                    <AlertIcon />
+                    <AlertDescription>{node.error}</AlertDescription>
+                  </Alert>
+                )}
                 {node.recentBlocks.slice(0, 3).map((block, index) => (
                   <Box
                     key={block.level}
