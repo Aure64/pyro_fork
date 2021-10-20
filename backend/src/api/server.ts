@@ -7,6 +7,7 @@ import morgan from "morgan";
 import cors from "cors";
 
 import { NodeInfoCollection } from "../nodeMonitor";
+import { BakerInfoCollection } from "bakerMonitor";
 
 export const app = express();
 
@@ -22,15 +23,27 @@ const rootValue = {
   },
 };
 
-//FIXME figure out types
-export const start = (nodeMonitor: NodeInfoCollection | null, port = 4000) => {
+type URL = string;
+
+const emptyInfoCollection = { info: () => [] };
+
+export const start = (
+  nodeMonitor: NodeInfoCollection | null,
+  bakerMonitor: BakerInfoCollection | null,
+  rpc: URL,
+  port = 4000
+) => {
   app.use(
     "/gql",
-    graphqlHTTP(async (request) => ({
+    graphqlHTTP(async () => ({
       schema,
       rootValue,
       graphiql: true,
-      context: createContext(nodeMonitor || { info: () => [] }),
+      context: createContext(
+        nodeMonitor || emptyInfoCollection,
+        bakerMonitor || emptyInfoCollection,
+        rpc
+      ),
       customFormatErrorFn: (error) => {
         const params = {
           message: error.message,
@@ -38,7 +51,6 @@ export const start = (nodeMonitor: NodeInfoCollection | null, port = 4000) => {
           stack: error.stack,
         };
         console.error(params);
-        // Optional ${request.body.operationName} ${request.body.variables}
         return params;
       },
     }))

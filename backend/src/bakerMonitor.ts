@@ -43,6 +43,16 @@ export type BakerMonitorConfig = {
 
 type ChainPositionInfo = { blockLevel: number; blockCycle: number };
 
+export type BakerInfo = {
+  address: string;
+  recentEvents: BakerEvent[];
+  updatedAt: Date;
+};
+
+export type BakerInfoCollection = { info: () => BakerInfo[] };
+
+export type BakerMonitor = service.Service & BakerInfoCollection;
+
 export const create = async (
   storageDirectory: string,
   {
@@ -52,7 +62,7 @@ export const create = async (
     head_distance: headDistance,
   }: BakerMonitorConfig,
   onEvent: (event: Event) => Promise<void>
-): Promise<service.Service> => {
+): Promise<BakerMonitor> => {
   const log = getLogger(name);
   const rpc = new RpcClient(rpcUrl);
 
@@ -153,10 +163,17 @@ export const create = async (
 
   const srv = service.create(name, task, interval);
 
+  const info = () => {
+    return bakers.map((address) => {
+      return { address, recentEvents: [], updatedAt: now() };
+    });
+  };
+
   return {
     name: srv.name,
     start: srv.start,
     stop: srv.stop,
+    info,
   };
 };
 
