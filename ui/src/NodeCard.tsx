@@ -100,10 +100,10 @@ export default ({
         <RecentBlocks recentBlocks={recentBlocks} />
       </Box>
       <Box w="100%" justifyContent="space-between" d="flex" fontSize="xs">
-        <HStack>
+        <HStack spacing={1}>
           {tezosVersion.version && <Text>v{tezosVersion.version}</Text>}
           {tezosVersion.commitHash && (
-            <Text>v{takeStart(tezosVersion.commitHash)}</Text>
+            <Text>({takeStart(tezosVersion.commitHash)})</Text>
           )}
         </HStack>
         <Text color="gray.400" as="i" align="end">
