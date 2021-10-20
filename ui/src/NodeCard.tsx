@@ -66,7 +66,7 @@ export default ({
       <Box w="100%" d="flex" justifyContent="space-between">
         <VStack align="flex-start" spacing={0}>
           <HStack maxW={290}>
-            <SyncStatus synced={synced} />
+            <SyncStatus synced={synced} peerCount={peerCount} />
 
             <Tooltip label={url}>
               <Text as="span" isTruncated>
