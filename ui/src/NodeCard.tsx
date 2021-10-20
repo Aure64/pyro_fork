@@ -58,6 +58,7 @@ export default ({
     padding="10px"
     minW="360px"
     maxW="360px"
+    minHeight="195px"
     marginRight="10px"
     marginBottom="10px"
   >
