@@ -26,16 +26,25 @@ export default ({
   return (
     <Card>
       <HStack w="100%" justifyContent="space-between">
-        <HStack maxW={290}>
-          <Tooltip label={deactivated ? 'deactivated' : 'active'}>
-            <Box>
-              <Icon as={MdLens} color={deactivated ? 'grey.500' : 'blue.500'} />
-            </Box>
-          </Tooltip>
-          <Tooltip label={address}>
-            <Text>{ellipsifyMiddle(address)}</Text>
-          </Tooltip>
-        </HStack>
+        <VStack align="flex-start" spacing={0}>
+          <HStack maxW={290}>
+            <Tooltip label={deactivated ? 'deactivated' : 'active'}>
+              <Box>
+                <Icon
+                  as={MdLens}
+                  color={deactivated ? 'grey.500' : 'blue.500'}
+                />
+              </Box>
+            </Tooltip>
+            <Tooltip label={address}>
+              <Text>{ellipsifyMiddle(address)}</Text>
+            </Tooltip>
+          </HStack>
+          <Text fontSize="x-small">Balance: {formatMutezAsTez(balance)}</Text>
+          <Text fontSize="x-small">
+            Frozen: {formatMutezAsTez(frozenBalance)}
+          </Text>
+        </VStack>
         <Tooltip label="Staking balance">
           <Text>{formatMutezAsTez(stakingBalance)}</Text>
         </Tooltip>
@@ -52,7 +61,7 @@ export default ({
       <Box>
         <HStack justifyContent="space-between">
           <Tooltip label="Grace period">
-            <Box>{gracePeriod}</Box>
+            <Box>Cycle {gracePeriod}</Box>
           </Tooltip>
           <UpdatedAt updatedAt={updatedAt} />
         </HStack>
