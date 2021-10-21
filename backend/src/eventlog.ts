@@ -19,8 +19,8 @@ export type EventLog<T> = {
 
 export const open = async <T>(
   storageDir: string,
-  topic: string = "eventlog",
-  maxSize: number = Number.MAX_SAFE_INTEGER
+  topic = "eventlog",
+  maxSize = Number.MAX_SAFE_INTEGER
 ): Promise<EventLog<T>> => {
   const store = await storage.open([storageDir, topic]);
 
