@@ -42,3 +42,10 @@ export const takeStart = (str: string | undefined | null, length = 5) => {
 export const ellipsifyMiddle = (str: string | undefined | null) => {
   return str && `${takeStart(str)}..${str.substr(-4)}`;
 };
+
+export const numberFormat = new Intl.NumberFormat();
+
+export const formatMutezAsTez = (mutez: string) => {
+  const value = BigInt(mutez) / 1000000n;
+  return `${numberFormat.format(value)} ꜩ`;
+};

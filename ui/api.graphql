@@ -21,3 +21,20 @@ query getNodes
     peerCount
   }
 }
+
+query getBakers
+{
+  bakers {
+    address
+    balance
+    frozenBalance
+    stakingBalance
+    recentEvents {
+      level
+      cycle
+      kind
+    }
+    gracePeriod
+    updatedAt
+  }
+}

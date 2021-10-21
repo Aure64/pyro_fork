@@ -15,7 +15,7 @@ export default ({
   if (hasCount && peerCount === 0) {
     return (
       <Tooltip label="no connected peers">
-        <Box>
+        <Box d="flex">
           <Icon as={MdSyncDisabled} color="red" />
         </Box>
       </Tooltip>
