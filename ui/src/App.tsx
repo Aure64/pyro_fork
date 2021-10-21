@@ -15,12 +15,12 @@ function App({}: AppProps) {
 
   return (
     <Box p="20px">
-      <Heading>Nodes</Heading>
-      <Divider marginBottom="10px" />
-      <Nodes />
       <Heading>Bakers</Heading>
       <Divider marginBottom="10px" />
       <Bakers />
+      <Heading>Nodes</Heading>
+      <Divider marginBottom="10px" />
+      <Nodes />
     </Box>
   );
 }
