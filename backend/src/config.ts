@@ -1,6 +1,5 @@
 import nconf from "nconf";
 import { promisify } from "util";
-import { LogLevelDesc } from "loglevel";
 import TOML from "@iarna/toml";
 
 import envPaths from "env-paths";

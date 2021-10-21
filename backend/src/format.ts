@@ -1,6 +1,6 @@
 import * as eventTypes from "./events";
 import { Events as E } from "./events";
-import { groupBy, sortBy, countBy, first, last, minBy, maxBy } from "lodash";
+import { groupBy, sortBy, countBy, first, last } from "lodash";
 
 const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
   "baker" in e;
