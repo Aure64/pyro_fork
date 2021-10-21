@@ -65,8 +65,8 @@ export const TezosNodeQuery = extendType({
     t.nonNull.list.field("nodes", {
       type: nonNull(TezosNode),
 
-      resolve(_root, _args, ctx) {
-        const info = ctx.nodeInfoCollection.info();
+      async resolve(_root, _args, ctx) {
+        const info = await ctx.nodeInfoCollection.info();
         return info.map(
           ({
             url,

@@ -47,7 +47,7 @@ type NodeInfoProvider = { nodeInfo: () => NodeInfo | undefined };
 
 type Sub = service.Service & NodeInfoProvider;
 
-export type NodeInfoCollection = { info: () => NodeInfo[] };
+export type NodeInfoCollection = { info: () => Promise<NodeInfo[]> };
 
 export type NodeMonitor = service.Service & NodeInfoCollection;
 
@@ -83,7 +83,7 @@ export const create = (
     }
   };
 
-  const info = () => {
+  const info = async () => {
     return allSubs.map((s) => s.nodeInfo()).filter((x): x is NodeInfo => !!x);
   };
 

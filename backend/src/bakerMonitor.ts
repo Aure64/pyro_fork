@@ -8,12 +8,11 @@ import {
   Event,
   Events,
 } from "./events";
-import { getLogger, LogLevel } from "loglevel";
+import { getLogger } from "loglevel";
 import {
   BakingRightsResponse,
   BlockMetadata,
   BlockResponse,
-  ConstantsResponse,
   EndorsingRightsResponse,
   OperationEntry,
   OpKind,
@@ -29,6 +28,9 @@ import * as storage from "./storage";
 
 import now from "./now";
 import * as format from "./format";
+import * as EventLog from "./eventlog";
+
+import { join as joinPath } from "path";
 
 const name = "bm";
 
@@ -46,12 +48,13 @@ type ChainPositionInfo = { blockLevel: number; blockCycle: number };
 export type BakerInfo = {
   address: string;
   recentEvents: BakerEvent[];
-  updatedAt: Date;
 };
 
-export type BakerInfoCollection = { info: () => BakerInfo[] };
+export type BakerInfoCollection = { info: () => Promise<BakerInfo[]> };
 
 export type BakerMonitor = service.Service & BakerInfoCollection;
+
+const MAX_HISTORY = 5;
 
 export const create = async (
   storageDirectory: string,
@@ -88,6 +91,21 @@ export const create = async (
     "baker-monitor",
     chainId,
   ]);
+
+  const bakerEventLogs: { [key: string]: EventLog.EventLog<BakerEvent> } = {};
+  const historyDir = joinPath(storageDirectory, "history");
+  for (const baker of bakers) {
+    bakerEventLogs[baker] = await EventLog.open(historyDir, baker, MAX_HISTORY);
+  }
+
+  const addToHistory = async (event: BakerEvent) => {
+    let bakerLog = bakerEventLogs[event.baker];
+    if (!bakerLog) {
+      bakerLog = await EventLog.open(historyDir, event.baker, 5);
+      bakerEventLogs[event.baker] = bakerLog;
+    }
+    bakerLog.add(event);
+  };
 
   const getPosition = async () =>
     (await store.get(CHAIN_POSITION_KEY, {
@@ -135,7 +153,6 @@ export const create = async (
           rpc,
           blockId: currentLevel.toString(),
           lastCycle: lastBlockCycle,
-          constants,
         });
         if (blockLevel !== currentLevel) {
           throw new Error(
@@ -148,6 +165,7 @@ export const create = async (
         );
         for (const event of events) {
           await onEvent(event);
+          await addToHistory(event);
         }
         await setPosition({ blockLevel: currentLevel, blockCycle });
         currentLevel++;
@@ -163,10 +181,19 @@ export const create = async (
 
   const srv = service.create(name, task, interval);
 
-  const info = () => {
-    return bakers.map((address) => {
-      return { address, recentEvents: [], updatedAt: now() };
-    });
+  const info = async () => {
+    const bakerInfo = [];
+    for (const [baker, bakerEventLog] of Object.entries(bakerEventLogs)) {
+      const recentEvents: BakerEvent[] = [];
+      for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
+        recentEvents.push(record.value);
+      }
+      bakerInfo.push({
+        address: baker,
+        recentEvents,
+      });
+    }
+    return bakerInfo;
   };
 
   return {
@@ -182,7 +209,6 @@ type CheckBlockArgs = {
   blockId: string;
   rpc: RpcClient;
   lastCycle: number | undefined;
-  constants: ConstantsResponse;
 };
 
 type CheckBlockResult = {
@@ -199,7 +225,6 @@ const checkBlock = async ({
   blockId,
   rpc,
   lastCycle,
-  constants,
 }: CheckBlockArgs): Promise<CheckBlockResult> => {
   const log = getLogger(name);
   log.trace(`Fetching baker data for block ${blockId}`);

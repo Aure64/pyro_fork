@@ -13,14 +13,18 @@ export type LogEntry<T> = {
 
 export type EventLog<T> = {
   add: (event: T) => Promise<LogEntry<T>>;
-  readAfter: (position: number) => AsyncIterableIterator<LogEntry<T>>;
+  readFrom: (position: number) => AsyncIterableIterator<LogEntry<T>>;
   deleteUpTo: (position: number) => Promise<void>;
 };
 
-export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
-  const store = await storage.open([storageDir, "eventlog"]);
+export const open = async <T>(
+  storageDir: string,
+  topic: string = "eventlog",
+  maxSize: number = Number.MAX_SAFE_INTEGER
+): Promise<EventLog<T>> => {
+  const store = await storage.open([storageDir, topic]);
 
-  const log = getLogger("eventlog");
+  const log = getLogger(topic);
 
   const SEQ_KEY = "_sequence";
   let sequence = (await store.get(SEQ_KEY, 0)) as number;
@@ -32,6 +36,10 @@ export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
     const nextSequenceValue = sequence + 1;
     await store.put(SEQ_KEY, nextSequenceValue);
     sequence = nextSequenceValue;
+    const beforeMinPosition = eventPos - maxSize;
+    if (beforeMinPosition > -1) {
+      await deleteUpTo(beforeMinPosition);
+    }
     return { value: event, position: eventPos };
   };
 
@@ -44,10 +52,10 @@ export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
     return null;
   };
 
-  const readAfter = async function* (
+  const readFrom = async function* (
     position: number
   ): AsyncIterableIterator<LogEntry<T>> {
-    let currentPosition = position + 1;
+    let currentPosition = position < 0 ? sequence + position : position;
     while (currentPosition < sequence) {
       const record = await read(currentPosition);
       if (record) {
@@ -61,13 +69,14 @@ export const open = async <T>(storageDir: string): Promise<EventLog<T>> => {
     const keys = (await store.keys()).filter((k) => k !== SEQ_KEY);
     // const fileNames = await fs.promises.readdir(eventsDir);
     const toDelete = keys.filter((name) => parseInt(name) <= position);
+    console.log(`About to delete ${toDelete.length} keys`, toDelete);
     log.debug(`About to delete ${toDelete.length} keys`, toDelete);
     await Promise.all(toDelete.map(store.remove));
   };
 
   return {
     add,
-    readAfter,
+    readFrom,
     deleteUpTo,
   };
 };

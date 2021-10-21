@@ -33,7 +33,7 @@ export const create = async (
     const batch: Event[] = [];
     let position = await readPosition();
     log.debug(`reading from position ${position}`);
-    for await (const record of eventLog.readAfter(position)) {
+    for await (const record of eventLog.readFrom(position + 1)) {
       const event = record.value;
       if (Date.now() - event.createdAt.getTime() > 1e3 * ttl) {
         log.info(`Skipping event (expired)`, record);

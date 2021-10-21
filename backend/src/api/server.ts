@@ -25,7 +25,7 @@ const rootValue = {
 
 type URL = string;
 
-const emptyInfoCollection = { info: () => [] };
+const emptyInfoCollection = { info: async () => [] };
 
 export const start = (
   nodeMonitor: NodeInfoCollection | null,

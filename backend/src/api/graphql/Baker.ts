@@ -4,11 +4,15 @@ import { nonNull } from "nexus";
 
 import { RpcClient, DelegatesResponse } from "@taquito/rpc";
 
+import { BakerInfo } from "../../bakerMonitor";
+
 export const BakerEvent = objectType({
   name: "BakerEvent",
 
   definition(t) {
-    t.nonNull.string("timestamp");
+    t.int("level");
+    t.int("cycle");
+    t.nonNull.string("kind");
   },
 });
 
@@ -30,9 +34,9 @@ export const Baker = objectType({
 
 const getDelegateInfo = async (
   rpc: RpcClient,
-  address: string
-): Promise<[string, DelegatesResponse]> => {
-  return [address, await rpc.getDelegates(address)];
+  bakerInfo: BakerInfo
+): Promise<[BakerInfo, DelegatesResponse]> => {
+  return [bakerInfo, await rpc.getDelegates(bakerInfo.address)];
 };
 
 export const BakerQuery = extendType({
@@ -43,21 +47,28 @@ export const BakerQuery = extendType({
       type: nonNull(Baker),
 
       async resolve(_root, _args, ctx) {
-        const bakerInfo = ctx.bakerInfoCollection.info();
-        const bakers = bakerInfo.map((x) => x.address);
+        const bakerInfos = await ctx.bakerInfoCollection.info();
         const delegates = await Promise.all(
-          bakers.map((address) => getDelegateInfo(ctx.rpc, address))
+          bakerInfos.map((bakerInfo) => getDelegateInfo(ctx.rpc, bakerInfo))
         );
-        return delegates.map(([address, delegate]) => {
+        return delegates.map(([bakerInfo, delegate]) => {
+          const recentEvents = bakerInfo.recentEvents.map((e) => {
+            return {
+              level: "level" in e ? e.level : null,
+              cycle: "cycle" in e ? e.cycle : null,
+              kind: e.kind,
+            };
+          });
+          recentEvents.reverse();
           return {
-            address: address,
+            address: bakerInfo.address,
             balance: delegate.balance.toJSON(),
             frozenBalance: delegate.frozen_balance.toJSON(),
             stakingBalance: delegate.staking_balance.toJSON(),
             delegatedBalance: delegate.delegated_balance.toJSON(),
             gracePeriod: delegate.grace_period,
             deactivated: delegate.deactivated,
-            recentEvents: [],
+            recentEvents,
             updatedAt: new Date().toISOString(),
           };
         });
