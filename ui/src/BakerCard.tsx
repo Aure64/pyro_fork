@@ -4,7 +4,9 @@ import type { Baker } from './api';
 import Card from './Card';
 import UpdatedAt from './UpdatedAt';
 
-import { MdLens } from 'react-icons/md';
+import { MdLens, MdOutlineAccountBalanceWallet } from 'react-icons/md';
+
+import { FaSnowflake } from 'react-icons/fa';
 
 import { ellipsifyMiddle, formatMutezAsTez, timestampFormat } from './format';
 
@@ -13,7 +15,6 @@ export default ({
     address,
     balance,
     deactivated,
-    delegatedBalance,
     frozenBalance,
     stakingBalance,
     recentEvents,
@@ -25,29 +26,33 @@ export default ({
 }) => {
   return (
     <Card>
-      <HStack w="100%" justifyContent="space-between">
-        <VStack align="flex-start" spacing={0}>
-          <HStack maxW={290}>
-            <Tooltip label={deactivated ? 'deactivated' : 'active'}>
-              <Box>
-                <Icon
-                  as={MdLens}
-                  color={deactivated ? 'grey.500' : 'blue.500'}
-                />
-              </Box>
-            </Tooltip>
-            <Tooltip label={address}>
-              <Text>{ellipsifyMiddle(address)}</Text>
-            </Tooltip>
-          </HStack>
-          <Text fontSize="x-small">Balance: {formatMutezAsTez(balance)}</Text>
-          <Text fontSize="x-small">
-            Frozen: {formatMutezAsTez(frozenBalance)}
-          </Text>
+      <HStack w="100%" justifyContent="space-between" alignItems="flex-start">
+        <HStack maxW={250}>
+          <Tooltip label={deactivated ? 'deactivated' : 'active'}>
+            <Box>
+              <Icon as={MdLens} color={deactivated ? 'grey.500' : 'blue.500'} />
+            </Box>
+          </Tooltip>
+          <Tooltip label={address}>
+            <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
+          </Tooltip>
+        </HStack>
+        <VStack align="flex-end" spacing={0}>
+          <Tooltip label="Staking balance">
+            <Text>{formatMutezAsTez(stakingBalance)}</Text>
+          </Tooltip>
+          <Tooltip label="Balance">
+            <Text fontSize="x-small">
+              <Icon as={MdOutlineAccountBalanceWallet} />{' '}
+              {formatMutezAsTez(balance)}
+            </Text>
+          </Tooltip>
+          <Tooltip label="Frozen balance">
+            <Text fontSize="x-small">
+              <Icon as={FaSnowflake} /> {formatMutezAsTez(frozenBalance)}
+            </Text>
+          </Tooltip>
         </VStack>
-        <Tooltip label="Staking balance">
-          <Text>{formatMutezAsTez(stakingBalance)}</Text>
-        </Tooltip>
       </HStack>
       <Box>
         {recentEvents.map((event) => (
