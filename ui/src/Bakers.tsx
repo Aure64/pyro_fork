@@ -23,7 +23,7 @@ export default () => {
         </Alert>
       )}
       {data?.bakers.map((baker) => (
-        <BakerCard baker={baker} />
+        <BakerCard key={baker.address} baker={baker} />
       ))}
     </HStack>
   );

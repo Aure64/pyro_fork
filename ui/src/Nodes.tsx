@@ -23,7 +23,7 @@ export default () => {
         </Alert>
       )}
       {data?.nodes.map((node) => (
-        <NodeCard node={node} />
+        <NodeCard key={node.url} node={node} />
       ))}
     </HStack>
   );
