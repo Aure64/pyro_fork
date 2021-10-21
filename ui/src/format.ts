@@ -39,8 +39,11 @@ export const takeStart = (str: string | undefined | null, length = 5) => {
   return str && `${str.substr(0, length)}`;
 };
 
-export const ellipsifyMiddle = (str: string | undefined | null) => {
-  return str && `${takeStart(str)}..${str.substr(-4)}`;
+export const ellipsifyMiddle = (
+  str: string | undefined | null,
+  startLength = 5,
+) => {
+  return str && `${takeStart(str, startLength)}..${str.substr(-4)}`;
 };
 
 export const numberFormat = new Intl.NumberFormat();
