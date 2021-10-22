@@ -42,12 +42,7 @@ describe("checkBlockBakingRights", () => {
       blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
-    expect(result).toEqual({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      level: 1299013,
-      kind: Events.Baked,
-      createdAt,
-    });
+    expect(result).toEqual(Events.Baked);
   });
 
   it("returns missed for 0 priority baked by other baker", () => {
@@ -58,12 +53,7 @@ describe("checkBlockBakingRights", () => {
       blockId: "some_block",
       bakingRights: responseWithPriorityZero,
     });
-    expect(result).toEqual({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      level: 1299013,
-      kind: Events.MissedBake,
-      createdAt,
-    });
+    expect(result).toEqual(Events.MissedBake);
   });
 
   it("returns none for a block that isn't priority 0 for our baker", () => {
@@ -138,12 +128,7 @@ describe("checkBlockEndorsingRights", () => {
       level: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
-    expect(result).toEqual({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      level: 1318230,
-      kind: Events.Endorsed,
-      createdAt,
-    });
+    expect(result).toEqual(Events.Endorsed);
   });
 
   it("returns missed when present in rights but no endorsement was made", () => {
@@ -153,12 +138,7 @@ describe("checkBlockEndorsingRights", () => {
       level: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
-    expect(result).toEqual({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      level: 1318230,
-      kind: Events.MissedEndorsement,
-      createdAt,
-    });
+    expect(result).toEqual(Events.MissedEndorsement);
   });
 
   it("returns none when not in rights and endorsement was not made", () => {
@@ -198,12 +178,7 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       operations: operationsWithDoubleEndorsementAccusation,
       level: 1000,
     });
-    expect(result).toEqual({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      level: 1000,
-      kind: Events.DoubleEndorsed,
-      createdAt,
-    });
+    expect(result).toEqual(true);
   });
   it("Does not fetch block when there are no accusations", async () => {
     const getBlock = jest.fn();
@@ -217,7 +192,7 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       operations: [],
       level: 1000,
     });
-    expect(result).toEqual(null);
+    expect(result).toEqual(false);
     expect(getBlock.mock.calls.length).toEqual(0);
   });
 });
@@ -237,12 +212,7 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       operations: operationsWithDoubleBakeAccusation,
       level: 1000,
     });
-    expect(result).toEqual({
-      baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
-      level: 1000,
-      kind: Events.DoubleBaked,
-      createdAt,
-    });
+    expect(result).toEqual(true);
   });
   it("Does not fetch baking rights when there are no accusations", async () => {
     const getBlock = jest.fn();
@@ -256,7 +226,7 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       operations: [],
       level: 1000,
     });
-    expect(result).toEqual(null);
+    expect(result).toEqual(false);
     expect(getBlock.mock.calls.length).toEqual(0);
   });
 });
