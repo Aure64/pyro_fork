@@ -6,7 +6,7 @@ export default ({
   minHeight,
 }: {
   children: Array<React.ReactNode>;
-  minHeight: string;
+  minHeight?: string;
 }) => (
   <Box
     borderWidth="1px"
