@@ -128,7 +128,7 @@ describe("checkBlockEndorsingRights", () => {
       level: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
-    expect(result).toEqual(Events.Endorsed);
+    expect(result).toEqual([Events.Endorsed, 1]);
   });
 
   it("returns missed when present in rights but no endorsement was made", () => {
@@ -138,7 +138,7 @@ describe("checkBlockEndorsingRights", () => {
       level: endorsementLevel,
       endorsingRights: endorsingRightsResponse,
     });
-    expect(result).toEqual(Events.MissedEndorsement);
+    expect(result).toEqual([Events.MissedEndorsement, 1]);
   });
 
   it("returns none when not in rights and endorsement was not made", () => {
