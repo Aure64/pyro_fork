@@ -42,6 +42,15 @@ describe("storage", () => {
     expect(await store.keys()).toEqual([]);
   });
 
+  it("deleting non-existing file is not an error", async () => {
+    const store = await mkTempStorage();
+    const item1 = { a: 1 };
+    await store.put("a", item1);
+    await store.remove("a");
+    await store.remove("a");
+    expect(await store.keys()).toEqual([]);
+  });
+
   it("returns null for non-existing keys", async () => {
     const store = await mkTempStorage();
     expect(await store.get("abc")).toEqual(null);

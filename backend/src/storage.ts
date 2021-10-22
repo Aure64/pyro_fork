@@ -60,7 +60,13 @@ export const open = async (
   };
 
   const remove = async (key: Key) => {
-    await fs.promises.unlink(mkFullPath(key));
+    try {
+      await fs.promises.unlink(mkFullPath(key));
+    } catch (err) {
+      if (err.code && err.code === "ENOENT") {
+        //ignore
+      } else throw err;
+    }
   };
 
   return { put, get, remove, keys };
