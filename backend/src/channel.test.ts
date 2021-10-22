@@ -26,21 +26,27 @@ const mkEventLog = async (
     kind: Events.Baked,
     baker: "tz1abc",
     level: 1,
+    cycle: 1,
     createdAt: ago(7),
+    timestamp: new Date(),
   };
 
   const item2: Event = {
     kind: Events.Endorsed,
     baker: "tz1abc",
     level: 2,
+    cycle: 1,
     createdAt: ago(5),
+    timestamp: new Date(),
   };
 
   const item3: Event = {
     kind: Events.MissedEndorsement,
     baker: "tz1abc",
     level: 3,
+    cycle: 1,
     createdAt: ago(3),
+    timestamp: new Date(),
   };
 
   await eventLog.add(item1);

@@ -12,6 +12,8 @@ describe("format", () => {
 
   const createdAt = new Date("2021-06-20");
   const level = 10000;
+  const cycle = 1;
+  const timestamp = new Date();
 
   const events: BakerEvent[] = [
     {
@@ -19,6 +21,8 @@ describe("format", () => {
       baker: baker1,
       level: level + 1,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -26,6 +30,8 @@ describe("format", () => {
       baker: baker1,
       level: level + 2,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -33,6 +39,8 @@ describe("format", () => {
       baker: baker1,
       level: level + 3,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -40,6 +48,8 @@ describe("format", () => {
       baker: baker1,
       level: level + 4,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -47,6 +57,8 @@ describe("format", () => {
       baker: baker1,
       level: level + 5,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -54,6 +66,8 @@ describe("format", () => {
       baker: baker2,
       level: level + 6,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -61,6 +75,8 @@ describe("format", () => {
       baker: baker2,
       level: level + 7,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -68,6 +84,8 @@ describe("format", () => {
       baker: baker2,
       level: level + 8,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
@@ -75,6 +93,8 @@ describe("format", () => {
       baker: baker2,
       level: level + 9,
       createdAt,
+      cycle,
+      timestamp,
     },
 
     {
