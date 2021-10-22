@@ -1,13 +1,8 @@
-import { Box, Text } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import React from 'react';
 import { ellipsifyMiddle } from './format';
+import Priority from './Priority';
 import RelativeTimeRow from './RelativeTimeRow';
-
-const priorityColors: { [key: number]: string } = {
-  '0': 'green.600',
-  '1': 'yellow.400',
-  '2': 'orange.400',
-};
 
 export default ({
   recentBlocks,
@@ -22,7 +17,6 @@ export default ({
 }) => (
   <>
     {recentBlocks.slice(0, 3).map((block, index) => {
-      const priorityColor = priorityColors[block.priority] || 'red.500';
       return (
         <RelativeTimeRow
           highlight={index === 0}
@@ -30,10 +24,7 @@ export default ({
         >
           <Box>
             <code>
-              {block.level}{' '}
-              <Text color={priorityColor} as="span">
-                {block.priority}
-              </Text>
+              {block.level} <Priority priority={block.priority} />
             </code>{' '}
             <code>{ellipsifyMiddle(block.hash)}</code>{' '}
           </Box>

@@ -53,7 +53,7 @@ export type BakerInfoCollection = { info: () => Promise<BakerInfo[]> };
 
 export type BakerMonitor = service.Service & BakerInfoCollection;
 
-const MAX_HISTORY = 5;
+const MAX_HISTORY = 7;
 
 export const create = async (
   storageDirectory: string,
@@ -248,6 +248,7 @@ const checkBlock = async ({
   const blockLevel = metadata.level_info.level;
   const blockCycle = metadata.level_info.cycle;
   const blockTimestamp = new Date(block.header.timestamp);
+  const priority = block.header.priority;
 
   const createEvent = (
     baker: string,
@@ -258,9 +259,10 @@ const checkBlock = async ({
       | Events.MissedEndorsement
       | Events.DoubleBaked
       | Events.DoubleEndorsed,
-    level = blockLevel
+    level = blockLevel,
+    slotCount?: number
   ): BakerEvent => {
-    return {
+    const event: any = {
       baker,
       kind,
       createdAt: now(),
@@ -268,6 +270,10 @@ const checkBlock = async ({
       cycle: blockCycle,
       timestamp: blockTimestamp,
     };
+    if (kind === Events.Baked) event.priority = priority;
+    if (kind === Events.Endorsed || kind === Events.MissedEndorsement)
+      event.slotCount = slotCount;
+    return event;
   };
 
   for (const baker of bakers) {
@@ -289,8 +295,10 @@ const checkBlock = async ({
       endorsementOperations,
       endorsingRights,
     });
-    if (endorsingEvent)
-      events.push(createEvent(baker, endorsingEvent, blockLevel - 1));
+    if (endorsingEvent) {
+      const [kind, slotCount] = endorsingEvent;
+      events.push(createEvent(baker, kind, blockLevel - 1, slotCount));
+    }
     if (!lastCycle || blockCycle > lastCycle) {
       const deactivationEvent = await getDeactivationEvent({
         baker,
@@ -458,25 +466,26 @@ export const checkBlockEndorsingRights = ({
   level,
   endorsingRights,
 }: CheckBlockEndorsingRightsArgs):
-  | Events.Endorsed
-  | Events.MissedEndorsement
+  | [Events.Endorsed | Events.MissedEndorsement, number]
   | null => {
   const log = getLogger(name);
   const endorsingRight = endorsingRights.find(
     (right) => right.level === level && right.delegate === baker
   );
-  const shouldEndorse = endorsingRight !== undefined;
-  if (shouldEndorse) {
-    log.debug(`found endorsing slot for baker ${baker} at level ${level}`);
+  if (endorsingRight) {
+    const slotCount = endorsingRight.slots.length;
+    log.debug(
+      `found ${slotCount} endorsement slots for baker ${baker} at level ${level}`
+    );
     const didEndorse =
       endorsementOperations.find((op) => isEndorsementByDelegate(op, baker)) !==
       undefined;
     if (didEndorse) {
       log.debug(`Successful endorse for baker ${baker}`);
-      return Events.Endorsed;
+      return [Events.Endorsed, endorsingRight.slots.length];
     } else {
       log.debug(`Missed endorse for baker ${baker} at level ${level}`);
-      return Events.MissedEndorsement;
+      return [Events.MissedEndorsement, endorsingRight.slots.length];
     }
   }
 

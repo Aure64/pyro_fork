@@ -33,8 +33,12 @@ query getBakers
     recentEvents {
       level
       cycle
-      kind
       timestamp
+      events {
+        kind
+        priority
+        slotCount
+      }
     }
     gracePeriod
     updatedAt

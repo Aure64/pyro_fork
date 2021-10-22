@@ -29,6 +29,7 @@ const mkEventLog = async (
     cycle: 1,
     createdAt: ago(7),
     timestamp: new Date(),
+    priority: 0,
   };
 
   const item2: Event = {
@@ -38,6 +39,7 @@ const mkEventLog = async (
     cycle: 1,
     createdAt: ago(5),
     timestamp: new Date(),
+    slotCount: 1,
   };
 
   const item3: Event = {
@@ -47,6 +49,7 @@ const mkEventLog = async (
     cycle: 1,
     createdAt: ago(3),
     timestamp: new Date(),
+    slotCount: 2,
   };
 
   await eventLog.add(item1);

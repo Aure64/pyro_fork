@@ -1,15 +1,13 @@
-import { VStack, HStack, Box, Tooltip, Text, Icon } from '@chakra-ui/react';
+import { Box, HStack, Icon, Text, Tooltip, VStack } from '@chakra-ui/react';
 import React from 'react';
+import { FaSnowflake } from 'react-icons/fa';
+import { MdLens, MdOutlineAccountBalanceWallet } from 'react-icons/md';
 import type { Baker } from './api';
 import Card from './Card';
-import UpdatedAt from './UpdatedAt';
-
-import { MdLens, MdOutlineAccountBalanceWallet } from 'react-icons/md';
-
-import { FaSnowflake } from 'react-icons/fa';
-
-import { ellipsifyMiddle, formatMutezAsTez, timestampFormat } from './format';
+import { ellipsifyMiddle, formatMutezAsTez } from './format';
 import RelativeTimeRow from './RelativeTimeRow';
+import UpdatedAt from './UpdatedAt';
+import Priority from './Priority';
 
 const emoji: { [key: string]: string } = {
   missed_bake: '😡',
@@ -76,18 +74,28 @@ export default ({
         </VStack>
       </HStack>
       <VStack spacing={0} alignContent="stretch">
-        {recentEvents.map((event, index) => {
+        {recentEvents.map((levelEvents, index) => {
           return (
             <RelativeTimeRow
               key={index}
               highlight={index === 0}
-              timestamp={new Date(event.timestamp)}
+              timestamp={new Date(levelEvents.timestamp)}
             >
               <code>
-                {event.cycle} {event.level}{' '}
-                <Tooltip label={eventLabels[event.kind] || '?'}>
-                  <Text as="span">{emoji[event.kind] || defaultEmoji}</Text>
-                </Tooltip>
+                {levelEvents.cycle} {levelEvents.level}{' '}
+                {levelEvents.events.map((e) => (
+                  <Box as="span" key={e.kind}>
+                    <Tooltip label={eventLabels[e.kind] || '?'}>
+                      <Text as="span">{emoji[e.kind] || defaultEmoji} </Text>
+                    </Tooltip>
+                    {e.priority && <Priority priority={e.priority} />}{' '}
+                    {e.slotCount && (
+                      <Tooltip label={`Number of slots: ${e.slotCount}`}>
+                        <Text as="span">{e.slotCount}</Text>
+                      </Tooltip>
+                    )}
+                  </Box>
+                ))}
               </code>
             </RelativeTimeRow>
           );

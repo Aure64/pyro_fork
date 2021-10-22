@@ -14,6 +14,8 @@ describe("format", () => {
   const level = 10000;
   const cycle = 1;
   const timestamp = new Date();
+  const priority = 0;
+  const slotCount = 1;
 
   const events: BakerEvent[] = [
     {
@@ -23,6 +25,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      priority,
     },
 
     {
@@ -32,6 +35,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      slotCount,
     },
 
     {
@@ -41,6 +45,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      slotCount,
     },
 
     {
@@ -50,6 +55,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      priority,
     },
 
     {
@@ -59,6 +65,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      slotCount,
     },
 
     {
@@ -68,6 +75,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      priority,
     },
 
     {
@@ -77,6 +85,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      slotCount,
     },
 
     {
@@ -86,6 +95,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      slotCount,
     },
 
     {
@@ -95,6 +105,7 @@ describe("format", () => {
       createdAt,
       cycle,
       timestamp,
+      slotCount,
     },
 
     {

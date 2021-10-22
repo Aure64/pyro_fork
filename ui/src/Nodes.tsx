@@ -4,6 +4,7 @@ import {
   AlertIcon,
   AlertTitle,
   HStack,
+  VStack,
   Spinner,
 } from '@chakra-ui/react';
 import React from 'react';
@@ -13,8 +14,7 @@ import NodeCard from './NodeCard';
 export default () => {
   const { data, error, loading } = useGetNodesQuery({ pollInterval: 5000 });
   return (
-    <HStack shouldWrapChildren wrap="wrap" spacing="0">
-      {loading && <Spinner />}
+    <VStack alignItem="flex-start">
       {error && (
         <Alert status="error">
           <AlertIcon />
@@ -22,9 +22,12 @@ export default () => {
           <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       )}
-      {data?.nodes.map((node) => (
-        <NodeCard key={node.url} node={node} />
-      ))}
-    </HStack>
+      <HStack shouldWrapChildren wrap="wrap" spacing="0">
+        {loading && <Spinner />}
+        {data?.nodes.map((node) => (
+          <NodeCard key={node.url} node={node} />
+        ))}
+      </HStack>
+    </VStack>
   );
 };

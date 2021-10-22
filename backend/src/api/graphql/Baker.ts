@@ -1,9 +1,6 @@
-import { objectType } from "nexus";
-import { extendType } from "nexus";
-import { nonNull } from "nexus";
-
-import { RpcClient, DelegatesResponse } from "@taquito/rpc";
-
+import { DelegatesResponse, RpcClient } from "@taquito/rpc";
+import { groupBy, orderBy, take, first } from "lodash";
+import { extendType, nonNull, objectType } from "nexus";
 import { BakerInfo } from "../../bakerMonitor";
 
 export const BakerEvent = objectType({
@@ -11,9 +8,19 @@ export const BakerEvent = objectType({
 
   definition(t) {
     t.nonNull.string("kind");
+    t.int("priority");
+    t.int("slotCount");
+  },
+});
+
+export const LevelEvents = objectType({
+  name: "LevelEvents",
+
+  definition(t) {
     t.nonNull.int("level");
     t.nonNull.int("cycle");
     t.nonNull.string("timestamp");
+    t.nonNull.list.field("events", { type: nonNull(BakerEvent) });
   },
 });
 
@@ -22,7 +29,7 @@ export const Baker = objectType({
 
   definition(t) {
     t.nonNull.string("address");
-    t.nonNull.list.field("recentEvents", { type: nonNull(BakerEvent) });
+    t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
     t.nonNull.string("balance");
     t.nonNull.string("frozenBalance");
     t.nonNull.string("stakingBalance");
@@ -52,15 +59,23 @@ export const BakerQuery = extendType({
           bakerInfos.map((bakerInfo) => getDelegateInfo(ctx.rpc, bakerInfo))
         );
         return delegates.map(([bakerInfo, delegate]) => {
-          const recentEvents = bakerInfo.recentEvents.map((e) => {
+          const recentEvents = Object.entries(
+            groupBy(bakerInfo.recentEvents, "level")
+          ).map(([levelStr, events]) => {
+            const firstEvent = first(events)!;
             return {
-              level: e.level,
-              cycle: e.cycle,
-              kind: e.kind,
-              timestamp: e.timestamp.toISOString(),
+              level: parseInt(levelStr),
+              cycle: firstEvent.cycle,
+              timestamp: firstEvent.timestamp.toISOString(),
+              events: events.map((e) => {
+                return {
+                  kind: e.kind,
+                  priority: "priority" in e ? e.priority : null,
+                  slotCount: "slotCount" in e ? e.slotCount : null,
+                };
+              }),
             };
           });
-          recentEvents.reverse();
           return {
             address: bakerInfo.address,
             balance: delegate.balance.toJSON(),
@@ -69,7 +84,7 @@ export const BakerQuery = extendType({
             delegatedBalance: delegate.delegated_balance.toJSON(),
             gracePeriod: delegate.grace_period,
             deactivated: delegate.deactivated,
-            recentEvents,
+            recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
             updatedAt: new Date().toISOString(),
           };
         });

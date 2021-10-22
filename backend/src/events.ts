@@ -34,16 +34,20 @@ export type BlockEvent = BasicBakerEvent &
     timestamp: Date;
   };
 
-export type Baked = BlockEvent & { kind: Events.Baked };
+export type Baked = BlockEvent & { kind: Events.Baked; priority: number };
 
 export type MissedBake = BlockEvent & { kind: Events.MissedBake };
 
 export type DoubleBaked = BlockEvent & { kind: Events.DoubleBaked };
 
-export type Endorsed = BlockEvent & { kind: Events.Endorsed };
+export type Endorsed = BlockEvent & {
+  kind: Events.Endorsed;
+  slotCount: number;
+};
 
 export type MissedEndorsement = BlockEvent & {
   kind: Events.MissedEndorsement;
+  slotCount: number;
 };
 
 export type DoubleEndorsed = BlockEvent & { kind: Events.DoubleEndorsed };
