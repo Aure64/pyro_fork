@@ -19,6 +19,7 @@ export default ({
     {recentBlocks.slice(0, 3).map((block, index) => {
       return (
         <RelativeTimeRow
+          key={block.hash}
           highlight={index === 0}
           timestamp={new Date(block.timestamp)}
         >
