@@ -3,6 +3,12 @@ import React from 'react';
 import { Box, Text, Tooltip } from '@chakra-ui/react';
 import { ellipsifyMiddle, formatRelativeTime, timestampFormat } from './format';
 
+const priorityColors: { [key: number]: string } = {
+  '0': 'green.600',
+  '1': 'yellow.400',
+  '2': 'orange.400',
+};
+
 export default ({
   recentBlocks,
 }: {
@@ -17,6 +23,7 @@ export default ({
   <>
     {recentBlocks.slice(0, 3).map((block, index) => {
       const blockTimeStamp = new Date(block.timestamp);
+      const priorityColor = priorityColors[block.priority] || 'red.500';
       return (
         <Box
           key={block.level}
@@ -29,7 +36,10 @@ export default ({
         >
           <Box>
             <code>
-              {block.level} {block.priority}
+              {block.level}{' '}
+              <Text color={priorityColor} as="span">
+                {block.priority}
+              </Text>
             </code>{' '}
             <code>{ellipsifyMiddle(block.hash)}</code>{' '}
           </Box>
