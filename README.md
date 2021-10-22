@@ -140,10 +140,22 @@ npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
 ```
 
 Assuming we have `./pyrometer.toml` config file and `./data`
-directory, start Pyrometer:
+directory, install Pyrometer:
 
 ```bash
-npx @tezos-kiln/pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
+npm install -g @tezos-kiln/pyrometer
+```
+
+Create a config file
+
+```bash
+pyrometer config sample > pyrometer.toml
+```
+and edit as necessary.
+
+Start Pyrometer:
+```bash
+pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 ```
 
 ## Docker Build
