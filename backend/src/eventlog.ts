@@ -32,9 +32,9 @@ export const open = async <T>(
   const add = async (event: T): Promise<LogEntry<T>> => {
     log.debug(`about to store event ${sequence}`, event);
     const eventPos = sequence;
-    await store.put(eventPos, event);
+    store.putSync(eventPos, event);
     const nextSequenceValue = sequence + 1;
-    await store.put(SEQ_KEY, nextSequenceValue);
+    store.putSync(SEQ_KEY, nextSequenceValue);
     sequence = nextSequenceValue;
     const beforeMinPosition = eventPos - maxSize;
     if (beforeMinPosition > -1) {

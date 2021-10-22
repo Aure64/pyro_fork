@@ -2,13 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { getLogger } from "loglevel";
 
-import { writeJson, readJson } from "./fs-utils";
+import { writeJson, readJson, writeJsonSync } from "./fs-utils";
 import { normalize, join } from "path";
 
 export type Key = string | number;
 
 export type Storage = {
   put: (key: Key, value: unknown) => Promise<void>;
+  putSync: (key: Key, value: unknown) => void;
   get: (key: Key, defaultValue?: unknown) => Promise<unknown>;
   remove: (key: Key) => Promise<unknown>;
   keys: () => Promise<string[]>;
@@ -45,6 +46,13 @@ export const open = async (
     await fs.promises.rename(tmp, fileName);
   };
 
+  const putSync = (key: Key, value: unknown) => {
+    const tmp = mkTmpPath(key);
+    const fileName = mkFullPath(key);
+    writeJsonSync(tmp, value);
+    fs.renameSync(tmp, fileName);
+  };
+
   const get = async (key: Key, defaultValue: unknown = null) => {
     const fileName = mkFullPath(key);
     try {
@@ -69,5 +77,5 @@ export const open = async (
     }
   };
 
-  return { put, get, remove, keys };
+  return { put, putSync, get, remove, keys };
 };

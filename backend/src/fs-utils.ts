@@ -28,6 +28,12 @@ export const writeJson = async (fileName: string, value: any): Promise<void> =>
     encoding
   );
 
+export const writeJsonSync = async (
+  fileName: string,
+  value: any
+): Promise<void> =>
+  fs.writeFileSync(fileName, JSON.stringify(value, jsonReplacer), encoding);
+
 export const readJson = async (fileName: string): Promise<any> =>
   JSON.parse(await fs.promises.readFile(fileName, encoding), jsonReviver);
 
