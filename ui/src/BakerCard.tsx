@@ -55,8 +55,8 @@ export default ({
         </VStack>
       </HStack>
       <Box>
-        {recentEvents.map((event) => (
-          <Box d="flex" w="100%" justifyContent="space-between">
+        {recentEvents.map((event, index) => (
+          <Box key={index} d="flex" w="100%" justifyContent="space-between">
             <code>
               {event.level} {event.kind}
             </code>
