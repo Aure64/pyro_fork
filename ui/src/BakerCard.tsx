@@ -88,8 +88,10 @@ export default ({
                     <Tooltip label={eventLabels[e.kind] || '?'}>
                       <Text as="span">{emoji[e.kind] || defaultEmoji} </Text>
                     </Tooltip>
-                    {e.priority && <Priority priority={e.priority} />}{' '}
-                    {e.slotCount && (
+                    {typeof e.priority === 'number' && (
+                      <Priority priority={e.priority} />
+                    )}{' '}
+                    {typeof e.slotCount === 'number' && (
                       <Tooltip label={`Number of slots: ${e.slotCount}`}>
                         <Text as="span">{e.slotCount}</Text>
                       </Tooltip>
