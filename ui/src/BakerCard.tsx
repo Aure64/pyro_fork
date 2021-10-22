@@ -58,16 +58,18 @@ export default ({
         </HStack>
         <VStack align="flex-end" spacing={0}>
           <Tooltip label="Staking balance">
-            <Text>{formatMutezAsTez(stakingBalance)}</Text>
+            <Text fontSize="small" fontFamily="mono">
+              {formatMutezAsTez(stakingBalance)}
+            </Text>
           </Tooltip>
           <Tooltip label="Balance">
-            <Text fontSize="x-small">
+            <Text fontSize="x-small" fontFamily="mono">
               <Icon as={MdOutlineAccountBalanceWallet} />{' '}
               {formatMutezAsTez(balance)}
             </Text>
           </Tooltip>
           <Tooltip label="Frozen balance">
-            <Text fontSize="x-small">
+            <Text fontSize="x-small" fontFamily="mono">
               <Icon as={FaSnowflake} /> {formatMutezAsTez(frozenBalance)}
             </Text>
           </Tooltip>
