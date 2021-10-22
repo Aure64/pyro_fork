@@ -9,6 +9,27 @@ import { MdLens, MdOutlineAccountBalanceWallet } from 'react-icons/md';
 import { FaSnowflake } from 'react-icons/fa';
 
 import { ellipsifyMiddle, formatMutezAsTez, timestampFormat } from './format';
+import RelativeTimeRow from './RelativeTimeRow';
+
+const emoji: { [key: string]: string } = {
+  missed_bake: '😡',
+  baked: '🥖',
+  double_baked: '🛑️️',
+  missed_endorsement: '😕',
+  endorsed: '👍',
+  double_endorsed: '🛑️',
+};
+
+const eventLabels: { [key: string]: string } = {
+  missed_bake: 'Missed bake',
+  baked: 'Baked',
+  double_baked: 'Double bake️d',
+  missed_endorsement: 'Missed endorsement',
+  endorsed: 'Endorsed',
+  double_endorsed: 'Double endorsed️',
+};
+
+const defaultEmoji = '👽'; //should never show up
 
 export default ({
   baker: {
@@ -25,7 +46,7 @@ export default ({
   baker: Baker;
 }) => {
   return (
-    <Card>
+    <Card minHeight="248px">
       <HStack w="100%" justifyContent="space-between" alignItems="flex-start">
         <HStack maxW={250}>
           <Tooltip label={deactivated ? 'deactivated' : 'active'}>
@@ -54,15 +75,24 @@ export default ({
           </Tooltip>
         </VStack>
       </HStack>
-      <Box>
-        {recentEvents.map((event, index) => (
-          <Box key={index} d="flex" w="100%" justifyContent="space-between">
-            <code>
-              {event.level} {event.kind}
-            </code>
-          </Box>
-        ))}
-      </Box>
+      <VStack spacing={0} alignContent="stretch">
+        {recentEvents.map((event, index) => {
+          return (
+            <RelativeTimeRow
+              key={index}
+              highlight={index === 0}
+              timestamp={new Date(event.timestamp)}
+            >
+              <code>
+                {event.cycle} {event.level}{' '}
+                <Tooltip label={eventLabels[event.kind] || '?'}>
+                  <Text as="span">{emoji[event.kind] || defaultEmoji}</Text>
+                </Tooltip>
+              </code>
+            </RelativeTimeRow>
+          );
+        })}
+      </VStack>
       <Box>
         <HStack justifyContent="space-between">
           <Tooltip label="Grace period">

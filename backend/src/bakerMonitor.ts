@@ -1,6 +1,7 @@
 //import { BakerEvent, TezosNodeEvent } from "./types";
 import {
   BakerEvent,
+  BakerBlockEvent,
   DoubleBaked,
   DoubleEndorsed,
   Deactivated,
@@ -47,7 +48,7 @@ type ChainPositionInfo = { blockLevel: number; blockCycle: number };
 
 export type BakerInfo = {
   address: string;
-  recentEvents: BakerEvent[];
+  recentEvents: BakerBlockEvent[];
 };
 
 export type BakerInfoCollection = { info: () => Promise<BakerInfo[]> };
@@ -92,13 +93,14 @@ export const create = async (
     chainId,
   ]);
 
-  const bakerEventLogs: { [key: string]: EventLog.EventLog<BakerEvent> } = {};
+  const bakerEventLogs: { [key: string]: EventLog.EventLog<BakerBlockEvent> } =
+    {};
   const historyDir = joinPath(storageDirectory, "history");
   for (const baker of bakers) {
     bakerEventLogs[baker] = await EventLog.open(historyDir, baker, MAX_HISTORY);
   }
 
-  const addToHistory = async (event: BakerEvent) => {
+  const addToHistory = async (event: BakerBlockEvent) => {
     let bakerLog = bakerEventLogs[event.baker];
     if (!bakerLog) {
       bakerLog = await EventLog.open(historyDir, event.baker, 5);
@@ -165,7 +167,9 @@ export const create = async (
         );
         for (const event of events) {
           await onEvent(event);
-          await addToHistory(event);
+          if ("level" in event) {
+            await addToHistory(event);
+          }
         }
         await setPosition({ blockLevel: currentLevel, blockCycle });
         currentLevel++;
@@ -184,7 +188,7 @@ export const create = async (
   const info = async () => {
     const bakerInfo = [];
     for (const [baker, bakerEventLog] of Object.entries(bakerEventLogs)) {
-      const recentEvents: BakerEvent[] = [];
+      const recentEvents: BakerBlockEvent[] = [];
       for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
         recentEvents.push(record.value);
       }
@@ -245,6 +249,28 @@ const checkBlock = async ({
 
   const blockLevel = metadata.level_info.level;
   const blockCycle = metadata.level_info.cycle;
+  const blockTimestamp = new Date(block.header.timestamp);
+
+  const createEvent = (
+    baker: string,
+    kind:
+      | Events.Baked
+      | Events.MissedBake
+      | Events.Endorsed
+      | Events.MissedEndorsement
+      | Events.DoubleBaked
+      | Events.DoubleEndorsed,
+    level = blockLevel
+  ): BakerEvent => {
+    return {
+      baker,
+      kind,
+      createdAt: now(),
+      level,
+      cycle: blockCycle,
+      timestamp: blockTimestamp,
+    };
+  };
 
   for (const baker of bakers) {
     const endorsementOperations = block.operations[0];
@@ -256,14 +282,17 @@ const checkBlock = async ({
       blockId,
       level: blockLevel,
     });
-    if (bakingEvent) events.push(bakingEvent);
+    if (bakingEvent) {
+      events.push(createEvent(baker, bakingEvent));
+    }
     const endorsingEvent = checkBlockEndorsingRights({
       baker,
       level: blockLevel - 1,
       endorsementOperations,
       endorsingRights,
     });
-    if (endorsingEvent) events.push(endorsingEvent);
+    if (endorsingEvent)
+      events.push(createEvent(baker, endorsingEvent, blockLevel - 1));
     if (!lastCycle || blockCycle > lastCycle) {
       const deactivationEvent = await getDeactivationEvent({
         baker,
@@ -283,7 +312,7 @@ const checkBlock = async ({
       level: blockLevel,
     });
     if (doubleBakeEvent) {
-      events.push(doubleBakeEvent);
+      events.push(createEvent(baker, Events.DoubleBaked));
     }
     const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement({
       baker,
@@ -292,7 +321,7 @@ const checkBlock = async ({
       level: blockLevel,
     });
     if (doubleEndorseEvent) {
-      events.push(doubleEndorseEvent);
+      events.push(createEvent(baker, Events.DoubleEndorsed));
     }
   }
   return { events, blockLevel, blockCycle };
@@ -389,9 +418,8 @@ export const checkBlockBakingRights = ({
   level,
   bakingRights,
   blockId,
-}: CheckBlockBakingRightsArgs): BakerEvent | null => {
+}: CheckBlockBakingRightsArgs): Events.MissedBake | Events.Baked | null => {
   const log = getLogger(name);
-  const createdAt = now();
   for (const bakingRight of bakingRights) {
     if (
       bakingRight.delegate === baker &&
@@ -404,20 +432,10 @@ export const checkBlockBakingRights = ({
       // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
       if (blockBaker !== baker) {
         log.info(`Missed bake detected for baker ${baker}`);
-        return {
-          kind: Events.MissedBake,
-          baker,
-          level,
-          createdAt,
-        };
+        return Events.MissedBake;
       } else {
         log.debug(`Successful bake for block ${blockId} for baker ${baker}`);
-        return {
-          kind: Events.Baked,
-          baker,
-          level,
-          createdAt,
-        };
+        return Events.Baked;
       }
     }
   }
@@ -441,13 +459,15 @@ export const checkBlockEndorsingRights = ({
   endorsementOperations,
   level,
   endorsingRights,
-}: CheckBlockEndorsingRightsArgs): BakerEvent | null => {
+}: CheckBlockEndorsingRightsArgs):
+  | Events.Endorsed
+  | Events.MissedEndorsement
+  | null => {
   const log = getLogger(name);
   const endorsingRight = endorsingRights.find(
     (right) => right.level === level && right.delegate === baker
   );
   const shouldEndorse = endorsingRight !== undefined;
-  const createdAt = now();
   if (shouldEndorse) {
     log.debug(`found endorsing slot for baker ${baker} at level ${level}`);
     const didEndorse =
@@ -455,20 +475,10 @@ export const checkBlockEndorsingRights = ({
       undefined;
     if (didEndorse) {
       log.debug(`Successful endorse for baker ${baker}`);
-      return {
-        kind: Events.Endorsed,
-        baker,
-        level,
-        createdAt,
-      };
+      return Events.Endorsed;
     } else {
       log.debug(`Missed endorse for baker ${baker} at level ${level}`);
-      return {
-        kind: Events.MissedEndorsement,
-        baker,
-        level,
-        createdAt,
-      };
+      return Events.MissedEndorsement;
     }
   }
 
@@ -506,7 +516,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
   operations,
   rpc,
   level,
-}: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<DoubleEndorsed | null> => {
+}: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<boolean> => {
   const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
@@ -533,12 +543,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
               log.info(
                 `Double endorsement for baker ${baker} at block ${block.hash}`
               );
-              return {
-                kind: Events.DoubleEndorsed,
-                baker,
-                level,
-                createdAt: now(),
-              };
+              return true;
             }
           } else {
             log.warn(
@@ -555,7 +560,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
     }
   }
 
-  return null;
+  return false;
 };
 
 /**
@@ -585,7 +590,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
   operations,
   rpc,
   level,
-}: CheckBlockAccusationsForDoubleBakeArgs): Promise<DoubleBaked | null> => {
+}: CheckBlockAccusationsForDoubleBakeArgs): Promise<boolean> => {
   const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
@@ -609,12 +614,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
             log.info(
               `Double bake for baker ${baker} at level ${accusedLevel} with hash ${accusedHash}`
             );
-            return {
-              kind: Events.DoubleBaked,
-              baker,
-              level,
-              createdAt: now(),
-            };
+            return true;
           }
         } catch (err) {
           log.warn(
@@ -626,7 +626,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
     }
   }
 
-  return null;
+  return false;
 };
 
 type GetDeactivationEventsArgs = {

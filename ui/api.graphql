@@ -29,10 +29,12 @@ query getBakers
     balance
     frozenBalance
     stakingBalance
+    deactivated
     recentEvents {
       level
       cycle
       kind
+      timestamp
     }
     gracePeriod
     updatedAt

@@ -1,4 +1,4 @@
-import { Box, Divider, Heading } from '@chakra-ui/react';
+import { VStack, Divider, Heading } from '@chakra-ui/react';
 import React from 'react';
 import Nodes from './Nodes';
 import Bakers from './Bakers';
@@ -14,14 +14,14 @@ function App({}: AppProps) {
   }, 1000);
 
   return (
-    <Box p="20px">
+    <VStack p="20px" alignItems="flex-start">
       <Heading>Bakers</Heading>
       <Divider marginBottom="10px" />
       <Bakers />
       <Heading>Nodes</Heading>
       <Divider marginBottom="10px" />
       <Nodes />
-    </Box>
+    </VStack>
   );
 }
 

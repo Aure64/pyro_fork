@@ -5,6 +5,7 @@ import {
   AlertTitle,
   HStack,
   Spinner,
+  VStack,
 } from '@chakra-ui/react';
 import React from 'react';
 import { useGetBakersQuery } from './api';
@@ -13,8 +14,7 @@ import BakerCard from './BakerCard';
 export default () => {
   const { data, error, loading } = useGetBakersQuery({ pollInterval: 5000 });
   return (
-    <HStack shouldWrapChildren wrap="wrap" spacing="0">
-      {loading && <Spinner />}
+    <VStack alignItem="flex-start">
       {error && (
         <Alert status="error">
           <AlertIcon />
@@ -22,9 +22,12 @@ export default () => {
           <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       )}
-      {data?.bakers.map((baker) => (
-        <BakerCard key={baker.address} baker={baker} />
-      ))}
-    </HStack>
+      <HStack shouldWrapChildren wrap="wrap" spacing="0">
+        {loading && <Spinner />}
+        {data?.bakers.map((baker) => (
+          <BakerCard key={baker.address} baker={baker} />
+        ))}
+      </HStack>
+    </VStack>
   );
 };

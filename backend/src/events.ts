@@ -24,13 +24,15 @@ export type BasicBakerEvent = BasicEvent & {
   baker: string;
 };
 
-export type BlockEvent = BasicBakerEvent & {
-  level: number;
-};
-
 export type CycleEvent = BasicBakerEvent & {
   cycle: number;
 };
+
+export type BlockEvent = BasicBakerEvent &
+  CycleEvent & {
+    level: number;
+    timestamp: Date;
+  };
 
 export type Baked = BlockEvent & { kind: Events.Baked };
 
@@ -50,15 +52,17 @@ export type Deactivated = CycleEvent & { kind: Events.Deactivated };
 
 export type DeactivationRisk = CycleEvent & { kind: Events.DeactivationRisk };
 
-export type BakerEvent =
+export type BakerBlockEvent =
   | Baked
   | MissedBake
   | DoubleBaked
   | Endorsed
   | MissedEndorsement
-  | DoubleEndorsed
-  | Deactivated
-  | DeactivationRisk;
+  | DoubleEndorsed;
+
+export type BakerCycleEvent = Deactivated | DeactivationRisk;
+
+export type BakerEvent = BakerBlockEvent | BakerCycleEvent;
 
 export type BasicNodeEvent = BasicEvent & { node: string };
 

@@ -10,9 +10,10 @@ export const BakerEvent = objectType({
   name: "BakerEvent",
 
   definition(t) {
-    t.int("level");
-    t.int("cycle");
     t.nonNull.string("kind");
+    t.nonNull.int("level");
+    t.nonNull.int("cycle");
+    t.nonNull.string("timestamp");
   },
 });
 
@@ -25,7 +26,6 @@ export const Baker = objectType({
     t.nonNull.string("balance");
     t.nonNull.string("frozenBalance");
     t.nonNull.string("stakingBalance");
-    t.nonNull.string("delegatedBalance");
     t.nonNull.int("gracePeriod");
     t.nonNull.boolean("deactivated");
     t.nonNull.string("updatedAt");
@@ -54,9 +54,10 @@ export const BakerQuery = extendType({
         return delegates.map(([bakerInfo, delegate]) => {
           const recentEvents = bakerInfo.recentEvents.map((e) => {
             return {
-              level: "level" in e ? e.level : null,
-              cycle: "cycle" in e ? e.cycle : null,
+              level: e.level,
+              cycle: e.cycle,
               kind: e.kind,
+              timestamp: e.timestamp.toISOString(),
             };
           });
           recentEvents.reverse();

@@ -1,7 +1,7 @@
+import { Box, Text } from '@chakra-ui/react';
 import React from 'react';
-
-import { Box, Text, Tooltip } from '@chakra-ui/react';
-import { ellipsifyMiddle, formatRelativeTime, timestampFormat } from './format';
+import { ellipsifyMiddle } from './format';
+import RelativeTimeRow from './RelativeTimeRow';
 
 const priorityColors: { [key: number]: string } = {
   '0': 'green.600',
@@ -22,17 +22,11 @@ export default ({
 }) => (
   <>
     {recentBlocks.slice(0, 3).map((block, index) => {
-      const blockTimeStamp = new Date(block.timestamp);
       const priorityColor = priorityColors[block.priority] || 'red.500';
       return (
-        <Box
-          key={block.level}
-          d="flex"
-          w="100%"
-          justifyContent="space-between"
-          alignItems="baseline"
-          fontWeight={index ? 'normal' : 'bold'}
-          color={index ? 'gray.600' : 'black'}
+        <RelativeTimeRow
+          highlight={index === 0}
+          timestamp={new Date(block.timestamp)}
         >
           <Box>
             <code>
@@ -43,12 +37,7 @@ export default ({
             </code>{' '}
             <code>{ellipsifyMiddle(block.hash)}</code>{' '}
           </Box>
-          <Tooltip label={timestampFormat.format(blockTimeStamp)}>
-            <Text fontSize="xs" fontFamily="monospace">
-              {formatRelativeTime(blockTimeStamp.getTime())}
-            </Text>
-          </Tooltip>
-        </Box>
+        </RelativeTimeRow>
       );
     })}
   </>

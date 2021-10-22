@@ -1,14 +1,20 @@
 import { Box, Divider, VStack } from '@chakra-ui/react';
 import React from 'react';
 
-export default ({ children }: { children: Array<React.ReactNode> }) => (
+export default ({
+  children,
+  minHeight,
+}: {
+  children: Array<React.ReactNode>;
+  minHeight: string;
+}) => (
   <Box
     borderWidth="1px"
     rounded="md"
     padding="10px"
     minW="360px"
     maxW="360px"
-    minHeight="195px"
+    minHeight={minHeight || '195px'}
     marginRight="10px"
     marginBottom="10px"
   >
