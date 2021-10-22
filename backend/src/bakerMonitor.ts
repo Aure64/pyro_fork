@@ -2,8 +2,6 @@
 import {
   BakerEvent,
   BakerBlockEvent,
-  DoubleBaked,
-  DoubleEndorsed,
   Deactivated,
   DeactivationRisk,
   Event,
