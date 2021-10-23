@@ -49,7 +49,7 @@ export default ({
         <HStack maxW={250}>
           <Tooltip label={deactivated ? 'deactivated' : 'active'}>
             <Box>
-              <Icon as={MdLens} color={deactivated ? 'grey.500' : 'blue.500'} />
+              <Icon as={MdLens} color={deactivated ? 'red.500' : 'blue.500'} />
             </Box>
           </Tooltip>
           <Tooltip label={address}>
