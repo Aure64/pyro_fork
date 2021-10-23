@@ -2,14 +2,13 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
-import fetch from "cross-fetch";
 import { retry404 } from "./networkWrapper";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
-import { HttpResponseError } from "@taquito/http-utils";
-
 import * as service from "./service";
 import now from "./now";
+
+import { rpcFetch } from "./networkWrapper";
 
 type URL = string;
 
@@ -402,20 +401,6 @@ const findSharedAncestor = (
   }
 
   return NO_ANCESTOR;
-};
-
-const rpcFetch = async (url: string) => {
-  const response = await fetch(url);
-  if (response.ok) {
-    return response.json();
-  }
-  throw new HttpResponseError(
-    `Http error response: (${response.status})`,
-    response.status,
-    response.statusText,
-    await response.text(),
-    url
-  );
 };
 
 export type BootstrappedStatus = {

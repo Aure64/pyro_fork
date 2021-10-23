@@ -1,7 +1,7 @@
 import { debug, warn } from "loglevel";
 import { HttpResponseError } from "@taquito/http-utils";
 import { delay } from "./delay";
-
+import fetch from "cross-fetch";
 /**
  * Wraps provided API function so that it is retried on 404.
  * These are common on server clusters where a node may slightly lag
@@ -49,4 +49,18 @@ export const tryForever: TryForever = async (call, interval, label = "") => {
       await delay(interval);
     }
   }
+};
+
+export const rpcFetch = async (url: string) => {
+  const response = await fetch(url);
+  if (response.ok) {
+    return response.json();
+  }
+  throw new HttpResponseError(
+    `Http error response: (${response.status})`,
+    response.status,
+    response.statusText,
+    await response.text(),
+    url
+  );
 };

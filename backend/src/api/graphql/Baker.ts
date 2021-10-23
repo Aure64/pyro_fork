@@ -1,7 +1,6 @@
-import { DelegatesResponse, RpcClient } from "@taquito/rpc";
-import { groupBy, orderBy, take, first } from "lodash";
+import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType } from "nexus";
-import { BakerInfo } from "../../bakerMonitor";
+import { rpcFetch } from "../../networkWrapper";
 
 export const BakerEvent = objectType({
   name: "BakerEvent",
@@ -24,27 +23,63 @@ export const LevelEvents = objectType({
   },
 });
 
+const delegatesUrl = (rpcUrl: string, pkh: string) => {
+  return `${rpcUrl}/chains/main/blocks/head/context/delegates/${pkh}`;
+};
+
 export const Baker = objectType({
   name: "Baker",
 
   definition(t) {
     t.nonNull.string("address");
     t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
-    t.nonNull.string("balance");
-    t.nonNull.string("frozenBalance");
-    t.nonNull.string("stakingBalance");
-    t.nonNull.int("gracePeriod");
-    t.nonNull.boolean("deactivated");
+    t.nonNull.field("balance", {
+      type: nonNull("String"),
+      async resolve(parent, _args, ctx) {
+        const url = ctx.rpc.getRpcUrl();
+        const pkh = parent.address;
+        return rpcFetch(`${delegatesUrl(url, pkh)}/balance`);
+      },
+    });
+    t.nonNull.field("frozenBalance", {
+      type: nonNull("String"),
+      async resolve(parent, _args, ctx) {
+        const url = ctx.rpc.getRpcUrl();
+        const pkh = parent.address;
+        return rpcFetch(`${delegatesUrl(url, pkh)}/frozen_balance`);
+      },
+    });
+
+    t.nonNull.field("stakingBalance", {
+      type: nonNull("String"),
+      async resolve(parent, _args, ctx) {
+        const url = ctx.rpc.getRpcUrl();
+        const pkh = parent.address;
+        return rpcFetch(`${delegatesUrl(url, pkh)}/staking_balance`);
+      },
+    });
+
+    t.nonNull.field("gracePeriod", {
+      type: nonNull("Int"),
+      async resolve(parent, _args, ctx) {
+        const url = ctx.rpc.getRpcUrl();
+        const pkh = parent.address;
+        return rpcFetch(`${delegatesUrl(url, pkh)}/grace_period`);
+      },
+    });
+
+    t.nonNull.field("deactivated", {
+      type: nonNull("Boolean"),
+      async resolve(parent, _args, ctx) {
+        const url = ctx.rpc.getRpcUrl();
+        const pkh = parent.address;
+        return rpcFetch(`${delegatesUrl(url, pkh)}/deactivated`);
+      },
+    });
+
     t.nonNull.string("updatedAt");
   },
 });
-
-const getDelegateInfo = async (
-  rpc: RpcClient,
-  bakerInfo: BakerInfo
-): Promise<[BakerInfo, DelegatesResponse]> => {
-  return [bakerInfo, await rpc.getDelegates(bakerInfo.address)];
-};
 
 export const BakerQuery = extendType({
   type: "Query",
@@ -55,10 +90,8 @@ export const BakerQuery = extendType({
 
       async resolve(_root, _args, ctx) {
         const bakerInfos = await ctx.bakerInfoCollection.info();
-        const delegates = await Promise.all(
-          bakerInfos.map((bakerInfo) => getDelegateInfo(ctx.rpc, bakerInfo))
-        );
-        return delegates.map(([bakerInfo, delegate]) => {
+
+        return bakerInfos.map((bakerInfo) => {
           const recentEvents = Object.entries(
             groupBy(bakerInfo.recentEvents, "level")
           ).map(([levelStr, events]) => {
@@ -78,12 +111,6 @@ export const BakerQuery = extendType({
           });
           return {
             address: bakerInfo.address,
-            balance: delegate.balance.toJSON(),
-            frozenBalance: delegate.frozen_balance.toJSON(),
-            stakingBalance: delegate.staking_balance.toJSON(),
-            delegatedBalance: delegate.delegated_balance.toJSON(),
-            gracePeriod: delegate.grace_period,
-            deactivated: delegate.deactivated,
             recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
             updatedAt: new Date().toISOString(),
           };
