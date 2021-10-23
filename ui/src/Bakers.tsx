@@ -14,7 +14,7 @@ import BakerCard from './BakerCard';
 export default () => {
   const { data, error, loading } = useGetBakersQuery({ pollInterval: 5000 });
   return (
-    <VStack alignItem="flex-start">
+    <VStack alignItems="flex-start">
       {error && (
         <Alert status="error">
           <AlertIcon />
