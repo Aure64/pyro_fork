@@ -1,16 +1,8 @@
-//import { PeerEvent, TezosNodeEvent } from "./types";
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
-import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
-import {
-  retry404,
-  TezosVersion,
-  getNetworkConnections,
-  getTezosVersion,
-  BootstrappedStatus,
-  getBootstrappedStatus,
-} from "./rpc";
-import { makeMemoizedAsyncFunction } from "./memoization";
+import { BlockHeaderResponse } from "@taquito/rpc";
+
+import { client, RpcClient, BootstrappedStatus, TezosVersion } from "./rpc";
 
 import * as service from "./service";
 import now from "./now";
@@ -112,11 +104,13 @@ const subscribeToNode = (
   onEvent: (event: Event) => Promise<void>,
   getReference: () => NodeInfo | undefined
 ): Sub => {
-  const rpc = new RpcClient(node);
-  rpc.getBlockHeader = makeMemoizedAsyncFunction(
-    rpc.getBlockHeader.bind(rpc),
-    ({ block }: { block: string }) => `${block}`
-  );
+  // const rpc = new RpcClient(node);
+  // rpc.getBlockHeader = makeMemoizedAsyncFunction(
+  //   rpc.getBlockHeader.bind(rpc),
+  //   ({ block }: { block: string }) => `${block}`
+  // );
+
+  const rpc = client(node);
 
   const log = getLogger(`nm|${node}`);
   let nodeData: NodeInfo = {
@@ -235,7 +229,7 @@ const updateNodeInfo = async ({
   try {
     blockHash = await rpc.getBlockHash();
     log.debug(`Checking block ${blockHash}`);
-    history = await fetchBlockHeaders({ blockHash, rpc });
+    history = await rpc.getBlockHistory(blockHash);
   } catch (err) {
     log.warn(`Unable to get block history`, err);
     unableToReach = true;
@@ -253,7 +247,7 @@ const updateNodeInfo = async ({
   if (!unableToReach) {
     if (endpoints.status) {
       try {
-        bootstrappedStatus = await retry404(() => getBootstrappedStatus(node));
+        bootstrappedStatus = await rpc.getBootsrappedStatus();
         log.debug(`bootstrap status:`, bootstrappedStatus);
       } catch (err) {
         log.warn(`Unable to get bootsrap status`, err);
@@ -265,7 +259,7 @@ const updateNodeInfo = async ({
 
     if (endpoints.networkConnections) {
       try {
-        const connections = await retry404(() => getNetworkConnections(node));
+        const connections = await rpc.getNetworkConnections();
         peerCount = connections.length;
         log.debug(`Node has ${peerCount} peers`);
       } catch (err) {
@@ -278,7 +272,7 @@ const updateNodeInfo = async ({
 
     if (endpoints.version) {
       try {
-        tezosVersion = await getTezosVersion(node);
+        tezosVersion = await rpc.getTezosVersion();
         log.debug(`Tezos version:`, tezosVersion);
       } catch (err) {
         log.warn(`Unable to get tezos version info`, err);
@@ -425,28 +419,4 @@ const catchUpOccurred = (
       currentStatus.sync_state === "synced"
     );
   }
-};
-
-type FetchBlockHeadersArgs = {
-  blockHash: string;
-  rpc: RpcClient;
-};
-
-const BRANCH_HISTORY_LENGTH = 5;
-
-const fetchBlockHeaders = async ({
-  blockHash,
-  rpc,
-}: FetchBlockHeadersArgs): Promise<BlockHeaderResponse[]> => {
-  const history: BlockHeaderResponse[] = [];
-  let nextHash = blockHash;
-  // very primitive approach: we simply iterate up our chain to find the most recent blocks
-  while (history.length < BRANCH_HISTORY_LENGTH) {
-    const header = await retry404(() =>
-      rpc.getBlockHeader({ block: nextHash })
-    );
-    nextHash = header.predecessor;
-    history.push(header);
-  }
-  return history;
 };

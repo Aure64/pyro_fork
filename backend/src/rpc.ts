@@ -2,6 +2,17 @@ import { debug, warn } from "loglevel";
 import { HttpResponseError } from "@taquito/http-utils";
 import { delay } from "./delay";
 import fetch from "cross-fetch";
+
+import { makeMemoizedAsyncFunction } from "./memoization";
+
+import { RpcClient as TaquitoRpcClient } from "@taquito/rpc";
+
+import type { BlockHeaderResponse } from "@taquito/rpc";
+
+interface RPCOptions {
+  block: string;
+}
+
 /**
  * Wraps provided API function so that it is retried on 404.
  * These are common on server clusters where a node may slightly lag
@@ -32,6 +43,8 @@ export const retry404: RpcRetry = async (apiCall) => {
 };
 
 type Millisecond = number;
+
+type URL = string;
 
 type TryForever = <T>(
   call: () => Promise<T>,
@@ -109,4 +122,62 @@ export const getBootstrappedStatus = async (
   node: string
 ): Promise<BootstrappedStatus> => {
   return await rpcFetch(`${node}/chains/main/is_bootstrapped`);
+};
+
+export type RpcClient = {
+  url: URL;
+  getTezosVersion: () => Promise<TezosVersion>;
+  getBootsrappedStatus: () => Promise<BootstrappedStatus>;
+  getNetworkConnections: () => Promise<NetworkConnection[]>;
+  getBlockHeader: (options?: RPCOptions) => Promise<BlockHeaderResponse>;
+  getBlockHash: (options?: RPCOptions) => Promise<string>;
+  getBlockHistory: (
+    blockHash: string,
+    length?: number
+  ) => Promise<BlockHeaderResponse[]>;
+};
+
+const fetchBlockHeaders = async (
+  blockHash: string,
+  rpc: TaquitoRpcClient,
+  length: number
+): Promise<BlockHeaderResponse[]> => {
+  const history: BlockHeaderResponse[] = [];
+  let nextHash = blockHash;
+  // very primitive approach: we simply iterate up our chain to find the most recent blocks
+  while (history.length < length) {
+    const header = await retry404(() =>
+      rpc.getBlockHeader({ block: nextHash })
+    );
+    nextHash = header.predecessor;
+    history.push(header);
+  }
+  return history;
+};
+
+export const client = (nodeRpcUrl: URL): RpcClient => {
+  const rpc = new TaquitoRpcClient(nodeRpcUrl);
+
+  rpc.getBlockHeader = makeMemoizedAsyncFunction(
+    rpc.getBlockHeader.bind(rpc),
+    ({ block }: { block: string }) => `${block}`
+  );
+
+  return {
+    url: nodeRpcUrl,
+    getTezosVersion: () => getTezosVersion(nodeRpcUrl),
+    getBootsrappedStatus: () => getBootstrappedStatus(nodeRpcUrl),
+    getNetworkConnections: () => getNetworkConnections(nodeRpcUrl),
+    getBlockHeader: (options?: RPCOptions) => {
+      return rpc.getBlockHeader(options);
+    },
+
+    getBlockHash: (options?: RPCOptions) => {
+      return rpc.getBlockHash(options);
+    },
+
+    getBlockHistory: (blockHash: string, length = 5) => {
+      return fetchBlockHeaders(blockHash, rpc, length);
+    },
+  };
 };
