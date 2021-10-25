@@ -1,6 +1,5 @@
 import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType } from "nexus";
-import { rpcFetch } from "../../rpc";
 
 export const BakerEvent = objectType({
   name: "BakerEvent",
@@ -35,10 +34,6 @@ export const NetworkInfo = objectType({
   },
 });
 
-const delegatesUrl = (rpcUrl: string, pkh: string) => {
-  return `${rpcUrl}/chains/main/blocks/head/context/delegates/${pkh}`;
-};
-
 export const Baker = objectType({
   name: "Baker",
 
@@ -48,44 +43,34 @@ export const Baker = objectType({
     t.nonNull.field("balance", {
       type: nonNull("String"),
       async resolve(parent, _args, ctx) {
-        const url = ctx.rpc.getRpcUrl();
-        const pkh = parent.address;
-        return rpcFetch(`${delegatesUrl(url, pkh)}/balance`);
+        return ctx.rpc.getBalance(parent.address);
       },
     });
     t.nonNull.field("frozenBalance", {
       type: nonNull("String"),
       async resolve(parent, _args, ctx) {
-        const url = ctx.rpc.getRpcUrl();
-        const pkh = parent.address;
-        return rpcFetch(`${delegatesUrl(url, pkh)}/frozen_balance`);
+        return ctx.rpc.getFrozenBalance(parent.address);
       },
     });
 
     t.nonNull.field("stakingBalance", {
       type: nonNull("String"),
       async resolve(parent, _args, ctx) {
-        const url = ctx.rpc.getRpcUrl();
-        const pkh = parent.address;
-        return rpcFetch(`${delegatesUrl(url, pkh)}/staking_balance`);
+        return ctx.rpc.getStakingBalance(parent.address);
       },
     });
 
     t.nonNull.field("gracePeriod", {
       type: nonNull("Int"),
       async resolve(parent, _args, ctx) {
-        const url = ctx.rpc.getRpcUrl();
-        const pkh = parent.address;
-        return rpcFetch(`${delegatesUrl(url, pkh)}/grace_period`);
+        return ctx.rpc.getGracePeriod(parent.address);
       },
     });
 
     t.nonNull.field("deactivated", {
       type: nonNull("Boolean"),
       async resolve(parent, _args, ctx) {
-        const url = ctx.rpc.getRpcUrl();
-        const pkh = parent.address;
-        return rpcFetch(`${delegatesUrl(url, pkh)}/deactivated`);
+        return ctx.rpc.getDeactivated(parent.address);
       },
     });
 

@@ -1,6 +1,6 @@
 import { NodeInfoCollection } from "../nodeMonitor";
 import { BakerInfoCollection } from "../bakerMonitor";
-import { RpcClient } from "@taquito/rpc";
+import { client, RpcClient } from "../rpc";
 
 export interface Context {
   nodeInfoCollection: NodeInfoCollection;
@@ -16,6 +16,6 @@ export const createContext = (
   return {
     nodeInfoCollection,
     bakerInfoCollection,
-    rpc: new RpcClient(rpcUrl),
+    rpc: client(rpcUrl),
   };
 };

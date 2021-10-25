@@ -46,6 +46,8 @@ type Millisecond = number;
 
 type URL = string;
 
+type TzAddress = string;
+
 type TryForever = <T>(
   call: () => Promise<T>,
   interval: Millisecond,
@@ -135,6 +137,11 @@ export type RpcClient = {
     blockHash: string,
     length?: number
   ) => Promise<BlockHeaderResponse[]>;
+  getBalance: (pkh: TzAddress, block?: string) => Promise<string>;
+  getFrozenBalance: (pkh: TzAddress, block?: string) => Promise<string>;
+  getStakingBalance: (pkh: TzAddress, block?: string) => Promise<string>;
+  getGracePeriod: (pkh: TzAddress, block?: string) => Promise<number>;
+  getDeactivated: (pkh: TzAddress, block?: string) => Promise<boolean>;
 };
 
 const fetchBlockHeaders = async (
@@ -153,6 +160,10 @@ const fetchBlockHeaders = async (
     history.push(header);
   }
   return history;
+};
+
+const delegatesUrl = (rpcUrl: string, pkh: TzAddress, block: string) => {
+  return `${rpcUrl}/chains/main/blocks/${block}/context/delegates/${pkh}`;
 };
 
 export const client = (nodeRpcUrl: URL): RpcClient => {
@@ -178,6 +189,28 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
 
     getBlockHistory: (blockHash: string, length = 5) => {
       return fetchBlockHeaders(blockHash, rpc, length);
+    },
+
+    getBalance: (pkh: TzAddress, block = "head") => {
+      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/balance`);
+    },
+
+    getFrozenBalance: (pkh: TzAddress, block = "head") => {
+      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/frozen_balance`);
+    },
+
+    getStakingBalance: (pkh: TzAddress, block = "head") => {
+      return rpcFetch(
+        `${delegatesUrl(nodeRpcUrl, pkh, block)}/staking_balance`
+      );
+    },
+
+    getGracePeriod: (pkh: TzAddress, block = "head") => {
+      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/grace_period`);
+    },
+
+    getDeactivated: (pkh: TzAddress, block = "head") => {
+      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/deactivated`);
     },
   };
 };
