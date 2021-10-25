@@ -2,13 +2,13 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
-import { retry404 } from "./networkWrapper";
+import { retry404 } from "./rpc";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
 import * as service from "./service";
 import now from "./now";
 
-import { rpcFetch } from "./networkWrapper";
+import { rpcFetch } from "./rpc";
 
 type URL = string;
 

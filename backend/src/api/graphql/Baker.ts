@@ -1,6 +1,6 @@
 import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType } from "nexus";
-import { rpcFetch } from "../../networkWrapper";
+import { rpcFetch } from "../../rpc";
 
 export const BakerEvent = objectType({
   name: "BakerEvent",
@@ -20,6 +20,18 @@ export const LevelEvents = objectType({
     t.nonNull.int("cycle");
     t.nonNull.string("timestamp");
     t.nonNull.list.field("events", { type: nonNull(BakerEvent) });
+  },
+});
+
+export const NetworkInfo = objectType({
+  name: "NetworkInfo",
+
+  definition(t) {
+    t.nonNull.string("chainId");
+    t.nonNull.int("level");
+    t.nonNull.int("proto");
+    t.nonNull.string("protocol");
+    t.nonNull.string("timestamp");
   },
 });
 
@@ -115,6 +127,21 @@ export const BakerQuery = extendType({
             updatedAt: new Date().toISOString(),
           };
         });
+      },
+    });
+
+    t.nonNull.field("networkInfo", {
+      type: nonNull(NetworkInfo),
+
+      async resolve(_root, _args, ctx) {
+        const {
+          chain_id: chainId,
+          level,
+          proto,
+          protocol,
+          timestamp,
+        } = await ctx.rpc.getBlockHeader();
+        return { chainId, level, proto, protocol, timestamp };
       },
     });
   },

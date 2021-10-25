@@ -18,7 +18,7 @@ import {
   RpcClient,
   DelegatesResponse,
 } from "@taquito/rpc";
-import { retry404, tryForever } from "./networkWrapper";
+import { retry404, tryForever } from "./rpc";
 
 import { delay } from "./delay";
 
