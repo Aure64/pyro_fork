@@ -2,13 +2,18 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse, RpcClient } from "@taquito/rpc";
-import { retry404 } from "./rpc";
+import {
+  retry404,
+  TezosVersion,
+  getNetworkConnections,
+  getTezosVersion,
+  BootstrappedStatus,
+  getBootstrappedStatus,
+} from "./rpc";
 import { makeMemoizedAsyncFunction } from "./memoization";
 
 import * as service from "./service";
 import now from "./now";
-
-import { rpcFetch } from "./rpc";
 
 type URL = string;
 
@@ -403,17 +408,6 @@ const findSharedAncestor = (
   return NO_ANCESTOR;
 };
 
-export type BootstrappedStatus = {
-  bootstrapped: boolean;
-  sync_state: "synced" | "unsynced" | "stuck";
-};
-
-const getBootstrappedStatus = async (
-  node: string
-): Promise<BootstrappedStatus> => {
-  return await rpcFetch(`${node}/chains/main/is_bootstrapped`);
-};
-
 const catchUpOccurred = (
   previousResult: BootstrappedStatus | undefined,
   currentStatus: BootstrappedStatus
@@ -455,39 +449,4 @@ const fetchBlockHeaders = async ({
     history.push(header);
   }
   return history;
-};
-
-export type NetworkConnection = {
-  incoming: boolean;
-  peer_id: string;
-  id_point: { addr: string; port: number };
-  remote_socket_port: number;
-  announced_version: {
-    chain_name: string;
-    distributed_db_version: number;
-    p2p_version: number;
-  };
-  private: boolean;
-  local_metadata: { disable_mempool: boolean; private_node: boolean };
-  remote_metadata: { disable_mempool: boolean; private_node: boolean };
-};
-
-export type TezosVersion = {
-  version: {
-    major: number;
-    minor: number;
-    additional_info: undefined | "release" | "dev" | { rc: number };
-  };
-  network_version: { chain_name: string };
-  commit_info: { commit_hash: string; commit_date: string };
-};
-
-const getNetworkConnections = async (
-  node: string
-): Promise<NetworkConnection[]> => {
-  return await rpcFetch(`${node}/network/connections`);
-};
-
-const getTezosVersion = async (node: string): Promise<TezosVersion> => {
-  return await rpcFetch(`${node}/version`);
 };

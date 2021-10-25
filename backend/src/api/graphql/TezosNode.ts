@@ -2,7 +2,8 @@ import { objectType } from "nexus";
 import { extendType } from "nexus";
 import { nonNull } from "nexus";
 
-import { TezosVersion, NodeCommunicationError } from "../../nodeMonitor";
+import { NodeCommunicationError } from "../../nodeMonitor";
+import { TezosVersion } from "../../rpc";
 
 export const BlockInfo = objectType({
   name: "BlockInfo",
