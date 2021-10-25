@@ -14,7 +14,7 @@ import NodeCard from './NodeCard';
 export default () => {
   const { data, error, loading } = useGetNodesQuery({ pollInterval: 5000 });
   return (
-    <VStack alignItem="flex-start">
+    <VStack alignItems="flex-start">
       {error && (
         <Alert status="error">
           <AlertIcon />
