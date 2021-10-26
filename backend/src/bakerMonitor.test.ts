@@ -73,12 +73,10 @@ describe("loadBlockData", () => {
     const getBakingRights = jest.fn().mockResolvedValue({});
     const getBlockMetadata = jest.fn().mockResolvedValue({ level: {} });
     const getEndorsingRights = jest.fn().mockResolvedValue({});
-    const getBlock = jest
-      .fn()
-      .mockResolvedValue({
-        metadata: { level_info: { level: 123 } },
-        header: { pirority: 0 },
-      });
+    const getBlock = jest.fn().mockResolvedValue({
+      metadata: { level_info: { level: 123 } },
+      header: { pirority: 0 },
+    });
     const rpc = {
       getBakingRights,
       getBlock,
