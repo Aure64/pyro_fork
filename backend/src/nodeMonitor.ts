@@ -231,12 +231,13 @@ const updateNodeInfo = async ({
     history = [];
   }
 
+  let hasNetworkConnectionsEndpoint = endpoints.networkConnections;
+  let hasStatusEndpoint = endpoints.status;
+  let hasVersionEndpoint = endpoints.version;
+
   let bootstrappedStatus;
-  let hasStatusEndpoint = true;
   let peerCount;
-  let hasNetworkConnectionsEndpoint = true;
   let tezosVersion;
-  let hasVersionEndpoint = true;
 
   if (!unableToReach) {
     if (endpoints.status) {
