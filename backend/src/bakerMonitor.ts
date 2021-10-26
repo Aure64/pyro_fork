@@ -319,7 +319,6 @@ const checkBlock = async ({
       baker,
       operations: anonymousOperations,
       rpc,
-      level: blockLevel,
     });
     if (doubleBakeEvent) {
       events.push(createEvent(baker, Events.DoubleBaked));
@@ -328,7 +327,6 @@ const checkBlock = async ({
       baker,
       operations: anonymousOperations,
       rpc,
-      level: blockLevel,
     });
     if (doubleEndorseEvent) {
       events.push(createEvent(baker, Events.DoubleEndorsed));
@@ -519,14 +517,12 @@ type CheckBlockAccusationsForDoubleEndorsementArgs = {
   baker: string;
   operations: OperationEntry[];
   rpc: RpcClient;
-  level: number;
 };
 
 export const checkBlockAccusationsForDoubleEndorsement = async ({
   baker,
   operations,
   rpc,
-  level,
 }: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<boolean> => {
   const log = getLogger(name);
   for (const operation of operations) {
@@ -593,14 +589,12 @@ type CheckBlockAccusationsForDoubleBakeArgs = {
   baker: string;
   operations: OperationEntry[];
   rpc: RpcClient;
-  level: number;
 };
 
 export const checkBlockAccusationsForDoubleBake = async ({
   baker,
   operations,
   rpc,
-  level,
 }: CheckBlockAccusationsForDoubleBakeArgs): Promise<boolean> => {
   const log = getLogger(name);
   for (const operation of operations) {
