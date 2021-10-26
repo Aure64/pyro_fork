@@ -106,7 +106,9 @@ const run = async (config: Config.Config) => {
   const { bakers } = bakerMonitorConfig;
 
   //always monitor rpc node
-  const nodes = [...new Set([...nodeMonitorConfig.nodes])];
+  const nodes = [
+    ...new Set([bakerMonitorConfig.rpc, ...nodeMonitorConfig.nodes]),
+  ];
 
   if (bakers.length === 0 && nodes.length === 0) {
     console.error("You must specify nodes or bakers to watch.");
