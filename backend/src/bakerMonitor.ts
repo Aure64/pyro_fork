@@ -10,7 +10,6 @@ import {
 import { getLogger } from "loglevel";
 import {
   BakingRightsResponse,
-  BlockMetadata,
   BlockResponse,
   EndorsingRightsResponse,
   OperationEntry,
@@ -254,11 +253,12 @@ const checkBlock = async ({
   log.trace(`Fetching baker data for block ${blockId}`);
   const events: BakerEvent[] = [];
 
-  const { metadata, block, bakingRights, endorsingRights } =
-    await loadBlockData({
-      blockId,
-      rpc,
-    });
+  const { block, bakingRights, endorsingRights } = await loadBlockData({
+    blockId,
+    rpc,
+  });
+
+  const metadata = block.metadata;
 
   log.trace(`Successfully retrieved baker data for block ${blockId}`, metadata);
 
@@ -359,7 +359,6 @@ type LoadBlockDataArgs = {
 };
 
 type BlockData = {
-  metadata: BlockMetadata;
   bakingRights: BakingRightsResponse;
   endorsingRights: EndorsingRightsResponse;
   block: BlockResponse;
@@ -421,7 +420,7 @@ export const loadBlockData = async ({
     endorsingRights
   );
 
-  return { metadata: block.metadata, bakingRights, endorsingRights, block };
+  return { bakingRights, endorsingRights, block };
 };
 
 type CheckBlockBakingRightsArgs = {
