@@ -5,23 +5,25 @@
  */
 export const makeMemoizedAsyncFunction = <Args extends unknown[], Return>(
   originalFunction: (...args: Args) => Promise<Return>,
-  makeMemoKey: (...args: Args) => string,
+  makeMemoKey: (...args: Args) => string | null,
   maxCacheLength?: number
 ): ((...args: Args) => Promise<Return>) => {
   const cache: Record<string, Return> = {};
   const memoizedFunction = async (...args: Args) => {
     const key = makeMemoKey(...args);
-    if (cache[key]) {
+    if (key && cache[key]) {
       return cache[key];
     } else {
       const response: Return = await originalFunction(...args);
-      cache[key] = response;
-      if (maxCacheLength !== undefined) {
-        // trim old cache entries
-        const cacheLength = Object.keys(cache).length;
-        if (cacheLength > maxCacheLength) {
-          const firstCacheKey = Object.keys(cache)[0];
-          delete cache[firstCacheKey];
+      if (key) {
+        cache[key] = response;
+        if (maxCacheLength !== undefined) {
+          // trim old cache entries
+          const cacheLength = Object.keys(cache).length;
+          if (cacheLength > maxCacheLength) {
+            const firstCacheKey = Object.keys(cache)[0];
+            delete cache[firstCacheKey];
+          }
         }
       }
       return response;

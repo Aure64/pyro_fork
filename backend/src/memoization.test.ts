@@ -27,6 +27,19 @@ describe("makeMemoizedFunction", () => {
     expect(apiCall.mock.calls.length).toEqual(1);
   });
 
+  it("fetches new data if memo key is empty", async () => {
+    const apiCall = jest.fn().mockResolvedValue("result");
+    const memoizedFunction = makeMemoizedAsyncFunction(apiCall, () => "") as (
+      arg: string
+    ) => Promise<string>;
+
+    const result = await memoizedFunction("data");
+    expect(result).toEqual("result");
+    const result2 = await memoizedFunction("data");
+    expect(result2).toEqual("result");
+    expect(apiCall.mock.calls.length).toEqual(2);
+  });
+
   it("flushes old items from the cache", async () => {
     const apiCall = jest.fn().mockResolvedValue("result");
     const memoizedFunction = makeMemoizedAsyncFunction(
