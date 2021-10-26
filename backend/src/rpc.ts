@@ -171,7 +171,9 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
 
   rpc.getBlockHeader = makeMemoizedAsyncFunction(
     rpc.getBlockHeader.bind(rpc),
-    ({ block }: { block: string }) => `${block}`
+    ({ block }: { block: string }) =>
+      block.toLowerCase().startsWith("head") ? null : block,
+    10
   );
 
   return {
@@ -179,6 +181,7 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
     getTezosVersion: () => getTezosVersion(nodeRpcUrl),
     getBootsrappedStatus: () => getBootstrappedStatus(nodeRpcUrl),
     getNetworkConnections: () => getNetworkConnections(nodeRpcUrl),
+
     getBlockHeader: (options?: RPCOptions) => {
       return rpc.getBlockHeader(options);
     },
