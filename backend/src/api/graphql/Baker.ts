@@ -16,6 +16,7 @@ export const LevelEvents = objectType({
 
   definition(t) {
     t.nonNull.int("level");
+    t.string("explorerUrl");
     t.nonNull.int("cycle");
     t.nonNull.string("timestamp");
     t.nonNull.list.field("events", { type: nonNull(BakerEvent) });
@@ -53,6 +54,7 @@ export const Baker = objectType({
 
   definition(t) {
     t.nonNull.string("address");
+    t.string("explorerUrl");
     t.field("lastProcessed", { type: LastProcessed });
     t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
     t.field("balance", {
@@ -143,6 +145,9 @@ export const BakerQuery = extendType({
             const firstEvent = first(events)!;
             return {
               level: parseInt(levelStr),
+              explorerUrl: ctx.explorerUrl
+                ? `${ctx.explorerUrl}/${levelStr}`
+                : null,
               cycle: firstEvent.cycle,
               timestamp: firstEvent.timestamp.toISOString(),
               events: events.map((e) => {
@@ -157,6 +162,9 @@ export const BakerQuery = extendType({
 
           return {
             address: bakerInfo.address,
+            explorerUrl: ctx.explorerUrl
+              ? `${ctx.explorerUrl}/${bakerInfo.address}`
+              : null,
             recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
             lastProcessed: bakerMonitorInfo.lastProcessed,
             updatedAt: new Date().toISOString(),

@@ -40,6 +40,7 @@ const defaultEmoji = '👽'; //should never show up
 export default ({
   baker: {
     address,
+    explorerUrl,
     balance,
     deactivated,
     frozenBalance,
@@ -72,7 +73,7 @@ export default ({
             </Box>
           </Tooltip>
           <Tooltip label={address}>
-            <Link href={`https://tzstats.com/${address}`} isExternal>
+            <Link href={explorerUrl || undefined} isExternal>
               <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
             </Link>
           </Tooltip>
@@ -105,7 +106,10 @@ export default ({
               timestamp={new Date(levelEvents.timestamp)}
             >
               <code>
-                {levelEvents.cycle} {levelEvents.level}{' '}
+                {levelEvents.cycle}{' '}
+                <Link href={levelEvents.explorerUrl || undefined}>
+                  {levelEvents.level}
+                </Link>{' '}
                 {levelEvents.events.map((e) => (
                   <Box as="span" key={e.kind}>
                     <Tooltip label={eventLabels[e.kind] || '?'}>

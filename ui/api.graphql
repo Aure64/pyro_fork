@@ -26,12 +26,14 @@ query getBakers
 {
   bakers {
     address
+    explorerUrl
     balance
     frozenBalance
     stakingBalance
     deactivated
     recentEvents {
       level
+      explorerUrl
       cycle
       timestamp
       events {
