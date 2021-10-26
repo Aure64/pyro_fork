@@ -18,6 +18,7 @@ import { NotificationsConfig } from "./channel";
 import { BakerMonitorConfig } from "./bakerMonitor";
 import { NodeMonitorConfig } from "./nodeMonitor";
 import { LoggingConfig } from "./logging";
+import { UIConfig } from "./api/server";
 import FS from "fs";
 import Path from "path";
 import yargs from "yargs";
@@ -520,6 +521,52 @@ const NOTIFICATIONS_TTL: UserPref = {
   validationRule: ["numeric", "min:1"],
 };
 
+const UI_GROUP: Group = { key: "ui", label: "User Interface:" };
+
+const UI_ENABLED: UserPref = {
+  key: `${UI_GROUP.key}:enabled`,
+  default: false,
+  description: "Whether web UI is enabled",
+  alias: undefined,
+  type: "boolean",
+  group: UI_GROUP.label,
+  isArray: false,
+  validationRule: "boolean",
+};
+
+const UI_PORT: UserPref = {
+  key: `${UI_GROUP.key}:port`,
+  default: 2020,
+  description: "Web server port",
+  alias: undefined,
+  type: "string",
+  group: UI_GROUP.label,
+  isArray: false,
+  validationRule: ["numeric", "min:1"],
+};
+
+const UI_HOST: UserPref = {
+  key: `${UI_GROUP.key}:port`,
+  default: "localhost",
+  description: "Web server host",
+  alias: undefined,
+  type: "string",
+  group: UI_GROUP.label,
+  isArray: false,
+  validationRule: "string",
+};
+
+const UI_EXPLORER_URL: UserPref = {
+  key: `${UI_GROUP.key}:explorer_url`,
+  default: "https://tzstats.com",
+  description: "URL of blockchain explorer to use for baker and block links",
+  alias: undefined,
+  type: "string",
+  group: UI_GROUP.label,
+  isArray: false,
+  validationRule: "link",
+};
+
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
   BAKERS,
@@ -560,6 +607,10 @@ const userPrefs = [
   NOTIFICATIONS_INTERVAL,
   NOTIFICATIONS_MAX_BATCH_SIZE,
   NOTIFICATIONS_TTL,
+  UI_ENABLED,
+  UI_HOST,
+  UI_PORT,
+  UI_EXPLORER_URL,
 ];
 
 /**
@@ -695,6 +746,7 @@ export type Config = {
   webhook: WebhookConfig;
   storageDirectory: string;
   notifications: NotificationsConfig;
+  ui: UIConfig;
   asObject: () => any;
 };
 
@@ -793,6 +845,9 @@ export const load = async (
     },
     get storageDirectory() {
       return nconf.get(DATA_DIR.key);
+    },
+    get ui() {
+      return nconf.get(UI_GROUP.key) as UIConfig;
     },
     asObject,
   };

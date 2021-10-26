@@ -6,6 +6,8 @@ import { createContext } from "./context";
 import morgan from "morgan";
 import cors from "cors";
 
+import { getLogger } from "loglevel";
+
 import { NodeInfoCollection } from "../nodeMonitor";
 import { BakerInfoCollection } from "bakerMonitor";
 
@@ -25,11 +27,18 @@ const rootValue = {
 
 type URL = string;
 
+export type UIConfig = {
+  enabled: boolean;
+  host: string;
+  port: number;
+  explorer_url?: string;
+};
+
 export const start = (
   nodeMonitor: NodeInfoCollection | null,
   bakerMonitor: BakerInfoCollection | null,
   rpc: URL,
-  port = 4000
+  { host, port, explorer_url }: UIConfig
 ) => {
   app.use(
     "/gql",
@@ -44,7 +53,8 @@ export const start = (
             return { bakerInfo: [] };
           },
         },
-        rpc
+        rpc,
+        explorer_url
       ),
       customFormatErrorFn: (error) => {
         const params = {
@@ -58,5 +68,8 @@ export const start = (
     }))
   );
 
-  return app.listen(port, () => console.log(`Server started on port ${port}`));
+  return app.listen(port, host, () => {
+    const logger = getLogger("api");
+    logger.log(`Server started on ${host}:${port}`);
+  });
 };

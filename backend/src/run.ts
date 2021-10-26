@@ -135,16 +135,20 @@ const run = async (config: Config.Config) => {
 
   const gc = EventLog.gc(eventLog, channels);
 
-  const apiServer = startAPIServer(
-    nodeMonitor,
-    bakerMonitor,
-    bakerMonitorConfig.rpc,
-    4000
-  );
+  const uiConfig = config.ui;
+
+  const apiServer = uiConfig.enabled
+    ? startAPIServer(
+        nodeMonitor,
+        bakerMonitor,
+        bakerMonitorConfig.rpc,
+        uiConfig
+      )
+    : null;
 
   const stop = (event: NodeJS.Signals) => {
     info(`Caught signal ${event}, shutting down...`);
-    apiServer.close();
+    apiServer?.close();
     bakerMonitor?.stop();
     nodeMonitor?.stop();
     for (const ch of channels) {
