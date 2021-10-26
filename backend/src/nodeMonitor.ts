@@ -104,12 +104,6 @@ const subscribeToNode = (
   onEvent: (event: Event) => Promise<void>,
   getReference: () => NodeInfo | undefined
 ): Sub => {
-  // const rpc = new RpcClient(node);
-  // rpc.getBlockHeader = makeMemoizedAsyncFunction(
-  //   rpc.getBlockHeader.bind(rpc),
-  //   ({ block }: { block: string }) => `${block}`
-  // );
-
   const rpc = client(node);
 
   const log = getLogger(`nm|${node}`);
