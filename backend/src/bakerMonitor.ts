@@ -212,7 +212,7 @@ export const create = async (
 
     const chainPosition = await getPosition();
     const lastBlockLevel = chainPosition.blockLevel;
-    let lastBlockCycle = chainPosition.blockCycle;
+    const lastBlockCycle = chainPosition.blockCycle;
 
     return {
       bakerInfo,
