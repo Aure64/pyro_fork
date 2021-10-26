@@ -179,7 +179,11 @@ export const create = async (
     }
   };
 
-  const interval = 1000 * constants.time_between_blocks[0].toNumber();
+  const interval =
+    1000 *
+    (
+      constants.minimal_block_delay || constants.time_between_blocks[0]
+    ).toNumber();
 
   const srv = service.create(name, task, interval);
 
