@@ -176,7 +176,6 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       baker: endorsementBaker,
       rpc,
       operations: operationsWithDoubleEndorsementAccusation,
-      level: 1000,
     });
     expect(result).toEqual(true);
   });
@@ -190,7 +189,6 @@ describe("checkBlockAccusationsForDoubleEndorsement", () => {
       baker: endorsementBaker,
       rpc,
       operations: [],
-      level: 1000,
     });
     expect(result).toEqual(false);
     expect(getBlock.mock.calls.length).toEqual(0);
@@ -210,7 +208,6 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       baker: delegate,
       rpc,
       operations: operationsWithDoubleBakeAccusation,
-      level: 1000,
     });
     expect(result).toEqual(true);
   });
@@ -224,7 +221,6 @@ describe("checkBlockAccusationsForDoubleBake", () => {
       baker: delegate,
       rpc,
       operations: [],
-      level: 1000,
     });
     expect(result).toEqual(false);
     expect(getBlock.mock.calls.length).toEqual(0);
