@@ -16,6 +16,7 @@ import {
   OpKind,
   RpcClient,
   DelegatesResponse,
+  BakingRightsResponseItem,
 } from "@taquito/rpc";
 import { retry404, tryForever } from "./rpc";
 
@@ -298,19 +299,31 @@ const checkBlock = async ({
     return event;
   };
 
+  const bakingRightForBlock = bakingRights.find(
+    (bakingRight) =>
+      bakingRight.priority === priority && bakingRight.level === blockLevel
+  );
+  log.debug(
+    `Baking right for block ${blockLevel} of priority ${priority}:`,
+    bakingRightForBlock
+  );
+
   for (const baker of bakers) {
     const endorsementOperations = block.operations[0];
     const anonymousOperations = block.operations[2];
-    const bakingEvent = checkBlockBakingRights({
-      baker,
-      bakingRights,
-      blockBaker: metadata.baker,
-      blockId,
-      level: blockLevel,
-    });
-    if (bakingEvent) {
-      events.push(createEvent(baker, bakingEvent));
+    if (bakingRightForBlock) {
+      const bakingEvent = checkBlockBakingRights({
+        baker,
+        bakingRight: bakingRightForBlock,
+        blockBaker: metadata.baker,
+        blockId,
+        blockPriority: priority,
+      });
+      if (bakingEvent) {
+        events.push(createEvent(baker, bakingEvent));
+      }
     }
+
     const endorsingEvent = checkBlockEndorsingRights({
       baker,
       level: blockLevel - 1,
@@ -393,7 +406,7 @@ export const loadBlockData = async ({
   const bakingRightsPromise = retry404(() =>
     rpc.getBakingRights(
       {
-        max_priority: 0,
+        max_priority: block.header.priority,
         level,
       },
       { block: blockId }
@@ -427,12 +440,10 @@ type CheckBlockBakingRightsArgs = {
   baker: string;
   blockBaker: string;
   blockId: string;
-  level: number;
-  bakingRights: BakingRightsResponse;
+  bakingRight: BakingRightsResponseItem;
+  blockPriority: number;
 };
 
-// For now just check for missed bakes where baker was the top priority
-const priority = 0;
 /**
  * Check the baking rights for a block to see if the provided baker had a successful or missed bake.
  */
@@ -440,29 +451,21 @@ const priority = 0;
 export const checkBlockBakingRights = ({
   baker,
   blockBaker,
-  level,
-  bakingRights,
+  bakingRight,
   blockId,
+  blockPriority,
 }: CheckBlockBakingRightsArgs): Events.MissedBake | Events.Baked | null => {
   const log = getLogger(name);
-  for (const bakingRight of bakingRights) {
-    if (
-      bakingRight.delegate === baker &&
-      bakingRight.level === level &&
-      bakingRight.priority === priority
-    ) {
+
+  if (bakingRight.delegate === baker) {
+    if (blockBaker === baker) {
       log.debug(
-        `found baking slot for priority ${priority} for baker ${baker}`
+        `Successful bake for block ${blockId} for baker ${baker} at priority ${blockPriority}`
       );
-      // if baker was priority 0 but didn't bake, that opportunity was lost to another baker
-      if (blockBaker !== baker) {
-        log.info(`Missed bake detected for baker ${baker}`);
-        return Events.MissedBake;
-      } else {
-        log.debug(`Successful bake for block ${blockId} for baker ${baker}`);
-        return Events.Baked;
-      }
+      return Events.Baked;
     }
+    log.info(`Missed bake detected for baker ${baker}`);
+    return Events.MissedBake;
   }
 
   log.debug(`No bake event for block ${blockId} for baker ${baker}`);

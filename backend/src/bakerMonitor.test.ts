@@ -10,7 +10,7 @@ import { setLevel } from "loglevel";
 import {
   responseWithPriorityZero,
   priorityZero,
-  levelWithMultipleBakers,
+  priorityZeroOtherBaker,
 } from "./testFixtures/baking";
 import {
   endorsementsWithMiss,
@@ -27,7 +27,7 @@ import { BigNumber } from "bignumber.js";
 
 import { Events } from "./events";
 
-const { delegate, level } = priorityZero;
+const { delegate } = priorityZero;
 
 Date.now = jest.fn(() => 1624758855227);
 
@@ -38,31 +38,31 @@ describe("checkBlockBakingRights", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: delegate,
-      level,
       blockId: "some_block",
-      bakingRights: responseWithPriorityZero,
+      bakingRight: priorityZero,
+      blockPriority: 0,
     });
     expect(result).toEqual(Events.Baked);
   });
 
-  it("returns missed for 0 priority baked by other baker", () => {
+  it("returns missed block baked by other baker", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: "other_baker",
-      level,
       blockId: "some_block",
-      bakingRights: responseWithPriorityZero,
+      bakingRight: priorityZero,
+      blockPriority: 0,
     });
     expect(result).toEqual(Events.MissedBake);
   });
 
-  it("returns none for a block that isn't priority 0 for our baker", () => {
+  it("returns none for a block that our baker has no rights for", () => {
     const result = checkBlockBakingRights({
       baker: delegate,
       blockBaker: "other_baker",
-      level: levelWithMultipleBakers,
       blockId: "some_block",
-      bakingRights: responseWithPriorityZero,
+      bakingRight: priorityZeroOtherBaker,
+      blockPriority: 0,
     });
     expect(result).toBe(null);
   });
