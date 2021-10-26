@@ -15,8 +15,6 @@ function App({}: AppProps) {
 
   return (
     <VStack p="20px" alignItems="flex-start">
-      <Heading>Bakers</Heading>
-      <Divider marginBottom="10px" />
       <Bakers />
       <Heading>Nodes</Heading>
       <Divider marginBottom="10px" />

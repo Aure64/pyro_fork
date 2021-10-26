@@ -26,11 +26,25 @@ export const NetworkInfo = objectType({
   name: "NetworkInfo",
 
   definition(t) {
-    t.nonNull.string("chainId");
+    t.nonNull.field("chainName", {
+      type: nonNull("String"),
+      async resolve(_parent, _args, ctx) {
+        const tzVersion = await ctx.rpc.getTezosVersion();
+        return tzVersion.network_version.chain_name;
+      },
+    });
     t.nonNull.int("level");
-    t.nonNull.int("proto");
+    t.nonNull.int("cycle");
     t.nonNull.string("protocol");
-    t.nonNull.string("timestamp");
+  },
+});
+
+export const LastProcessed = objectType({
+  name: "LastProcessed",
+
+  definition(t) {
+    t.nonNull.int("level");
+    t.nonNull.int("cycle");
   },
 });
 
@@ -39,38 +53,72 @@ export const Baker = objectType({
 
   definition(t) {
     t.nonNull.string("address");
+    t.field("lastProcessed", { type: LastProcessed });
     t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
-    t.nonNull.field("balance", {
-      type: nonNull("String"),
+    t.field("balance", {
+      type: "String",
       async resolve(parent, _args, ctx) {
-        return ctx.rpc.getBalance(parent.address);
+        if (!parent.lastProcessed) return null;
+        return ctx.rpc.getBalance(
+          parent.address,
+          `${parent.lastProcessed.level}`
+        );
       },
     });
-    t.nonNull.field("frozenBalance", {
-      type: nonNull("String"),
+    t.field("frozenBalance", {
+      type: "String",
       async resolve(parent, _args, ctx) {
-        return ctx.rpc.getFrozenBalance(parent.address);
-      },
-    });
-
-    t.nonNull.field("stakingBalance", {
-      type: nonNull("String"),
-      async resolve(parent, _args, ctx) {
-        return ctx.rpc.getStakingBalance(parent.address);
-      },
-    });
-
-    t.nonNull.field("gracePeriod", {
-      type: nonNull("Int"),
-      async resolve(parent, _args, ctx) {
-        return ctx.rpc.getGracePeriod(parent.address);
+        if (!parent.lastProcessed) return null;
+        return ctx.rpc.getFrozenBalance(
+          parent.address,
+          `${parent.lastProcessed.level}`
+        );
       },
     });
 
-    t.nonNull.field("deactivated", {
-      type: nonNull("Boolean"),
+    t.field("stakingBalance", {
+      type: "String",
       async resolve(parent, _args, ctx) {
-        return ctx.rpc.getDeactivated(parent.address);
+        if (!parent.lastProcessed) return null;
+        return ctx.rpc.getStakingBalance(
+          parent.address,
+          `${parent.lastProcessed.level}`
+        );
+      },
+    });
+
+    t.field("gracePeriod", {
+      type: "Int",
+      async resolve(parent, _args, ctx) {
+        if (!parent.lastProcessed) return null;
+        return ctx.rpc.getGracePeriod(
+          parent.address,
+          `${parent.lastProcessed.level}`
+        );
+      },
+    });
+
+    t.field("atRisk", {
+      type: "Boolean",
+
+      async resolve(parent, _args, ctx) {
+        if (!parent.lastProcessed) return null;
+        const gracePeriod = await ctx.rpc.getGracePeriod(
+          parent.address,
+          `${parent.lastProcessed.level}`
+        );
+        return gracePeriod - parent.lastProcessed.cycle <= 1;
+      },
+    });
+
+    t.field("deactivated", {
+      type: "Boolean",
+      async resolve(parent, _args, ctx) {
+        if (!parent.lastProcessed) return null;
+        return ctx.rpc.getDeactivated(
+          parent.address,
+          `${parent.lastProcessed.level}`
+        );
       },
     });
 
@@ -86,9 +134,9 @@ export const BakerQuery = extendType({
       type: nonNull(Baker),
 
       async resolve(_root, _args, ctx) {
-        const bakerInfos = await ctx.bakerInfoCollection.info();
+        const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
 
-        return bakerInfos.map((bakerInfo) => {
+        return bakerMonitorInfo.bakerInfo.map((bakerInfo) => {
           const recentEvents = Object.entries(
             groupBy(bakerInfo.recentEvents, "level")
           ).map(([levelStr, events]) => {
@@ -106,27 +154,32 @@ export const BakerQuery = extendType({
               }),
             };
           });
+
           return {
             address: bakerInfo.address,
             recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
+            lastProcessed: bakerMonitorInfo.lastProcessed,
             updatedAt: new Date().toISOString(),
           };
         });
       },
     });
 
-    t.nonNull.field("networkInfo", {
-      type: nonNull(NetworkInfo),
+    t.field("networkInfo", {
+      type: NetworkInfo,
 
       async resolve(_root, _args, ctx) {
-        const {
-          chain_id: chainId,
+        const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
+        if (!bakerMonitorInfo || !bakerMonitorInfo.lastProcessed) return null;
+        const { level, cycle } = bakerMonitorInfo.lastProcessed;
+        const { protocol } = await ctx.rpc.getBlockHeader({
+          block: `${level}`,
+        });
+        return {
           level,
-          proto,
           protocol,
-          timestamp,
-        } = await ctx.rpc.getBlockHeader();
-        return { chainId, level, proto, protocol, timestamp };
+          cycle,
+        };
       },
     });
   },

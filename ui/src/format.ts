@@ -48,7 +48,7 @@ export const ellipsifyMiddle = (
 
 export const numberFormat = new Intl.NumberFormat();
 
-export const formatMutezAsTez = (mutez: string) => {
+export const formatMutezAsTez = (mutez: string | undefined | null) => {
   if (!mutez) return '';
   const value = BigInt(mutez) / 1000000n;
   return `${numberFormat.format(value)} ꜩ`;

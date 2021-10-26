@@ -6,15 +6,19 @@ import {
   HStack,
   Spinner,
   VStack,
+  Divider,
 } from '@chakra-ui/react';
 import React from 'react';
 import { useGetBakersQuery } from './api';
 import BakerCard from './BakerCard';
+import BakersHeader from './BakersHeader';
 
 export default () => {
   const { data, error, loading } = useGetBakersQuery({ pollInterval: 5000 });
   return (
     <VStack alignItems="flex-start">
+      <BakersHeader />
+      <Divider marginBottom="10px" />
       {error && (
         <Alert status="error">
           <AlertIcon />

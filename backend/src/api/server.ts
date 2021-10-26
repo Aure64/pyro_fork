@@ -25,8 +25,6 @@ const rootValue = {
 
 type URL = string;
 
-const emptyInfoCollection = { info: async () => [] };
-
 export const start = (
   nodeMonitor: NodeInfoCollection | null,
   bakerMonitor: BakerInfoCollection | null,
@@ -40,8 +38,12 @@ export const start = (
       rootValue,
       graphiql: true,
       context: createContext(
-        nodeMonitor || emptyInfoCollection,
-        bakerMonitor || emptyInfoCollection,
+        nodeMonitor || { info: async () => [] },
+        bakerMonitor || {
+          info: async () => {
+            return { bakerInfo: [] };
+          },
+        },
         rpc
       ),
       customFormatErrorFn: (error) => {

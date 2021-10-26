@@ -49,7 +49,17 @@ export type BakerInfo = {
   recentEvents: BakerBlockEvent[];
 };
 
-export type BakerInfoCollection = { info: () => Promise<BakerInfo[]> };
+export type LastProcessed = {
+  cycle: number;
+  level: number;
+};
+
+export type BakerMonitorInfo = {
+  bakerInfo: BakerInfo[];
+  lastProcessed?: LastProcessed;
+};
+
+export type BakerInfoCollection = { info: () => Promise<BakerMonitorInfo> };
 
 export type BakerMonitor = service.Service & BakerInfoCollection;
 
@@ -199,7 +209,15 @@ export const create = async (
         recentEvents,
       });
     }
-    return bakerInfo;
+
+    const chainPosition = await getPosition();
+    const lastBlockLevel = chainPosition.blockLevel;
+    let lastBlockCycle = chainPosition.blockCycle;
+
+    return {
+      bakerInfo,
+      lastProcessed: { level: lastBlockLevel, cycle: lastBlockCycle },
+    };
   };
 
   return {

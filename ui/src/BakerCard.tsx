@@ -1,4 +1,12 @@
-import { Box, HStack, Icon, Text, Tooltip, VStack } from '@chakra-ui/react';
+import {
+  Link,
+  Box,
+  HStack,
+  Icon,
+  Text,
+  Tooltip,
+  VStack,
+} from '@chakra-ui/react';
 import React from 'react';
 import { FaSnowflake } from 'react-icons/fa';
 import { MdLens, MdOutlineAccountBalanceWallet } from 'react-icons/md';
@@ -38,22 +46,35 @@ export default ({
     stakingBalance,
     recentEvents,
     gracePeriod,
+    atRisk,
     updatedAt,
   },
 }: {
   baker: Baker;
 }) => {
+  const deactivationStatusText = deactivated
+    ? 'deactivated'
+    : atRisk
+    ? 'will be deactivated soon'
+    : 'active';
+  const deactivationStatusColor = deactivated
+    ? 'gray.500'
+    : atRisk
+    ? 'red.500'
+    : 'blue.500';
   return (
     <Card minHeight="248px">
       <HStack w="100%" justifyContent="space-between" alignItems="flex-start">
         <HStack maxW={250}>
-          <Tooltip label={deactivated ? 'deactivated' : 'active'}>
+          <Tooltip label={deactivationStatusText}>
             <Box>
-              <Icon as={MdLens} color={deactivated ? 'red.500' : 'blue.500'} />
+              <Icon as={MdLens} color={deactivationStatusColor} />
             </Box>
           </Tooltip>
           <Tooltip label={address}>
-            <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
+            <Link href={`https://tzstats.com/${address}`} isExternal>
+              <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
+            </Link>
           </Tooltip>
         </HStack>
         <VStack align="flex-end" spacing={0}>
@@ -107,9 +128,7 @@ export default ({
       </VStack>
       <Box>
         <HStack justifyContent="space-between">
-          <Tooltip label="Grace period">
-            <Box>Cycle {gracePeriod}</Box>
-          </Tooltip>
+          <Box>Grace period end: cycle {gracePeriod}</Box>
           <UpdatedAt updatedAt={updatedAt} />
         </HStack>
       </Box>

@@ -41,6 +41,16 @@ query getBakers
       }
     }
     gracePeriod
+    atRisk
     updatedAt
+  }
+}
+
+query getNetworkInfo {
+  networkInfo {
+    chainName,
+    protocol,
+    level,
+    cycle
   }
 }
