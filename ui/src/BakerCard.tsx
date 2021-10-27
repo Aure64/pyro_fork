@@ -107,7 +107,7 @@ export default ({
             >
               <code>
                 {levelEvents.cycle}{' '}
-                <Link href={levelEvents.explorerUrl || undefined}>
+                <Link href={levelEvents.explorerUrl || undefined} isExternal>
                   {levelEvents.level}
                 </Link>{' '}
                 {levelEvents.events.map((e) => (
