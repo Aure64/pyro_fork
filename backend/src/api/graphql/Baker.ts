@@ -1,4 +1,4 @@
-import { first, groupBy, orderBy, take, sortBy } from "lodash";
+import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType, list, intArg } from "nexus";
 
 export const BakerEvent = objectType({
