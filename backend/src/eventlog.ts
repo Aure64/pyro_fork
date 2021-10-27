@@ -69,7 +69,6 @@ export const open = async <T>(
     const keys = (await store.keys()).filter((k) => k !== SEQ_KEY);
     // const fileNames = await fs.promises.readdir(eventsDir);
     const toDelete = keys.filter((name) => parseInt(name) <= position);
-    console.log(`About to delete ${toDelete.length} keys`, toDelete);
     log.debug(`About to delete ${toDelete.length} keys`, toDelete);
     await Promise.all(toDelete.map(store.remove));
   };
