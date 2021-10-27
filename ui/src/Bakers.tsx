@@ -3,7 +3,6 @@ import {
   AlertDescription,
   AlertIcon,
   AlertTitle,
-  Divider,
   HStack,
   Spinner,
   VStack,
@@ -33,7 +32,6 @@ export default () => {
   return (
     <VStack alignItems="flex-start" w="100%">
       <BakersHeader bakerCount={totalCount} />
-      <Divider marginBottom="10px" />
       {error && (
         <Alert status="error">
           <AlertIcon />
