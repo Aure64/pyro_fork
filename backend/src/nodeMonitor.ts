@@ -59,6 +59,9 @@ export const create = (
   onEvent: (event: Event) => Promise<void>,
   { nodes, reference_node: referenceNode }: NodeMonitorConfig
 ): NodeMonitor => {
+  //dedup
+  nodes = [...new Set(nodes)];
+
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)
     : NoSub;
