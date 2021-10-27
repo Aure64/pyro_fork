@@ -75,6 +75,9 @@ export const create = async (
   }: BakerMonitorConfig,
   onEvent: (event: Event) => Promise<void>
 ): Promise<BakerMonitor> => {
+  //dedup
+  bakers = [...new Set(bakers)];
+
   const log = getLogger(name);
   const rpc = new RpcClient(rpcUrl);
 
