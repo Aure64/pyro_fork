@@ -1,24 +1,27 @@
-query getNodes
+query getNodes($offset: Int!, $limit: Int!)
 {
-  nodes {
-    url
-    recentBlocks {
-      protocol
-      hash
-      level
-      timestamp
-      priority
+  nodes (offset: $offset, limit: $limit) {
+    items {
+      url
+      recentBlocks {
+        protocol
+        hash
+        level
+        timestamp
+        priority
+      }
+      tezosVersion {
+        version,
+        commitHash
+        chainName
+      }
+      error
+      unableToReach
+      synced
+      updatedAt
+      peerCount
     }
-    tezosVersion {
-      version,
-      commitHash
-      chainName
-    }
-    error
-    unableToReach
-    synced
-    updatedAt
-    peerCount
+    totalCount
   }
 }
 

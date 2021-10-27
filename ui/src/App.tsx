@@ -16,7 +16,6 @@ function App({}: AppProps) {
   return (
     <VStack p="20px" alignItems="flex-start" w="100%">
       <Bakers />
-      <Heading>Nodes</Heading>
       <Nodes />
     </VStack>
   );

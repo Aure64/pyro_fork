@@ -38,6 +38,8 @@ export default ({
   const first = () => onChange(0);
   const last = () => onChange(pageSize * (pageCount - 1));
 
+  if (pageCount === 1) return null;
+
   return (
     <HStack w="100%" justifyContent="flex-end">
       <ButtonGroup

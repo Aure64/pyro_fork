@@ -1,7 +1,4 @@
-import { objectType } from "nexus";
-import { extendType } from "nexus";
-import { nonNull } from "nexus";
-
+import { extendType, list, nonNull, objectType, intArg } from "nexus";
 import { NodeCommunicationError } from "../../nodeMonitor";
 import { TezosVersion } from "../../rpc";
 
@@ -43,6 +40,14 @@ export const TezosNode = objectType({
   },
 });
 
+export const Nodes = objectType({
+  name: "Nodes",
+  definition(t) {
+    t.nonNull.field("items", { type: list(nonNull(TezosNode)) });
+    t.nonNull.int("totalCount");
+  },
+});
+
 const fmtVersion = (v: TezosVersion | undefined): string => {
   if (!v) return "";
   const { additional_info, major, minor } = v.version;
@@ -63,39 +68,48 @@ export const TezosNodeQuery = extendType({
   type: "Query",
 
   definition(t) {
-    t.nonNull.list.field("nodes", {
-      type: nonNull(TezosNode),
+    t.nonNull.field("nodes", {
+      type: Nodes,
 
-      async resolve(_root, _args, ctx) {
+      args: {
+        offset: nonNull(intArg()),
+        limit: nonNull(intArg()),
+      },
+
+      async resolve(_root, args, ctx) {
         const info = await ctx.nodeInfoCollection.info();
-        return info.map(
-          ({
-            url,
-            history: recentBlocks,
-            bootstrappedStatus,
-            peerCount,
-            tezosVersion,
-            error,
-            unableToReach,
-            updatedAt,
-          }) => {
-            return {
+        const nodes = info
+          .slice(args.offset, args.offset + args.limit)
+          .map(
+            ({
               url,
-              recentBlocks,
-              bootstrapped: bootstrappedStatus?.bootstrapped,
-              synced: bootstrappedStatus?.sync_state,
-              peerCount: peerCount,
-              error: fmtError(error),
+              history: recentBlocks,
+              bootstrappedStatus,
+              peerCount,
+              tezosVersion,
+              error,
               unableToReach,
-              tezosVersion: {
-                version: fmtVersion(tezosVersion),
-                commitHash: tezosVersion?.commit_info.commit_hash || "",
-                chainName: tezosVersion?.network_version.chain_name || "",
-              },
-              updatedAt: updatedAt.toISOString(),
-            };
-          }
-        );
+              updatedAt,
+            }) => {
+              return {
+                url,
+                recentBlocks,
+                bootstrapped: bootstrappedStatus?.bootstrapped,
+                synced: bootstrappedStatus?.sync_state,
+                peerCount: peerCount,
+                error: fmtError(error),
+                unableToReach,
+                tezosVersion: {
+                  version: fmtVersion(tezosVersion),
+                  commitHash: tezosVersion?.commit_info.commit_hash || "",
+                  chainName: tezosVersion?.network_version.chain_name || "",
+                },
+                updatedAt: updatedAt.toISOString(),
+              };
+            }
+          );
+
+        return { items: nodes, totalCount: info.length };
       },
     });
   },
