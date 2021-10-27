@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import { useGetNetworkInfoQuery } from './api';
-import { takeStart } from './format';
+import { takeStart, numberFormat } from './format';
 
 const InfoItem = ({
   text,
@@ -26,7 +26,7 @@ const InfoItem = ({
   </Tooltip>
 );
 
-export default () => {
+export default ({ bakerCount }: { bakerCount: number | null }) => {
   const { data, loading } = useGetNetworkInfoQuery({
     pollInterval: 5000,
   });
@@ -39,7 +39,12 @@ export default () => {
       alignItems="baseline"
       flexWrap="wrap"
     >
-      <Heading>Bakers</Heading> {loading && <Spinner size="sm" />}
+      <HStack w="100%" justifyContent="space-between">
+        <Heading>Bakers</Heading> {loading && <Spinner size="sm" />}
+        <Heading>
+          {typeof bakerCount === 'number' && numberFormat.format(bakerCount)}
+        </Heading>
+      </HStack>
       {networkInfo && (
         <HStack flexWrap="wrap">
           <InfoItem tooltip="Chain name" text={networkInfo.chainName} />

@@ -22,29 +22,32 @@ query getNodes
   }
 }
 
-query getBakers
+query getBakers($offset: Int!, $limit: Int!)
 {
-  bakers {
-    address
-    explorerUrl
-    balance
-    frozenBalance
-    stakingBalance
-    deactivated
-    recentEvents {
-      level
+  bakers (offset: $offset, limit: $limit) {
+    items {
+      address
       explorerUrl
-      cycle
-      timestamp
-      events {
-        kind
-        priority
-        slotCount
+      balance
+      frozenBalance
+      stakingBalance
+      deactivated
+      recentEvents {
+        level
+        explorerUrl
+        cycle
+        timestamp
+        events {
+          kind
+          priority
+          slotCount
+        }
       }
+      gracePeriod
+      atRisk
+      updatedAt
     }
-    gracePeriod
-    atRisk
-    updatedAt
+    totalCount
   }
 }
 

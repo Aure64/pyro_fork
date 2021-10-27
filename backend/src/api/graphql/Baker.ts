@@ -1,5 +1,5 @@
-import { first, groupBy, orderBy, take } from "lodash";
-import { extendType, nonNull, objectType } from "nexus";
+import { first, groupBy, orderBy, take, sortBy } from "lodash";
+import { extendType, nonNull, objectType, list, intArg } from "nexus";
 
 export const BakerEvent = objectType({
   name: "BakerEvent",
@@ -128,48 +128,66 @@ export const Baker = objectType({
   },
 });
 
+export const Bakers = objectType({
+  name: "Bakers",
+  definition(t) {
+    t.nonNull.field("items", { type: list(nonNull(Baker)) });
+    t.nonNull.int("totalCount");
+  },
+});
+
 export const BakerQuery = extendType({
   type: "Query",
 
   definition(t) {
-    t.nonNull.list.field("bakers", {
-      type: nonNull(Baker),
+    t.nonNull.field("bakers", {
+      type: Bakers,
 
-      async resolve(_root, _args, ctx) {
+      args: {
+        offset: nonNull(intArg()),
+        limit: nonNull(intArg()),
+      },
+
+      async resolve(_root, args, ctx) {
         const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
 
-        return bakerMonitorInfo.bakerInfo.map((bakerInfo) => {
-          const recentEvents = Object.entries(
-            groupBy(bakerInfo.recentEvents, "level")
-          ).map(([levelStr, events]) => {
-            const firstEvent = first(events)!;
-            return {
-              level: parseInt(levelStr),
-              explorerUrl: ctx.explorerUrl
-                ? `${ctx.explorerUrl}/${levelStr}`
-                : null,
-              cycle: firstEvent.cycle,
-              timestamp: firstEvent.timestamp.toISOString(),
-              events: events.map((e) => {
+        const bakers = bakerMonitorInfo.bakerInfo
+          .slice(args.offset, args.offset + args.limit)
+          .map((bakerInfo) => {
+            const grouped = groupBy(bakerInfo.recentEvents, "level");
+            const recentEvents = Object.entries(grouped).map(
+              ([levelStr, events]) => {
+                const firstEvent = first(events)!;
                 return {
-                  kind: e.kind,
-                  priority: "priority" in e ? e.priority : null,
-                  slotCount: "slotCount" in e ? e.slotCount : null,
+                  level: parseInt(levelStr),
+                  explorerUrl: ctx.explorerUrl
+                    ? `${ctx.explorerUrl}/${levelStr}`
+                    : null,
+                  cycle: firstEvent.cycle,
+                  timestamp: firstEvent.timestamp.toISOString(),
+                  events: events.map((e) => {
+                    return {
+                      kind: e.kind,
+                      priority: "priority" in e ? e.priority : null,
+                      slotCount: "slotCount" in e ? e.slotCount : null,
+                    };
+                  }),
                 };
-              }),
+              }
+            );
+
+            return {
+              address: bakerInfo.address,
+              explorerUrl: ctx.explorerUrl
+                ? `${ctx.explorerUrl}/${bakerInfo.address}`
+                : null,
+              recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
+              lastProcessed: bakerMonitorInfo.lastProcessed,
+              updatedAt: new Date().toISOString(),
             };
           });
 
-          return {
-            address: bakerInfo.address,
-            explorerUrl: ctx.explorerUrl
-              ? `${ctx.explorerUrl}/${bakerInfo.address}`
-              : null,
-            recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
-            lastProcessed: bakerMonitorInfo.lastProcessed,
-            updatedAt: new Date().toISOString(),
-          };
-        });
+        return { items: bakers, totalCount: bakerMonitorInfo.bakerInfo.length };
       },
     });
 
