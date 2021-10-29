@@ -57,6 +57,7 @@ export type LastProcessed = {
 export type BakerMonitorInfo = {
   bakerInfo: BakerInfo[];
   lastProcessed?: LastProcessed;
+  headDistance: number;
 };
 
 export type BakerInfoCollection = { info: () => Promise<BakerMonitorInfo> };
@@ -220,6 +221,7 @@ export const create = async (
     return {
       bakerInfo,
       lastProcessed: { level: lastBlockLevel, cycle: lastBlockCycle },
+      headDistance,
     };
   };
 

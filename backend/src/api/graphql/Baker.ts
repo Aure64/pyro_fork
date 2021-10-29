@@ -76,6 +76,7 @@ export const Baker = objectType({
     t.nonNull.string("address");
     t.string("explorerUrl");
     t.field("lastProcessed", { type: LastProcessed });
+    t.nonNull.int("headDistance");
     t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
     t.field("balance", {
       type: "String",
@@ -83,7 +84,7 @@ export const Baker = objectType({
         if (!parent.lastProcessed) return null;
         return ctx.rpc.getBalance(
           parent.address,
-          `${parent.lastProcessed.level}`
+          `head~${parent.headDistance}`
         );
       },
     });
@@ -93,7 +94,7 @@ export const Baker = objectType({
         if (!parent.lastProcessed) return null;
         return ctx.rpc.getFrozenBalance(
           parent.address,
-          `${parent.lastProcessed.level}`
+          `head~${parent.headDistance}`
         );
       },
     });
@@ -104,7 +105,7 @@ export const Baker = objectType({
         if (!parent.lastProcessed) return null;
         return ctx.rpc.getStakingBalance(
           parent.address,
-          `${parent.lastProcessed.level}`
+          `head~${parent.headDistance}`
         );
       },
     });
@@ -213,6 +214,7 @@ export const BakerQuery = extendType({
                 : null,
               recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
               lastProcessed: bakerMonitorInfo.lastProcessed,
+              headDistance: bakerMonitorInfo.headDistance,
               updatedAt: new Date().toISOString(),
             };
           });
