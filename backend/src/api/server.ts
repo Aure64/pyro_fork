@@ -42,7 +42,7 @@ export const start = (
 ) => {
   app.use(
     "/gql",
-    graphqlHTTP(async () => ({
+    graphqlHTTP({
       schema,
       rootValue,
       graphiql: true,
@@ -65,7 +65,7 @@ export const start = (
         console.error(params);
         return params;
       },
-    }))
+    })
   );
 
   return app.listen(port, host, () => {
