@@ -14,20 +14,30 @@ import { numberFormat } from './format';
 import NodeCard from './NodeCard';
 import Pagination from './Pagination';
 
-export default () => {
-  const pageSize = 6;
-  const [offset, setOffset] = React.useState(0);
+const STORAGE_KEY_OFFSET = 'nodes.offset';
+const STORAGE_KEY_PAGE_SIZE = 'nodes.pageSize';
 
-  const { data, error, loading, refetch } = useGetNodesQuery({
+const getInt = (key: string, defaultValue: string) => {
+  return parseInt(localStorage.getItem(key) || defaultValue);
+};
+
+export default () => {
+  const initialOffset = getInt(STORAGE_KEY_OFFSET, '0');
+  const initialPageSize = getInt(STORAGE_KEY_PAGE_SIZE, '6');
+  const pageSize = initialPageSize;
+
+  const [offset, setOffset] = React.useState(initialOffset);
+
+  const { data, error, loading } = useGetNodesQuery({
     pollInterval: 5000,
-    variables: { offset: 0, limit: pageSize },
+    variables: { offset, limit: pageSize },
   });
 
   const totalCount = data?.nodes.totalCount || 0;
 
   const setAndRefetch = (newOffset: number) => {
     setOffset(newOffset);
-    refetch({ offset: newOffset });
+    localStorage.setItem(STORAGE_KEY_OFFSET, newOffset.toString());
   };
 
   return (
