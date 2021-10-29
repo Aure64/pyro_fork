@@ -161,7 +161,13 @@ export const Bakers = objectType({
   name: "Bakers",
   definition(t) {
     t.nonNull.field("items", { type: list(nonNull(Baker)) });
-    t.nonNull.int("totalCount");
+    t.nonNull.field("totalCount", {
+      type: "Int",
+      async resolve(_root, _args, ctx) {
+        const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
+        return bakerMonitorInfo.bakerInfo.length;
+      },
+    });
   },
 });
 
@@ -220,7 +226,7 @@ export const BakerQuery = extendType({
             };
           });
 
-        return { items: bakers, totalCount: bakerMonitorInfo.bakerInfo.length };
+        return { items: bakers };
       },
     });
 

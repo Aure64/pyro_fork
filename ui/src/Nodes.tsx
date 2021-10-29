@@ -24,9 +24,9 @@ const getInt = (key: string, defaultValue: string) => {
 export default () => {
   const initialOffset = getInt(STORAGE_KEY_OFFSET, '0');
   const initialPageSize = getInt(STORAGE_KEY_PAGE_SIZE, '6');
-  const pageSize = initialPageSize;
 
   const [offset, setOffset] = React.useState(initialOffset);
+  const [pageSize, setPageSize] = React.useState(initialPageSize);
 
   const { data, error, loading } = useGetNodesQuery({
     pollInterval: 5000,
@@ -38,6 +38,11 @@ export default () => {
   const setAndRefetch = (newOffset: number) => {
     setOffset(newOffset);
     localStorage.setItem(STORAGE_KEY_OFFSET, newOffset.toString());
+  };
+
+  const setAndSavePageSize = (newSize: number) => {
+    setPageSize(newSize);
+    localStorage.setItem(STORAGE_KEY_PAGE_SIZE, newSize.toString());
   };
 
   return (
@@ -63,6 +68,7 @@ export default () => {
         totalCount={totalCount}
         loading={loading}
         onChange={setAndRefetch}
+        onPageSizeChange={setAndSavePageSize}
       />
 
       <HStack shouldWrapChildren wrap="wrap" spacing="0">

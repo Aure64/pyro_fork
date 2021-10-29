@@ -44,7 +44,13 @@ export const Nodes = objectType({
   name: "Nodes",
   definition(t) {
     t.nonNull.field("items", { type: list(nonNull(TezosNode)) });
-    t.nonNull.int("totalCount");
+    t.nonNull.field("totalCount", {
+      type: "Int",
+      async resolve(_root, _args, ctx) {
+        const info = await ctx.nodeInfoCollection.info();
+        return info.length;
+      },
+    });
   },
 });
 
@@ -77,6 +83,7 @@ export const TezosNodeQuery = extendType({
       },
 
       async resolve(_root, args, ctx) {
+        1;
         const info = await ctx.nodeInfoCollection.info();
         const nodes = info
           .slice(args.offset, args.offset + args.limit)
@@ -109,7 +116,7 @@ export const TezosNodeQuery = extendType({
             }
           );
 
-        return { items: nodes, totalCount: info.length };
+        return { items: nodes };
       },
     });
   },
