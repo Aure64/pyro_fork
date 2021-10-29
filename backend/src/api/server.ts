@@ -50,7 +50,7 @@ export const start = (
         nodeMonitor || { info: async () => [] },
         bakerMonitor || {
           info: async () => {
-            return { bakerInfo: [] };
+            return { bakerInfo: [], headDistance: 0 };
           },
         },
         rpc,
