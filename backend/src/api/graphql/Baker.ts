@@ -136,6 +136,8 @@ export const Bakers = objectType({
   },
 });
 
+let cycleProtocol = { cycle: -1, protocol: "" };
+
 export const BakerQuery = extendType({
   type: "Query",
 
@@ -198,9 +200,17 @@ export const BakerQuery = extendType({
         const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
         if (!bakerMonitorInfo || !bakerMonitorInfo.lastProcessed) return null;
         const { level, cycle } = bakerMonitorInfo.lastProcessed;
-        const { protocol } = await ctx.rpc.getBlockHeader({
-          block: `${level}`,
-        });
+        let protocol;
+        if (cycleProtocol.cycle === cycle) {
+          protocol = cycleProtocol.protocol;
+        } else {
+          protocol = (
+            await ctx.rpc.getBlockHeader({
+              block: `${level}`,
+            })
+          ).protocol;
+          cycleProtocol = { cycle, protocol };
+        }
         return {
           level,
           protocol,
