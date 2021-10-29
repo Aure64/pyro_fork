@@ -1,76 +1,63 @@
-import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
-  HStack,
-  Spinner,
-  VStack,
-} from '@chakra-ui/react';
+import { HStack, Text, Tooltip } from '@chakra-ui/react';
 import React from 'react';
-import { useGetBakersQuery } from './api';
+import { useGetBakersQuery, useGetNetworkInfoQuery } from './api';
 import BakerCard from './BakerCard';
-import BakersHeader from './BakersHeader';
-import Pagination from './Pagination';
+import { takeStart } from './format';
+import PaginatedSection from './PaginatedSection';
 
-const STORAGE_KEY_OFFSET = 'bakers.offset';
-const STORAGE_KEY_PAGE_SIZE = 'bakers.pageSize';
-
-const getInt = (key: string, defaultValue: string) => {
-  return parseInt(localStorage.getItem(key) || defaultValue);
-};
+const InfoItem = ({
+  text,
+  tooltip,
+  fontSize = 'small',
+}: {
+  text: string | number | undefined | null;
+  tooltip: string | undefined;
+  fontSize?: string;
+}) => (
+  <Tooltip label={tooltip}>
+    <Text fontSize={fontSize} fontFamily="mono">
+      {text}
+    </Text>
+  </Tooltip>
+);
 
 export default () => {
-  const initialOffset = getInt(STORAGE_KEY_OFFSET, '0');
-  const initialPageSize = getInt(STORAGE_KEY_PAGE_SIZE, '6');
-
-  const [offset, setOffset] = React.useState(initialOffset);
-  const [pageSize, setPageSize] = React.useState(initialPageSize);
-
-  const { data, error, loading } = useGetBakersQuery({
+  const { data } = useGetNetworkInfoQuery({
     pollInterval: 5000,
-    variables: { offset, limit: pageSize },
   });
 
-  const totalCount = data?.bakers.totalCount || 0;
-
-  const setAndRefetch = (newOffset: number) => {
-    setOffset(newOffset);
-    localStorage.setItem(STORAGE_KEY_OFFSET, newOffset.toString());
-  };
-
-  const setAndSavePageSize = (newSize: number) => {
-    setAndRefetch(0);
-    setPageSize(newSize);
-    localStorage.setItem(STORAGE_KEY_PAGE_SIZE, newSize.toString());
-  };
+  const networkInfo = data?.networkInfo;
 
   return (
-    <VStack alignItems="flex-start" w="100%">
-      <BakersHeader bakerCount={totalCount} />
-      {error && (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle mr={2}>Error</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
-        </Alert>
-      )}
-
-      <Pagination
-        offset={offset}
-        pageSize={pageSize}
-        totalCount={totalCount}
-        loading={loading}
-        onChange={setAndRefetch}
-        onPageSizeChange={setAndSavePageSize}
-      />
-
-      <HStack shouldWrapChildren wrap="wrap" spacing="0">
-        {loading && <Spinner />}
-        {data?.bakers.items.map((baker) => (
-          <BakerCard key={baker.address} baker={baker} />
-        ))}
-      </HStack>
-    </VStack>
+    <PaginatedSection
+      title="Bakers"
+      storageNs="bakers"
+      query={useGetBakersQuery}
+      renderItems={(data) => {
+        return (
+          (data &&
+            'bakers' in data &&
+            data.bakers.items.map((baker) => (
+              <BakerCard key={baker.address} baker={baker} />
+            ))) ||
+          []
+        );
+      }}
+      renderSubHeader={() => {
+        return (
+          (networkInfo && (
+            <HStack flexWrap="wrap">
+              <InfoItem tooltip="Chain name" text={networkInfo.chainName} />
+              <InfoItem
+                tooltip="Current protocol"
+                text={takeStart(networkInfo.protocol, 12)}
+              />
+              <InfoItem tooltip="Cycle" text={networkInfo.cycle} />
+              <InfoItem tooltip="Level" text={networkInfo.level} />
+            </HStack>
+          )) || <></>
+        );
+      }}
+    />
   );
 };

@@ -1,14 +1,8 @@
-import {
-  VStack,
-  Heading,
-  HStack,
-  Spinner,
-  Text,
-  Tooltip,
-} from '@chakra-ui/react';
-import React from 'react';
+import { HStack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import React, { MouseEventHandler } from 'react';
 import { useGetNetworkInfoQuery } from './api';
-import { takeStart, numberFormat } from './format';
+import { takeStart } from './format';
+import SectionHeader from './SectionHeader';
 
 const InfoItem = ({
   text,
@@ -26,11 +20,19 @@ const InfoItem = ({
   </Tooltip>
 );
 
-export default ({ bakerCount }: { bakerCount: number | null }) => {
+export default ({
+  bakerCount,
+  onSettingsClick,
+}: {
+  bakerCount: number | null;
+  onSettingsClick: MouseEventHandler;
+}) => {
   const { data, loading } = useGetNetworkInfoQuery({
     pollInterval: 5000,
   });
+
   const networkInfo = data?.networkInfo;
+
   return (
     <VStack
       spacing={0}
@@ -39,12 +41,12 @@ export default ({ bakerCount }: { bakerCount: number | null }) => {
       alignItems="baseline"
       flexWrap="wrap"
     >
-      <HStack w="100%" justifyContent="space-between">
-        <Heading>Bakers</Heading> {loading && <Spinner size="sm" />}
-        <Heading>
-          {typeof bakerCount === 'number' && numberFormat.format(bakerCount)}
-        </Heading>
-      </HStack>
+      <SectionHeader
+        text="Bakers"
+        loading={loading}
+        count={bakerCount}
+        onSettingsClick={onSettingsClick}
+      />
       {networkInfo && (
         <HStack flexWrap="wrap">
           <InfoItem tooltip="Chain name" text={networkInfo.chainName} />
