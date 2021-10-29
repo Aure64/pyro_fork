@@ -120,7 +120,7 @@ export default ({
                     )}{' '}
                     {typeof e.slotCount === 'number' && (
                       <Tooltip label={`Number of slots: ${e.slotCount}`}>
-                        <Text as="span">{e.slotCount}</Text>
+                        <Text as="span">{e.slotCount} </Text>
                       </Tooltip>
                     )}
                   </Box>
