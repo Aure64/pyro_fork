@@ -1,7 +1,8 @@
-import { debug, warn } from "loglevel";
+import { getLogger } from "loglevel";
 import { HttpResponseError } from "@taquito/http-utils";
 import { delay } from "./delay";
 import fetch from "cross-fetch";
+import LRU from "lru-cache";
 
 import { makeMemoizedAsyncFunction } from "./memoization";
 
@@ -33,7 +34,9 @@ export const retry404: RpcRetry = async (apiCall) => {
         throw err;
       }
       if (err instanceof HttpResponseError && err.status === 404) {
-        debug(`Got ${err.status} from ${err.url}, retrying [${attempts}]`);
+        getLogger("rpc").debug(
+          `Got ${err.status} from ${err.url}, retrying [${attempts}]`
+        );
         await delay(1000);
       } else {
         throw err;
@@ -60,7 +63,10 @@ export const tryForever: TryForever = async (call, interval, label = "") => {
     try {
       return await call();
     } catch (err) {
-      warn(`${label} failed, will retry in ${interval} ms`, err);
+      getLogger("rpc").warn(
+        `${label} failed, will retry in ${interval} ms`,
+        err
+      );
       await delay(interval);
     }
   }
@@ -168,6 +174,7 @@ const delegatesUrl = (rpcUrl: string, pkh: TzAddress, block: string) => {
 
 export const client = (nodeRpcUrl: URL): RpcClient => {
   const rpc = new TaquitoRpcClient(nodeRpcUrl);
+  const log = getLogger("rpc");
 
   rpc.getBlockHeader = makeMemoizedAsyncFunction(
     rpc.getBlockHeader.bind(rpc),
@@ -176,9 +183,59 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
     10
   );
 
+  const delegateCache = new LRU<string, any>({
+    max: 5 * 25,
+    maxAge: 60e3,
+  });
+  const fetchDelegateField = async (
+    pkh: TzAddress,
+    block: string,
+    field: string
+  ) => {
+    const cacheKey = `${block}:${pkh}:${field}`;
+    let value = delegateCache.get(cacheKey);
+    if (value === undefined) {
+      //when status UI page loads/refreshes, GraphQL results in a lot
+      //of requests going out at the same time, up to number of bakers
+      //on page times 5 delegate fields if server just started and
+      //cache is empty... need to spread out these requests a bit,
+      //otherwise some nodes are not able to handle it
+      const d = 200 * Math.random();
+      log.debug("Random delay", d);
+      await delay(d);
+      const dt = Date.now();
+      value = await rpcFetch(
+        `${delegatesUrl(nodeRpcUrl, pkh, block)}/${field}`
+      );
+      log.debug(`got value for ${cacheKey} in ${Date.now() - dt}`);
+      //cache requests using block id relative to head for a few
+      //minutes, with different ttls so avoid request bursts when they
+      //all expire at the same time this means displayed balances may
+      //be slightly stale
+      delegateCache.set(cacheKey, value, 60e3 * (1 + 3 * Math.random()));
+    } else {
+      log.debug(
+        `CACHE HIT: '${value}' under ${cacheKey} (${delegateCache.itemCount} items cached)`
+      );
+    }
+    return value;
+  };
+
+  const tezosVersionCache = new LRU<string, TezosVersion>({ maxAge: 5 * 60e3 });
+
+  const fetchTezosVersion = async () => {
+    let tezosVersion = tezosVersionCache.get("value");
+    if (!tezosVersion) {
+      tezosVersion = await getTezosVersion(nodeRpcUrl);
+      tezosVersionCache.set("value", tezosVersion);
+    }
+
+    return tezosVersion;
+  };
+
   return {
     url: nodeRpcUrl,
-    getTezosVersion: () => getTezosVersion(nodeRpcUrl),
+    getTezosVersion: fetchTezosVersion,
     getBootsrappedStatus: () => getBootstrappedStatus(nodeRpcUrl),
     getNetworkConnections: () => getNetworkConnections(nodeRpcUrl),
 
@@ -195,25 +252,23 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
     },
 
     getBalance: (pkh: TzAddress, block = "head") => {
-      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/balance`);
+      return fetchDelegateField(pkh, block, "balance");
     },
 
     getFrozenBalance: (pkh: TzAddress, block = "head") => {
-      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/frozen_balance`);
+      return fetchDelegateField(pkh, block, "frozen_balance");
     },
 
     getStakingBalance: (pkh: TzAddress, block = "head") => {
-      return rpcFetch(
-        `${delegatesUrl(nodeRpcUrl, pkh, block)}/staking_balance`
-      );
+      return fetchDelegateField(pkh, block, "staking_balance");
     },
 
     getGracePeriod: (pkh: TzAddress, block = "head") => {
-      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/grace_period`);
+      return fetchDelegateField(pkh, block, "grace_period");
     },
 
     getDeactivated: (pkh: TzAddress, block = "head") => {
-      return rpcFetch(`${delegatesUrl(nodeRpcUrl, pkh, block)}/deactivated`);
+      return fetchDelegateField(pkh, block, "deactivated");
     },
   };
 };
