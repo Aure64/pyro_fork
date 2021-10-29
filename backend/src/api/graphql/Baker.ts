@@ -1,6 +1,9 @@
 import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType, list, intArg } from "nexus";
 
+import LRU from "lru-cache";
+import { RpcClient } from "../../rpc";
+
 export const BakerEvent = objectType({
   name: "BakerEvent",
 
@@ -49,6 +52,23 @@ export const LastProcessed = objectType({
   },
 });
 
+const bakerCache = new LRU<string, any>({ max: 100 });
+
+const getGracePeriod = async (
+  rpc: RpcClient,
+  cycle: number,
+  level: number,
+  address: string
+): Promise<number> => {
+  const cacheKey = `${cycle}:${address}:gracePeriod`;
+  let value = bakerCache.get(cacheKey);
+  if (!value) {
+    value = await rpc.getGracePeriod(address, `${level}`);
+    bakerCache.set(cacheKey, value);
+  }
+  return value;
+};
+
 export const Baker = objectType({
   name: "Baker",
 
@@ -93,10 +113,9 @@ export const Baker = objectType({
       type: "Int",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getGracePeriod(
-          parent.address,
-          `${parent.lastProcessed.level}`
-        );
+        const { cycle, level } = parent.lastProcessed;
+        const { address } = parent;
+        return await getGracePeriod(ctx.rpc, cycle, level, address);
       },
     });
 
@@ -105,11 +124,15 @@ export const Baker = objectType({
 
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        const gracePeriod = await ctx.rpc.getGracePeriod(
-          parent.address,
-          `${parent.lastProcessed.level}`
+        const { cycle, level } = parent.lastProcessed;
+        const { address } = parent;
+        const gracePeriod = await getGracePeriod(
+          ctx.rpc,
+          cycle,
+          level,
+          address
         );
-        return gracePeriod - parent.lastProcessed.cycle <= 1;
+        return gracePeriod - cycle <= 1;
       },
     });
 
@@ -117,10 +140,15 @@ export const Baker = objectType({
       type: "Boolean",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getDeactivated(
-          parent.address,
-          `${parent.lastProcessed.level}`
-        );
+        const { cycle, level } = parent.lastProcessed;
+        const { address } = parent;
+        const cacheKey = `${cycle}:${address}:deactivated`;
+        let value = bakerCache.get(cacheKey);
+        if (!value) {
+          value = ctx.rpc.getDeactivated(parent.address, `${level}`);
+          bakerCache.set(cacheKey, value);
+        }
+        return value;
       },
     });
 
