@@ -188,6 +188,7 @@ export const BakerQuery = extendType({
             const grouped = groupBy(bakerInfo.recentEvents, "level");
             const recentEvents = Object.entries(grouped).map(
               ([levelStr, events]) => {
+                events = orderBy(events, "kind", "desc");
                 const firstEvent = first(events)!;
                 return {
                   level: parseInt(levelStr),
