@@ -37,6 +37,12 @@ export default ({
     setValue(value);
   };
 
+  const onKeyUp = (e: React.KeyboardEvent) => {
+    if (e.code === 'Enter' && isValid()) {
+      handleSave();
+    }
+  };
+
   const isValid = () => {
     const valueAsNumber = parseInt(value);
     return (
@@ -59,7 +65,12 @@ export default ({
         <ModalBody pb={6}>
           <FormControl>
             <FormLabel>Number of items per page (12 max)</FormLabel>
-            <Input ref={initialRef} value={value} onChange={onChange} />
+            <Input
+              ref={initialRef}
+              value={value}
+              onChange={onChange}
+              onKeyUp={onKeyUp}
+            />
           </FormControl>
         </ModalBody>
 
