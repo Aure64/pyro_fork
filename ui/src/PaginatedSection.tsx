@@ -115,7 +115,6 @@ export default ({
           totalCount={totalCount}
           loading={loading}
           onChange={setAndSaveOffset}
-          onPageSizeChange={setAndSavePageSize}
         />
       )}
 

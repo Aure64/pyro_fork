@@ -2,26 +2,25 @@ import {
   Button,
   ButtonGroup,
   HStack,
+  Input,
+  InputGroup,
+  InputRightElement,
   Popover,
   PopoverArrow,
-  PopoverCloseButton,
   PopoverContent,
   PopoverTrigger,
   Text,
   useDisclosure,
-  FormControl,
-  FormLabel,
-  Input,
-  Stack,
-  InputProps,
+  IconButton,
 } from '@chakra-ui/react';
-import React, { MouseEventHandler, useState } from 'react';
+import React, { useState } from 'react';
 //import FocusLock from 'react-focus-lock';
 import {
   MdOutlineChevronLeft,
   MdOutlineChevronRight,
   MdOutlineSkipNext,
   MdOutlineSkipPrevious,
+  MdOutlineShortcut,
 } from 'react-icons/md';
 
 const ICON_SIZE = 24;
@@ -31,30 +30,16 @@ const IconLast = () => <MdOutlineSkipNext size={ICON_SIZE} />;
 const IconNext = () => <MdOutlineChevronRight size={ICON_SIZE} />;
 const IconPrev = () => <MdOutlineChevronLeft size={ICON_SIZE} />;
 
-// 1. Create a text input component
-const TextInput = React.forwardRef<
-  HTMLInputElement,
-  { label: string } & InputProps
->((props, ref) => {
-  return (
-    <FormControl>
-      <FormLabel htmlFor={props.id}>{props.label}</FormLabel>
-      <Input ref={ref} {...props} />
-    </FormControl>
-  );
-});
-
-// 2. Create the form
 const Form = ({
   firstFieldRef,
-  onCancel,
   onOk,
   initialValue,
+  maxValue,
 }: {
   firstFieldRef: React.Ref<HTMLInputElement>;
-  onCancel: MouseEventHandler;
   onOk: (value: number) => void;
   initialValue: string;
+  maxValue: number;
 }) => {
   const [value, setValue] = useState<string>(initialValue);
 
@@ -68,7 +53,7 @@ const Form = ({
     return (
       typeof valueAsNumber === 'number' &&
       valueAsNumber > 0 &&
-      valueAsNumber <= 12
+      valueAsNumber <= maxValue
     );
   };
 
@@ -76,24 +61,34 @@ const Form = ({
     onOk(parseInt(value));
   };
 
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if (e.code === 'Enter' && isValid()) {
+      handleOk();
+    }
+  };
+
   return (
-    <Stack spacing={4}>
-      <TextInput
-        label="Items per page (max 12)"
-        id="first-name"
-        ref={firstFieldRef}
-        value={value}
-        onChange={onChange}
-      />
-      <ButtonGroup d="flex" justifyContent="flex-end">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button isDisabled={!isValid()} colorScheme="teal" onClick={handleOk}>
-          Ok
-        </Button>
-      </ButtonGroup>
-    </Stack>
+    <HStack spacing={4}>
+      <InputGroup size="sm">
+        <Input
+          ref={firstFieldRef}
+          value={value}
+          onChange={onChange}
+          size="sm"
+          onKeyUp={handleKeyUp}
+        />
+        <InputRightElement>
+          <IconButton
+            aria-label="Go to page"
+            isDisabled={!isValid()}
+            onClick={handleOk}
+            size="sm"
+            icon={<MdOutlineShortcut />}
+            variant="link"
+          />
+        </InputRightElement>
+      </InputGroup>
+    </HStack>
   );
 };
 
@@ -103,14 +98,12 @@ export default ({
   totalCount,
   loading,
   onChange,
-  onPageSizeChange,
 }: {
   offset: number;
   pageSize: number;
   totalCount: number;
   loading: boolean;
   onChange: (newOffset: number) => void;
-  onPageSizeChange: (newSize: number) => void;
 }) => {
   const pageCount = Math.ceil(totalCount / pageSize);
   const currentPage = Math.ceil(offset / pageSize) + 1;
@@ -128,8 +121,8 @@ export default ({
   const { onOpen, onClose, isOpen } = useDisclosure();
   const firstFieldRef = React.useRef(null);
 
-  const handlePageSizeChange = (newSize: number) => {
-    onPageSizeChange(newSize);
+  const goToPage = (page: number) => {
+    onChange(pageSize * (page - 1));
     onClose();
   };
 
@@ -158,8 +151,10 @@ export default ({
           initialFocusRef={firstFieldRef}
           onOpen={onOpen}
           onClose={onClose}
-          placement="right"
-          closeOnBlur={false}
+          placement="auto"
+          closeOnBlur={true}
+          matchWidth={false}
+          gutter={2}
         >
           <PopoverTrigger>
             <Button disabled={loading}>
@@ -168,14 +163,13 @@ export default ({
               </Text>
             </Button>
           </PopoverTrigger>
-          <PopoverContent p={5}>
+          <PopoverContent p={2} w="6rem">
             <PopoverArrow />
-            <PopoverCloseButton />
             <Form
               firstFieldRef={firstFieldRef}
-              onCancel={onClose}
-              initialValue={pageSize.toString()}
-              onOk={handlePageSizeChange}
+              initialValue={currentPage.toString()}
+              maxValue={pageCount}
+              onOk={goToPage}
             />
           </PopoverContent>
         </Popover>
