@@ -5,19 +5,13 @@ import {
   AlertTitle,
   HStack,
   Spinner,
-  VStack,
   useDisclosure,
+  VStack,
 } from '@chakra-ui/react';
 import React, { ReactElement } from 'react';
-import type {
-  useGetBakersQuery,
-  useGetNodesQuery,
-  GetBakersQuery,
-  GetNodesQuery,
-} from './api';
-import SectionHeader from './SectionHeader';
-import Pagination from './Pagination';
 import PageSizeDialog from './PageSizeDialog';
+import Pagination from './Pagination';
+import SectionHeader from './SectionHeader';
 
 const getInt = (key: string, defaultValue: string) => {
   return parseInt(localStorage.getItem(key) || defaultValue);
@@ -27,15 +21,15 @@ export default ({
   title,
   storageNs,
   query,
-  renderItems,
   renderSubHeader,
+  getCount,
+  render,
 }: {
   title: string;
   storageNs: string;
-  query: typeof useGetBakersQuery | typeof useGetNodesQuery;
-  renderItems: (
-    data: GetNodesQuery | GetBakersQuery | undefined,
-  ) => ReactElement[];
+  query: any;
+  getCount: (data: any) => number;
+  render: (data: any) => JSX.Element[];
   renderSubHeader?: () => ReactElement;
 }) => {
   const storageKeyOffset = `${storageNs}.offset`;
@@ -59,9 +53,10 @@ export default ({
   });
 
   let totalCount = 0;
+  let renderedItems = null;
   if (data) {
-    if ('bakers' in data) totalCount = data.bakers.totalCount;
-    if ('nodes' in data) totalCount = data.nodes.totalCount;
+    totalCount = getCount(data);
+    renderedItems = render(data);
   }
 
   const setAndSaveOffset = (newOffset: number) => {
@@ -120,7 +115,7 @@ export default ({
 
       <HStack shouldWrapChildren wrap="wrap" spacing="0">
         {loading && <Spinner />}
-        {renderItems(data)}
+        {renderedItems}
       </HStack>
     </VStack>
   );

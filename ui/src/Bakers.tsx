@@ -1,6 +1,10 @@
 import { HStack, Text, Tooltip } from '@chakra-ui/react';
 import React from 'react';
-import { useGetBakersQuery, useGetNetworkInfoQuery } from './api';
+import {
+  useGetBakersQuery,
+  useGetNetworkInfoQuery,
+  GetBakersQuery,
+} from './api';
 import BakerCard from './BakerCard';
 import { takeStart } from './format';
 import PaginatedSection from './PaginatedSection';
@@ -33,16 +37,10 @@ export default () => {
       title="Bakers"
       storageNs="bakers"
       query={useGetBakersQuery}
-      renderItems={(data) => {
-        return (
-          (data &&
-            'bakers' in data &&
-            data.bakers.items.map((baker) => (
-              <BakerCard key={baker.address} baker={baker} />
-            ))) ||
-          []
-        );
-      }}
+      getCount={(data: GetBakersQuery) => data.bakers.totalCount}
+      render={({ bakers: { items } }: GetBakersQuery) =>
+        items.map((baker) => <BakerCard key={baker.address} baker={baker} />)
+      }
       renderSubHeader={() => {
         return (
           (networkInfo && (
