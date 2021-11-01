@@ -163,15 +163,17 @@ export default ({
               </Text>
             </Button>
           </PopoverTrigger>
-          <PopoverContent p={2} w="6rem">
-            <PopoverArrow />
-            <Form
-              firstFieldRef={firstFieldRef}
-              initialValue={currentPage.toString()}
-              maxValue={pageCount}
-              onOk={goToPage}
-            />
-          </PopoverContent>
+          {isOpen && (
+            <PopoverContent p={2} w="6rem">
+              <PopoverArrow />
+              <Form
+                firstFieldRef={firstFieldRef}
+                initialValue={currentPage.toString()}
+                maxValue={pageCount}
+                onOk={goToPage}
+              />
+            </PopoverContent>
+          )}
         </Popover>
 
         <Button
