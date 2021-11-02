@@ -27,7 +27,7 @@ const InfoItem = ({
 
 export default () => {
   const { data } = useGetNetworkInfoQuery({
-    pollInterval: 5000,
+    pollInterval: 15e3,
   });
 
   const networkInfo = data?.networkInfo;

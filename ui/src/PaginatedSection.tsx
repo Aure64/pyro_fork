@@ -48,7 +48,7 @@ export default ({
   const [pageSize, setPageSize] = React.useState(initialPageSize);
 
   const { data, error, loading } = query({
-    pollInterval: 5000,
+    pollInterval: 15e3,
     variables: { offset, limit: pageSize },
   });
 
