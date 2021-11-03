@@ -113,9 +113,16 @@ const run = async (config: Config.Config) => {
     process.exit(1);
   }
 
+  const uiConfig = config.ui;
+
   const bakerMonitor =
     bakers.length > 0
-      ? await BakerMonitor.create(storageDir, bakerMonitorConfig, onEvent)
+      ? await BakerMonitor.create(
+          storageDir,
+          bakerMonitorConfig,
+          uiConfig.enabled,
+          onEvent
+        )
       : null;
 
   const { reference_node: referenceNode } = nodeMonitorConfig;
@@ -132,8 +139,6 @@ const run = async (config: Config.Config) => {
   console.log("nodeMonitor", nodeMonitor);
 
   const gc = EventLog.gc(eventLog, channels);
-
-  const uiConfig = config.ui;
 
   const apiServer = uiConfig.enabled
     ? startAPIServer(

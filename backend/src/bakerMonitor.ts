@@ -74,6 +74,7 @@ export const create = async (
     max_catchup_blocks: catchupLimit,
     head_distance: headDistance,
   }: BakerMonitorConfig,
+  enableHistory: boolean,
   onEvent: (event: Event) => Promise<void>
 ): Promise<BakerMonitor> => {
   //dedup
@@ -179,7 +180,7 @@ export const create = async (
         );
         for (const event of events) {
           await onEvent(event);
-          if ("level" in event) {
+          if ("level" in event && enableHistory) {
             await addToHistory(event);
           }
         }
