@@ -74,6 +74,6 @@ export const start = (
 
   return app.listen(port, host, () => {
     const logger = getLogger("api");
-    logger.log(`Server started on ${host}:${port}`);
+    logger.info(`Server started on ${host}:${port}`);
   });
 };
