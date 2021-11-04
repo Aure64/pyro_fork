@@ -29,7 +29,7 @@ export default {
 
         return proxy.web(req, res, {
           hostname: 'localhost',
-          port: 4000,
+          port: 2020,
         });
       },
     },
