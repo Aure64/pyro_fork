@@ -46,7 +46,7 @@ type ChainPositionInfo = { blockLevel: number; blockCycle: number };
 
 export type BakerInfo = {
   address: string;
-  recentEvents: BakerBlockEvent[];
+  recentEvents: () => Promise<BakerBlockEvent[]>;
 };
 
 export type LastProcessed = {
@@ -202,26 +202,35 @@ export const create = async (
 
   const srv = service.create(name, task, interval);
 
-  const info = async () => {
-    const bakerInfo = [];
-    for (const [baker, bakerEventLog] of Object.entries(bakerEventLogs)) {
-      const recentEvents: BakerBlockEvent[] = [];
-      for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
-        recentEvents.push(record.value);
-      }
-      bakerInfo.push({
-        address: baker,
-        recentEvents,
-      });
+  const bakerInfo: BakerInfo[] = [];
+  for (const [baker, bakerEventLog] of Object.entries(bakerEventLogs)) {
+    const recentEvents: BakerBlockEvent[] = [];
+    for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
+      recentEvents.push(record.value);
     }
+    bakerInfo.push({
+      address: baker,
+      recentEvents: async () => {
+        const recentEvents: BakerBlockEvent[] = [];
+        for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
+          recentEvents.push(record.value);
+        }
+        return recentEvents;
+      },
+    });
+  }
 
+  const info = async () => {
     const chainPosition = await getPosition();
     const lastBlockLevel = chainPosition.blockLevel;
     const lastBlockCycle = chainPosition.blockCycle;
 
     return {
       bakerInfo,
-      lastProcessed: { level: lastBlockLevel, cycle: lastBlockCycle },
+      lastProcessed:
+        lastBlockLevel > 0
+          ? { level: lastBlockLevel, cycle: lastBlockCycle }
+          : undefined,
       headDistance,
     };
   };

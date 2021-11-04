@@ -190,8 +190,8 @@ export const BakerQuery = extendType({
 
         const bakers = bakerMonitorInfo.bakerInfo
           .slice(args.offset, args.offset + args.limit)
-          .map((bakerInfo) => {
-            const grouped = groupBy(bakerInfo.recentEvents, "level");
+          .map(async (bakerInfo) => {
+            const grouped = groupBy(await bakerInfo.recentEvents(), "level");
             const recentEvents = Object.entries(grouped).map(
               ([levelStr, events]) => {
                 events = orderBy(events, "kind", "desc");
