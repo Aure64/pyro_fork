@@ -11,6 +11,7 @@ RUN yarn build
 
 FROM node:16-alpine as ui-builder
 WORKDIR /usr/src/app
+COPY --from=backend-build /usr/src/app/src/schema.graphql /usr/src/backend/src/schema.graphql
 COPY ui/package.json ui/yarn.lock ./
 #install runtime dependencies and populate yarn cache
 RUN yarn install --frozen-lockfile --production=true
