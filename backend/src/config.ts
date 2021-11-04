@@ -546,7 +546,7 @@ const UI_PORT: UserPref = {
 };
 
 const UI_HOST: UserPref = {
-  key: `${UI_GROUP.key}:port`,
+  key: `${UI_GROUP.key}:host`,
   default: "localhost",
   description: "Web server host",
   alias: undefined,
