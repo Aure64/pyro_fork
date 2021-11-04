@@ -68,7 +68,7 @@ export default ({
     updatedAt,
   },
 }: {
-  baker: Baker;
+  baker: Omit<Baker, 'headDistance'>;
 }) => {
   const healthy = !deactivated && isHealthy(recentEvents);
 
