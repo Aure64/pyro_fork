@@ -556,6 +556,18 @@ const UI_HOST: UserPref = {
   validationRule: "string",
 };
 
+const UI_WEBROOT: UserPref = {
+  key: `${UI_GROUP.key}:webroot`,
+  default: "/opt/pyrometer/ui/",
+  description:
+    "Directory where UI web application code and resources are located",
+  alias: undefined,
+  type: "string",
+  group: UI_GROUP.label,
+  isArray: false,
+  validationRule: "string",
+};
+
 const UI_EXPLORER_URL: UserPref = {
   key: `${UI_GROUP.key}:explorer_url`,
   default: "https://tzstats.com",
@@ -610,6 +622,7 @@ const userPrefs = [
   UI_ENABLED,
   UI_HOST,
   UI_PORT,
+  UI_WEBROOT,
   UI_EXPLORER_URL,
 ];
 

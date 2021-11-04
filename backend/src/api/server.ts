@@ -32,14 +32,18 @@ export type UIConfig = {
   host: string;
   port: number;
   explorer_url?: string;
+  webroot?: string;
 };
 
 export const start = (
   nodeMonitor: NodeInfoCollection | null,
   bakerMonitor: BakerInfoCollection | null,
   rpc: URL,
-  { host, port, explorer_url }: UIConfig
+  { host, port, explorer_url, webroot }: UIConfig
 ) => {
+  if (webroot) {
+    app.use(express.static(webroot));
+  }
   app.use(
     "/gql",
     graphqlHTTP({
