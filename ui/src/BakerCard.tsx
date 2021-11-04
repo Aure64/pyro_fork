@@ -9,8 +9,13 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import { FaSnowflake } from 'react-icons/fa';
-import { MdLens, MdOutlineAccountBalanceWallet } from 'react-icons/md';
-import type { Baker } from './api';
+import {
+  MdCloud,
+  MdCloudOff,
+  MdOutlineCloud,
+  MdOutlineAccountBalanceWallet,
+} from 'react-icons/md';
+import type { Baker, BakerEvent, LevelEvents } from './api';
 import Card from './Card';
 import { ellipsifyMiddle, formatMutezAsTez } from './format';
 import RelativeTimeRow from './RelativeTimeRow';
@@ -37,6 +42,18 @@ const eventLabels: { [key: string]: string } = {
 
 const defaultEmoji = '👽'; //should never show up
 
+const isHealthyEvent = (e: BakerEvent) => {
+  return e.kind === 'endorsed' || e.kind === 'baked';
+};
+
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+const isHealthy = (recentEvents: LevelEvents[]) =>
+  recentEvents.length === 0 ||
+  recentEvents.map((e) => e.events.some(isHealthyEvent)).some(identity);
+
 export default ({
   baker: {
     address,
@@ -53,23 +70,40 @@ export default ({
 }: {
   baker: Baker;
 }) => {
+  const healthy = !deactivated && isHealthy(recentEvents);
+
   const deactivationStatusText = deactivated
     ? 'deactivated'
     : atRisk
     ? 'will be deactivated soon'
-    : 'active';
+    : healthy
+    ? 'active'
+    : 'active, but not healthy';
+
   const deactivationStatusColor = deactivated
     ? 'gray.500'
     : atRisk
     ? 'red.500'
-    : 'blue.500';
+    : healthy
+    ? 'blue.500'
+    : 'orange.500';
+
+  const deactivationStatusIcon = deactivated
+    ? MdCloudOff
+    : atRisk
+    ? MdOutlineCloud
+    : MdCloud;
+
   return (
     <Card minHeight="248px">
       <HStack w="100%" justifyContent="space-between" alignItems="flex-start">
         <HStack maxW={250}>
           <Tooltip label={deactivationStatusText}>
             <Box>
-              <Icon as={MdLens} color={deactivationStatusColor} />
+              <Icon
+                as={deactivationStatusIcon}
+                color={deactivationStatusColor}
+              />
             </Box>
           </Tooltip>
           <Tooltip label={address}>
