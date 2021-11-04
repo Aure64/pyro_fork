@@ -2,3 +2,5 @@ backend/dist
 backend/node_modules
 backend/**/*.test.ts
 backend/tmp/**
+ui/dist
+ui/node_modules
