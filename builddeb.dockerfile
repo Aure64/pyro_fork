@@ -14,6 +14,7 @@ COPY --from=pyrometer $APPDIR/node_modules node_modules
 COPY --from=pyrometer /usr/bin/pyrometer .
 COPY --from=pyrometer $APPDIR/dist dist
 COPY --from=pyrometer $APPDIR/package.json .
+COPY --from=pyrometer $APPDIR/ui ui
 
 RUN mkdir -p debian
 WORKDIR $BUILDDIR/debian
