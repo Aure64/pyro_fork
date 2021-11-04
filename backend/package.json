@@ -9,6 +9,7 @@
   "scripts": {
     "version": "echo $npm_package_version",
     "name": "echo $npm_package_name",
+    "prebuild": "yarn generate:gql",
     "build": "yarn -s clean && tsc",
     "clean": "rm -rf dist",
     "predev": "if command -v git; then git config core.hooksPath githooks; fi",
@@ -21,6 +22,7 @@
     "prettier:lint": "prettier --check 'src/**/*.ts'",
     "test": "jest",
     "tsc:lint": "tsc --noEmit -p .",
+    "generate:gql": "ts-node-dev --transpile-only src/api/schema.ts",
     "prepublishOnly": "yarn build"
   },
   "devDependencies": {

@@ -2,6 +2,7 @@
   "license": "MIT",
   "scripts": {
     "start": "snowpack dev",
+    "prebuild": "yarn generate:gql",
     "build": "snowpack build",
     "test": "web-test-runner \"src/**/*.test.tsx\"",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
