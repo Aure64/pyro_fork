@@ -1,2 +1,2 @@
-package.json dist node_modules opt/pyrometer/
+package.json dist node_modules ui opt/pyrometer/
 pyrometer usr/bin
