@@ -1,8 +1,15 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse } from "@taquito/rpc";
+import { readJson } from "./fs-utils";
 
-import { client, RpcClient, BootstrappedStatus, TezosVersion } from "./rpc";
+import {
+  client,
+  RpcClient,
+  BootstrappedStatus,
+  TezosVersion,
+  rpcFetch,
+} from "./rpc";
 
 import * as service from "./service";
 import now from "./now";
@@ -12,6 +19,8 @@ type URL = string;
 export type NodeMonitorConfig = {
   nodes: URL[];
   reference_node?: URL;
+  teztnets?: boolean;
+  teztnets_config: string;
 };
 
 export type NodeCommunicationError = {
@@ -55,12 +64,44 @@ const NoSub: Sub = {
   nodeInfo: () => undefined,
 };
 
-export const create = (
+export const create = async (
   onEvent: (event: Event) => Promise<void>,
-  { nodes, reference_node: referenceNode }: NodeMonitorConfig
-): NodeMonitor => {
+  {
+    nodes,
+    reference_node: referenceNode,
+    teztnets,
+    teztnets_config: teztnetsConfig,
+  }: NodeMonitorConfig
+): Promise<NodeMonitor> => {
+  const teztnetsNodes: string[] = [];
+  if (teztnets) {
+    try {
+      const read =
+        teztnetsConfig.startsWith("https:") ||
+        teztnetsConfig.startsWith("http:")
+          ? rpcFetch
+          : readJson;
+      const testNets = await read(teztnetsConfig);
+      for (const [networkName, data] of Object.entries<any>(testNets)) {
+        if ("rpc_url" in data) {
+          teztnetsNodes.push(data.rpc_url);
+        } else {
+          getLogger("nm").warn(
+            `Network ${networkName} has no rpc URL, skipping`,
+            data
+          );
+        }
+      }
+    } catch (err) {
+      getLogger("nm").error(
+        `Unable to get teztnets config from ${teztnetsConfig}`,
+        err
+      );
+    }
+  }
+
   //dedup
-  nodes = [...new Set(nodes)];
+  nodes = [...new Set([...nodes, ...teztnetsNodes])];
 
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)

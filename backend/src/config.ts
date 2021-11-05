@@ -159,6 +159,31 @@ const REFERENCE_NODE: UserPref = {
   validationRule: "link",
 };
 
+const WITH_TEZTNETS: UserPref = {
+  key: `${NODE_MONITOR_GROUP.key}:teztnets`,
+  default: false,
+  description: "Enable monitoring of nodes listed at https://teztnets.xyz/",
+  alias: ["-T", "--teztnets"],
+  type: "boolean",
+  group: NODE_MONITOR_GROUP.label,
+  isArray: false,
+  validationRule: "boolean",
+};
+
+const TEZTNETS_CONFIG: UserPref = {
+  key: `${NODE_MONITOR_GROUP.key}:teztnets_config`,
+  default: "https://teztnets.xyz/teztnets.json",
+  description: "URL or local file path to teztnets config file",
+  alias: undefined,
+  type: "string",
+  group: NODE_MONITOR_GROUP.label,
+  isArray: false,
+  validationRule: [
+    "string",
+    { required_if: [`${NODE_MONITOR_GROUP.key}.teztnets`, true] },
+  ],
+};
+
 const EXCLUDED_EVENTS: UserPref = {
   key: "exclude",
   default: [Events.Baked, Events.Endorsed],
@@ -590,6 +615,8 @@ const userPrefs = [
   NODES,
   RPC,
   REFERENCE_NODE,
+  WITH_TEZTNETS,
+  TEZTNETS_CONFIG,
   EXCLUDED_EVENTS,
   SLACK_ENABLED,
   SLACK_URL,

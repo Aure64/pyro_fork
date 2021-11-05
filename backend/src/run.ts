@@ -101,6 +101,11 @@ const run = async (config: Config.Config) => {
   };
 
   const nodeMonitorConfig = config.nodeMonitor;
+  const { reference_node: referenceNode, teztnets } = nodeMonitorConfig;
+
+  if (!referenceNode) {
+    warn("Reference node is not set, node-on-a-branch detection is off");
+  }
 
   const bakerMonitorConfig = config.bakerMonitor;
   const { bakers } = bakerMonitorConfig;
@@ -108,7 +113,7 @@ const run = async (config: Config.Config) => {
   //always monitor rpc node
   const nodes = [bakerMonitorConfig.rpc, ...nodeMonitorConfig.nodes];
 
-  if (bakers.length === 0 && nodes.length === 0) {
+  if (bakers.length === 0 && nodes.length === 0 && !teztnets) {
     console.error("You must specify nodes or bakers to watch.");
     process.exit(1);
   }
@@ -125,15 +130,9 @@ const run = async (config: Config.Config) => {
         )
       : null;
 
-  const { reference_node: referenceNode } = nodeMonitorConfig;
-
-  if (!referenceNode) {
-    warn("Reference node is not set, node-on-a-branch detection is off");
-  }
-
   const nodeMonitor =
     nodes.length > 0
-      ? NodeMonitor.create(onEvent, { ...nodeMonitorConfig, nodes })
+      ? await NodeMonitor.create(onEvent, { ...nodeMonitorConfig, nodes })
       : null;
 
   console.log("nodeMonitor", nodeMonitor);
