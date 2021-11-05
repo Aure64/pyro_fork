@@ -7,12 +7,15 @@ const priorityColors: { [key: number]: string } = {
   '2': 'orange.400',
 };
 
-const color = (priority: number) => priorityColors[priority] || 'red.500';
+const color = (priority: number | null) =>
+  typeof priority === 'number'
+    ? priorityColors[priority] || 'red.500'
+    : 'gray.500';
 
-export default ({ priority }: { priority: number }) => (
+export default ({ priority }: { priority: number | null }) => (
   <Tooltip label={`Priority: ${priority}`}>
     <Text color={color(priority)} as="span">
-      {priority}
+      {typeof priority === 'number' ? priority : '-'}
     </Text>
   </Tooltip>
 );
