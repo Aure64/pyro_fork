@@ -3,18 +3,9 @@ import React from 'react';
 import { ellipsifyMiddle } from './format';
 import Priority from './Priority';
 import RelativeTimeRow from './RelativeTimeRow';
+import type { BlockInfo } from './api';
 
-export default ({
-  recentBlocks,
-}: {
-  recentBlocks: Array<{
-    protocol: string;
-    hash: string;
-    level: number;
-    timestamp: string;
-    priority: number;
-  }>;
-}) => (
+export default ({ recentBlocks }: { recentBlocks: Array<BlockInfo> }) => (
   <>
     {recentBlocks.slice(0, 3).map((block, index) => {
       return (
