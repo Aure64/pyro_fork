@@ -3,6 +3,8 @@
   "version": "0.1.3",
   "license": "MIT",
   "scripts": {
+    "version": "echo $npm_package_version",
+    "name": "echo $npm_package_name",
     "start": "snowpack dev",
     "prebuild": "yarn generate:gql",
     "build": "snowpack build",
