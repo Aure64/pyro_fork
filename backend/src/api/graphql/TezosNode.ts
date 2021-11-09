@@ -85,7 +85,6 @@ export const TezosNodeQuery = extendType({
       },
 
       async resolve(_root, args, ctx) {
-        1;
         const info = await ctx.nodeInfoCollection.info();
         const nodes = info
           .slice(args.offset, args.offset + args.limit)
