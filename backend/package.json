@@ -22,7 +22,7 @@
     "prettier:lint": "prettier --check 'src/**/*.ts'",
     "test": "jest",
     "tsc:lint": "tsc --noEmit -p .",
-    "generate:gql": "ts-node-dev --transpile-only src/api/schema.ts",
+    "generate:gql": "NODE_ENV=development ts-node --transpile-only src/api/schema.ts",
     "prepublishOnly": "yarn build"
   },
   "devDependencies": {
