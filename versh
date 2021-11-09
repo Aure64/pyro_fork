@@ -123,6 +123,13 @@ main() {
         exit 1
     fi
 
+    if [ $CMD = "clean" ]
+    then
+        echo "Clean: removing $WORK_DIR"
+        rm -rf $WORK_DIR
+        exit 0
+    fi
+
     if [ -z "$VERSION" ]
     then
         echo "Version is not specified"
