@@ -6,3 +6,9 @@ echo "project root: $PROJECT_ROOT_DIR"
      yarn generate:gql && \
      yarn lint && \
      yarn test)
+
+(cd $PROJECT_ROOT_DIR/ui && \
+     yarn && \
+     yarn generate:gql && \
+     yarn lint && \
+     yarn build)
