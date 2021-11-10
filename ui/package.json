@@ -1,4 +1,5 @@
 {
+  "license": "MIT",
   "scripts": {
     "start": "snowpack dev",
     "prebuild": "yarn generate:gql",
