@@ -583,9 +583,9 @@ const UI_HOST: UserPref = {
 
 const UI_WEBROOT: UserPref = {
   key: `${UI_GROUP.key}:webroot`,
-  default: "/opt/pyrometer/ui/",
+  default: undefined,
   description:
-    "Directory where UI web application code and resources are located",
+    "Directory where UI web application code and resources are located, automatically detected by default.",
   alias: undefined,
   type: "string",
   group: UI_GROUP.label,

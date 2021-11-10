@@ -1,3 +1,5 @@
+import { join } from "path";
+
 import express from "express";
 import { graphqlHTTP } from "express-graphql";
 import { schema } from "./schema";
@@ -39,11 +41,12 @@ export const start = (
   nodeMonitor: NodeInfoCollection | null,
   bakerMonitor: BakerInfoCollection | null,
   rpc: URL,
-  { host, port, explorer_url, webroot }: UIConfig
+  { host, port, explorer_url, webroot: configuredWebroot }: UIConfig
 ) => {
-  if (webroot) {
-    app.use(express.static(webroot));
-  }
+  const webroot = configuredWebroot || join(__dirname, "../../ui");
+  getLogger("api").info(`Serving web UI assets from ${webroot}`);
+  app.use(express.static(webroot));
+
   app.use(
     "/gql",
     graphqlHTTP({

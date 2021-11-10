@@ -42,8 +42,6 @@ create() {
          && $ROOT_DIR/githooks/pre-push \
          && cd ./backend \
          && npm version $VERSION \
-         && cd ./ui \
-         && npm version $VERSION \
          && git commit -m "set version to $VERSION" ./package.json \
          && git tag -a $VERSION -m "version $VERSION"
     )
@@ -98,8 +96,6 @@ publish-npm() {
     (: \
          && checkout-version \
          && cd $WORK_DIR_REPO/backend \
-         && npm publish --tag=dev \
-         && cd $WORK_DIR_REPO/ui \
          && npm publish --tag=dev)
 }
 
@@ -116,10 +112,6 @@ release() {
     docker push $DOCKER_IMAGE_LATEST
     NPM_NAME=$(cd $ROOT_DIR/backend && npm run --silent name)
     (cd $ROOT_DIR/backend \
-         && npm dist-tag add $NPM_NAME@$VERSION latest \
-         && npm dist-tag remove $NPM_NAME@$VERSION dev)
-    NPM_NAME=$(cd $ROOT_DIR/ui && npm run --silent name)
-    (cd $ROOT_DIR/ui \
          && npm dist-tag add $NPM_NAME@$VERSION latest \
          && npm dist-tag remove $NPM_NAME@$VERSION dev)}
 
