@@ -100,8 +100,12 @@ export const create = async (
     }
   }
 
+  const nodeSet = new Set([...nodes, ...teztnetsNodes]);
+  if (referenceNode) {
+    nodeSet.delete(referenceNode);
+  }
   //dedup
-  nodes = [...new Set([...nodes, ...teztnetsNodes])];
+  nodes = [...nodeSet];
 
   const referenceSubscription = referenceNode
     ? subscribeToNode(referenceNode, onEvent, () => undefined)
