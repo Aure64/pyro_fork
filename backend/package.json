@@ -23,7 +23,7 @@
     "test": "jest",
     "tsc:lint": "tsc --noEmit -p .",
     "generate:gql": "NODE_ENV=development ts-node --transpile-only src/api/schema.ts",
-    "prepublishOnly": "yarn build && cp -a ../ui/build ./ui"
+    "prepublishOnly": "yarn build && cp -a ../ui/build/. ./ui"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
@@ -78,5 +78,11 @@
     "proper-lockfile": "^4.1.2",
     "validatorjs": "3.22.1",
     "yargs": "^17.2.1"
-  }
+  },
+  "files": [
+    "ui",
+    "dist",
+    "!dist/testFixtures",
+    "!dist/*.test.js"
+  ]
 }
