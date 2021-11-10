@@ -15,10 +15,20 @@ import { BakerInfoCollection } from "bakerMonitor";
 
 export const app = express();
 
-const logFormat = "dev";
-// const logFormat = "combined";
+const logFormat = process.env.NODE_ENV === "development" ? "dev" : "combined";
 
-app.use(morgan(logFormat));
+app.use(
+  morgan(
+    logFormat,
+    process.env.NODE_ENV === "development"
+      ? undefined
+      : {
+          skip: function (_req, res) {
+            return res.statusCode < 400;
+          },
+        }
+  )
+);
 app.use(cors());
 
 const rootValue = {
