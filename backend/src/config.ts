@@ -163,7 +163,7 @@ const WITH_TEZTNETS: UserPref = {
   key: `${NODE_MONITOR_GROUP.key}:teztnets`,
   default: false,
   description: "Enable monitoring of nodes listed at https://teztnets.xyz/",
-  alias: ["-T", "--teztnets"],
+  alias: ["T", "teztnets"],
   type: "boolean",
   group: NODE_MONITOR_GROUP.label,
   isArray: false,
