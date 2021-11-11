@@ -77,12 +77,14 @@ export default ({
 
   return (
     <VStack alignItems="flex-start" w="100%">
-      <SectionHeader
-        text={title}
-        loading={loading}
-        count={totalCount}
-        onSettingsClick={settingsOpen}
-      />
+      {totalCount > 0 && (
+        <SectionHeader
+          text={title}
+          loading={loading}
+          count={totalCount}
+          onSettingsClick={settingsOpen}
+        />
+      )}
       {renderSubHeader && renderSubHeader()}
       {error && (
         <Alert status="error">
