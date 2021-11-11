@@ -10,5 +10,4 @@ echo "project root: $PROJECT_ROOT_DIR"
 (cd $PROJECT_ROOT_DIR/ui && \
      yarn && \
      yarn generate:gql && \
-     yarn lint && \
-     yarn build)
+     yarn lint)

@@ -39,7 +39,7 @@ create() {
     (: \ && mk-work-copy \
          && cd $WORK_DIR_REPO \
          && git checkout $BRANCH \
-         && $ROOT_DIR/githooks/pre-push \
+         && githooks/pre-push \
          && cd ./backend \
          && npm version $VERSION \
          && git commit -m "set version to $VERSION" ./package.json \
