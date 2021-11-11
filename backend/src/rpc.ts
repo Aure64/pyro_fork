@@ -168,6 +168,10 @@ const fetchBlockHeaders = async (
   return history;
 };
 
+interface WithPayloadRound {
+  payload_round: number;
+}
+
 const delegatesUrl = (rpcUrl: string, pkh: TzAddress, block: string) => {
   return `${rpcUrl}/chains/main/blocks/${block}/context/delegates/${pkh}`;
 };
@@ -176,8 +180,18 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
   const rpc = new TaquitoRpcClient(nodeRpcUrl);
   const log = getLogger("rpc");
 
+  const origGetBlockReader = rpc.getBlockHeader.bind(rpc);
   rpc.getBlockHeader = makeMemoizedAsyncFunction(
-    rpc.getBlockHeader.bind(rpc),
+    (async (options?: RPCOptions): Promise<BlockHeaderResponse> => {
+      const b = await origGetBlockReader(options);
+      return (b.priority === null || b.priority === undefined) &&
+        "payload_round" in b
+        ? {
+            ...b,
+            priority: (b as unknown as WithPayloadRound).payload_round,
+          }
+        : b;
+    }).bind(rpc),
     ({ block }: { block: string }) =>
       block.toLowerCase().startsWith("head") ? null : block,
     10
