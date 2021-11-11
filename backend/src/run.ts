@@ -110,8 +110,11 @@ const run = async (config: Config.Config) => {
   const bakerMonitorConfig = config.bakerMonitor;
   const { bakers } = bakerMonitorConfig;
 
-  //always monitor rpc node
-  const nodes = [bakerMonitorConfig.rpc, ...nodeMonitorConfig.nodes];
+  //if there are bakers to monitor also monitor rpc node
+  const nodes =
+    bakers.length === 0
+      ? nodeMonitorConfig.nodes
+      : [bakerMonitorConfig.rpc, ...nodeMonitorConfig.nodes];
 
   if (bakers.length === 0 && nodes.length === 0 && !teztnets) {
     console.error("You must specify nodes or bakers to watch.");
@@ -131,7 +134,7 @@ const run = async (config: Config.Config) => {
       : null;
 
   const nodeMonitor =
-    nodes.length > 0
+    nodes.length > 0 || teztnets
       ? await NodeMonitor.create(onEvent, { ...nodeMonitorConfig, nodes })
       : null;
 
