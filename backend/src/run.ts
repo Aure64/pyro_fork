@@ -138,8 +138,6 @@ const run = async (config: Config.Config) => {
       ? await NodeMonitor.create(onEvent, { ...nodeMonitorConfig, nodes })
       : null;
 
-  console.log("nodeMonitor", nodeMonitor);
-
   const gc = EventLog.gc(eventLog, channels);
 
   const apiServer = uiConfig.enabled
