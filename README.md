@@ -166,6 +166,37 @@ To build the Docker image from scratch, clone this repo and run:
 docker build -t tezos-kiln/Pyrometer .
 ```
 
+### Status UI
+
+Pyrometer provides node and baker status web user interface. To
+enable, add or edit `ui` section in the config file:
+
+```
+[ui]
+enabled = true
+# port = 2020
+# host = "0.0.0.0"
+# explorer_url = "https://hangzhou.tzstats.com"
+explorer_url = "https://tzstats.com"
+```
+
+By default status web page is served on port `2020` at `localhost`.
+
+If running with Docker, be sure to set host to `0.0.0.0` and [publish
+port](https://docs.docker.com/config/containers/container-networking/#published-ports)
+where web UI is served.
+
+### Teztnets
+
+Pyrometer provides a shortcut - `--teztnets` option - to enable
+monitoring for test network nodes described at
+<https://teztnets.xyz/>. For example, to run Pyrometer as a visual
+status monitor for testnet nodes using Docker:
+
+```
+docker run -p 2020:2020 pyrometer run --ui:enabled --ui:host 0.0.0.0 --teztnets
+```
+
 ### Notification Channels
 
 Run Pyrometer with `pyrometer run --help` to see the CLI and config
