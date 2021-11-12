@@ -190,7 +190,11 @@ export const create = async (
         await delay(1000);
       }
     } catch (err) {
-      log.warn("RPC Error", err);
+      if (err.name === "HttpRequestFailed") {
+        log.warn("RPC Error:", err.message);
+      } else {
+        log.warn("RPC Error:", err);
+      }
     }
   };
 

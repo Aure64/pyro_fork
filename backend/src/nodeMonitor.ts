@@ -273,7 +273,16 @@ const updateNodeInfo = async ({
     log.debug(`Checking block ${blockHash}`);
     history = await rpc.getBlockHistory(blockHash);
   } catch (err) {
-    log.warn(`Unable to get block history`, err);
+    const logMessage = blockHash
+      ? `Unable to get block history for ${blockHash}: `
+      : `Unable to get head block hash: `;
+    let logStruct;
+    if (err.name === "HttpRequestFailed") {
+      logStruct = err.message;
+    } else {
+      logStruct = err;
+    }
+    log.warn(logMessage, logStruct);
     unableToReach = true;
     error = err;
     history = [];
