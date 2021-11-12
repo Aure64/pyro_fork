@@ -17,7 +17,7 @@ fi
 
 BRANCH=${3-$CURRENT_BRANCH}
 ROOT_DIR=$(git rev-parse --show-toplevel)
-WORK_DIR=$ROOT_DIR/.versh
+WORK_DIR=$ROOT_DIR/__versh
 mkdir -p $WORK_DIR
 NAME=pyrometer
 WORK_DIR_REPO=$WORK_DIR/${NAME}-${VERSION}
