@@ -96,7 +96,7 @@ export const create = async (
     "get protocol constants"
   );
 
-  log.info("Protocol constants", constants);
+  log.info("Protocol constants", JSON.stringify(constants, null, 2));
 
   const CHAIN_POSITION_KEY = "position";
 
