@@ -42,12 +42,6 @@ journalctl -u pyrometer -f
 
 ## Run with Docker
 
-Log in to Gitlab Docker Registry:
-
-```
-docker login registry.gitlab.com/tezos-kiln/pyrometer -u <username> -p <token>
-```
-
 Lets define shell alias so that following example commands are concise
 and clear:
 
@@ -196,7 +190,7 @@ monitoring for test network nodes described at
 status monitor for testnet nodes using Docker:
 
 ```
-docker run -p 2020:2020 pyrometer run --ui:enabled --ui:host 0.0.0.0 --teztnets
+docker run -p 2020:2020 registry.gitlab.com/tezos-kiln/pyrometer run --ui:enabled --ui:host 0.0.0.0 --teztnets
 ```
 
 ### Notification Channels
