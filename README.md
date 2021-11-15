@@ -186,6 +186,8 @@ If running with Docker, be sure to set host to `0.0.0.0` and [publish
 port](https://docs.docker.com/config/containers/container-networking/#published-ports)
 where web UI is served.
 
+[![](doc/pyrometer-0.2.0-ui-thumb.jpg)](doc/pyrometer-0.2.0-ui.jpg)
+
 ### Teztnets
 
 Pyrometer provides a shortcut - `--teztnets` option - to enable
