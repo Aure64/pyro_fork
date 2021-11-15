@@ -7,10 +7,6 @@ Pyrometer is a tool for monitoring events on
 
 - [Monitoring](./doc/monitoring.md)
 
-## Child Projects
-
-- [backend](/backend/README.md): monitor and API server
-
 ## Run on Ubuntu/Debian
 
 - Install NodeJS 14 or later following instructions at
