@@ -22,7 +22,7 @@ backend_prettier:
   only:
     - merge_requests
   stage: test
-  dependencies: 
+  dependencies:
     - build
   script:
     - cd backend
@@ -32,17 +32,17 @@ backend_tsc:
   only:
     - merge_requests
   stage: test
-  dependencies: 
+  dependencies:
     - build
   script:
     - cd backend
-    - yarn tsc:lint
+    - yarn generate:gql && yarn tsc:lint
 
 backend_eslint:
   only:
     - merge_requests
   stage: test
-  dependencies: 
+  dependencies:
     - build
   script:
     - cd backend
@@ -52,7 +52,7 @@ backend_test:
   only:
     - merge_requests
   stage: test
-  dependencies: 
+  dependencies:
     - build
   script:
     - cd backend
