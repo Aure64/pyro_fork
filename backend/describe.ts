@@ -82,7 +82,7 @@ const main = async () => {
     }
     if (Object.prototype.toString.call(obj) === "[object Object]") {
       const result: any = {};
-      for (let [k, v] of Object.entries(obj)) {
+      for (const [k, v] of Object.entries(obj)) {
         if (Object.prototype.toString.call(v) === "[object Object]") {
           const ref = (v as any).$ref;
           if (ref && ref.startsWith(defPrefix)) {
