@@ -3,13 +3,12 @@ import { getLogger, Logger } from "loglevel";
 import { BlockHeaderResponse } from "@taquito/rpc";
 import { readJson } from "./fs-utils";
 
-import {
-  client,
-  RpcClient,
-  BootstrappedStatus,
-  TezosVersion,
-  rpcFetch,
-} from "./rpc";
+import BootstrappedStatus from "./rpc/types/BootstrappedStatus";
+import TezosVersion from "./rpc/types/TezosVersion";
+
+import client, { RpcClient } from "./rpc/client";
+
+import { get as rpcFetch } from "./rpc/util";
 
 import * as service from "./service";
 import now from "./now";

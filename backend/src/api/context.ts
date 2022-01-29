@@ -1,6 +1,6 @@
 import { NodeInfoCollection } from "../nodeMonitor";
 import { BakerInfoCollection } from "../bakerMonitor";
-import { client, RpcClient } from "../rpc";
+import client, { RpcClient } from "../rpc/client";
 
 export interface Context {
   nodeInfoCollection: NodeInfoCollection;

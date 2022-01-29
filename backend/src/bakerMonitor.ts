@@ -18,7 +18,7 @@ import {
   DelegatesResponse,
   BakingRightsResponseItem,
 } from "@taquito/rpc";
-import { retry404, tryForever } from "./rpc";
+import { retry404, tryForever } from "./rpc/util";
 
 import { delay } from "./delay";
 

@@ -1,135 +1,53 @@
 import { getLogger } from "loglevel";
-import { HttpResponseError } from "@taquito/http-utils";
-import { delay } from "./delay";
-import fetch from "cross-fetch";
+// import { HttpResponseError } from "@taquito/http-utils";
+import { delay } from "../delay";
+// import fetch from "cross-fetch";
 import LRU from "lru-cache";
 
-import { makeMemoizedAsyncFunction } from "./memoization";
+import { makeMemoizedAsyncFunction } from "../memoization";
 
 import { RpcClient as TaquitoRpcClient } from "@taquito/rpc";
 
 import type { BlockHeaderResponse } from "@taquito/rpc";
 
+import { get as rpcFetch } from "./util";
+import { retry404 } from "./util";
+
+import NetworkConnection from "./types/NetworkConnection";
+import TezosVersion from "./types/TezosVersion";
+import BootstrappedStatus from "./types/BootstrappedStatus";
+
+import { E_NETWORK_CONNECTIONS } from "./urls";
+import { E_TEZOS_VERSION } from "./urls";
+import { E_IS_BOOTSTRAPPED } from "./urls";
+import { delegatesUrl } from "./urls";
+
 interface RPCOptions {
   block: string;
 }
 
-/**
- * Wraps provided API function so that it is retried on 404.
- * These are common on server clusters where a node may slightly lag
- * behind another and not know about a block or delegate yet.
- */
-
-type RpcRetry = <T>(apiCall: () => Promise<T>) => Promise<T>;
-
-export const retry404: RpcRetry = async (apiCall) => {
-  let attempts = 0;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    attempts++;
-    try {
-      return await apiCall();
-    } catch (err) {
-      if (attempts > 2) {
-        throw err;
-      }
-      if (err instanceof HttpResponseError && err.status === 404) {
-        getLogger("rpc").debug(
-          `Got ${err.status} from ${err.url}, retrying [${attempts}]`
-        );
-        await delay(1000);
-      } else {
-        throw err;
-      }
-    }
-  }
-};
-
-type Millisecond = number;
+type TzAddress = string;
 
 type URL = string;
 
-type TzAddress = string;
-
-type TryForever = <T>(
-  call: () => Promise<T>,
-  interval: Millisecond,
-  label: string
-) => Promise<T>;
-
-export const tryForever: TryForever = async (call, interval, label = "") => {
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    try {
-      return await call();
-    } catch (err) {
-      getLogger("rpc").warn(
-        `${label} failed, will retry in ${interval} ms`,
-        err
-      );
-      await delay(interval);
-    }
-  }
-};
-
-export const rpcFetch = async (url: string) => {
-  const response = await fetch(url);
-  if (response.ok) {
-    return response.json();
-  }
-  throw new HttpResponseError(
-    `Http error response: (${response.status})`,
-    response.status,
-    response.statusText,
-    await response.text(),
-    url
-  );
-};
-
-export type NetworkConnection = {
-  incoming: boolean;
-  peer_id: string;
-  id_point: { addr: string; port: number };
-  remote_socket_port: number;
-  announced_version: {
-    chain_name: string;
-    distributed_db_version: number;
-    p2p_version: number;
-  };
-  private: boolean;
-  local_metadata: { disable_mempool: boolean; private_node: boolean };
-  remote_metadata: { disable_mempool: boolean; private_node: boolean };
-};
-
-export type TezosVersion = {
-  version: {
-    major: number;
-    minor: number;
-    additional_info: undefined | "release" | "dev" | { rc: number };
-  };
-  network_version: { chain_name: string };
-  commit_info: { commit_hash: string; commit_date: string };
-};
+interface WithPayloadRound {
+  payload_round: number;
+}
 
 export const getNetworkConnections = async (
   node: string
 ): Promise<NetworkConnection[]> => {
-  return await rpcFetch(`${node}/network/connections`);
+  return await rpcFetch(`${node}/${E_NETWORK_CONNECTIONS}`);
 };
 
 export const getTezosVersion = async (node: string): Promise<TezosVersion> => {
-  return await rpcFetch(`${node}/version`);
-};
-
-export type BootstrappedStatus = {
-  bootstrapped: boolean;
-  sync_state: "synced" | "unsynced" | "stuck";
+  return await rpcFetch(`${node}/${E_TEZOS_VERSION}`);
 };
 
 export const getBootstrappedStatus = async (
   node: string
 ): Promise<BootstrappedStatus> => {
-  return await rpcFetch(`${node}/chains/main/is_bootstrapped`);
+  return await rpcFetch(`${node}/${E_IS_BOOTSTRAPPED}`);
 };
 
 export type RpcClient = {
@@ -150,33 +68,7 @@ export type RpcClient = {
   getDeactivated: (pkh: TzAddress, block?: string) => Promise<boolean>;
 };
 
-const fetchBlockHeaders = async (
-  blockHash: string,
-  rpc: TaquitoRpcClient,
-  length: number
-): Promise<BlockHeaderResponse[]> => {
-  const history: BlockHeaderResponse[] = [];
-  let nextHash = blockHash;
-  // very primitive approach: we simply iterate up our chain to find the most recent blocks
-  while (history.length < length) {
-    const header = await retry404(() =>
-      rpc.getBlockHeader({ block: nextHash })
-    );
-    nextHash = header.predecessor;
-    history.push(header);
-  }
-  return history;
-};
-
-interface WithPayloadRound {
-  payload_round: number;
-}
-
-const delegatesUrl = (rpcUrl: string, pkh: TzAddress, block: string) => {
-  return `${rpcUrl}/chains/main/blocks/${block}/context/delegates/${pkh}`;
-};
-
-export const client = (nodeRpcUrl: URL): RpcClient => {
+export default (nodeRpcUrl: URL): RpcClient => {
   const rpc = new TaquitoRpcClient(nodeRpcUrl);
   const log = getLogger("rpc");
 
@@ -245,6 +137,24 @@ export const client = (nodeRpcUrl: URL): RpcClient => {
     }
 
     return tezosVersion;
+  };
+
+  const fetchBlockHeaders = async (
+    blockHash: string,
+    rpc: TaquitoRpcClient,
+    length: number
+  ): Promise<BlockHeaderResponse[]> => {
+    const history: BlockHeaderResponse[] = [];
+    let nextHash = blockHash;
+    // very primitive approach: we simply iterate up our chain to find the most recent blocks
+    while (history.length < length) {
+      const header = await retry404(() =>
+        rpc.getBlockHeader({ block: nextHash })
+      );
+      nextHash = header.predecessor;
+      history.push(header);
+    }
+    return history;
   };
 
   return {

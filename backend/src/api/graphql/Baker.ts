@@ -2,7 +2,7 @@ import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType, list, intArg } from "nexus";
 
 import LRU from "lru-cache";
-import { RpcClient } from "../../rpc";
+import { RpcClient } from "../../rpc/client";
 
 export const BakerEvent = objectType({
   name: "BakerEvent",
@@ -34,7 +34,7 @@ export const NetworkInfo = objectType({
       type: nonNull("String"),
       async resolve(_parent, _args, ctx) {
         const tzVersion = await ctx.rpc.getTezosVersion();
-        return tzVersion.network_version.chain_name;
+        return tzVersion.network_version.chain_name as string;
       },
     });
     t.nonNull.int("level");
