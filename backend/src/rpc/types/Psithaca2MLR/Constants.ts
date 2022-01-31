@@ -1,3 +1,45 @@
+const positive_bignum = {
+  title: "Positive big number",
+  description: "Decimal representation of a positive big number",
+  type: "string",
+} as const;
+
+const unistring = {
+  title: "Universal string representation",
+  description:
+    "Either a plain UTF8 string, or a sequence of bytes for strings that contain invalid byte sequences.",
+  oneOf: [
+    { type: "string" },
+    {
+      type: "object",
+      properties: {
+        invalid_utf8_string: {
+          type: "array",
+          items: { type: "integer", minimum: 0, maximum: 255 },
+        },
+      },
+      required: ["invalid_utf8_string"],
+      additionalProperties: false,
+    },
+  ],
+} as const;
+
+const bignum = {
+  title: "Big number",
+  description: "Decimal representation of a big number",
+  type: "string",
+} as const;
+
+const int64 = {
+  title: "64 bit integers",
+  description: "Decimal representation of 64 bit integers",
+  type: "string",
+} as const;
+
+const _012_Psithaca$mutez = positive_bignum;
+
+const Signature$Public_key = unistring;
+
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",
   type: "object",
@@ -26,7 +68,7 @@ const schema = {
       minimum: -1073741824,
       maximum: 1073741823,
     },
-    cache_layout: { type: "array", items: { $ref: "#/definitions/int64" } },
+    cache_layout: { type: "array", items: int64 },
     michelson_maximum_type_size: {
       type: "integer",
       minimum: 0,
@@ -53,21 +95,21 @@ const schema = {
       minimum: -2147483648,
       maximum: 2147483647,
     },
-    hard_gas_limit_per_operation: { $ref: "#/definitions/bignum" },
-    hard_gas_limit_per_block: { $ref: "#/definitions/bignum" },
-    proof_of_work_threshold: { $ref: "#/definitions/int64" },
-    tokens_per_roll: { $ref: "#/definitions/012-Psithaca.mutez" },
-    seed_nonce_revelation_tip: { $ref: "#/definitions/012-Psithaca.mutez" },
+    hard_gas_limit_per_operation: bignum,
+    hard_gas_limit_per_block: bignum,
+    proof_of_work_threshold: int64,
+    tokens_per_roll: _012_Psithaca$mutez,
+    seed_nonce_revelation_tip: _012_Psithaca$mutez,
     origination_size: {
       type: "integer",
       minimum: -1073741824,
       maximum: 1073741823,
     },
-    baking_reward_fixed_portion: { $ref: "#/definitions/012-Psithaca.mutez" },
-    baking_reward_bonus_per_slot: { $ref: "#/definitions/012-Psithaca.mutez" },
-    endorsing_reward_per_slot: { $ref: "#/definitions/012-Psithaca.mutez" },
-    cost_per_byte: { $ref: "#/definitions/012-Psithaca.mutez" },
-    hard_storage_limit_per_operation: { $ref: "#/definitions/bignum" },
+    baking_reward_fixed_portion: _012_Psithaca$mutez,
+    baking_reward_bonus_per_slot: _012_Psithaca$mutez,
+    endorsing_reward_per_slot: _012_Psithaca$mutez,
+    cost_per_byte: _012_Psithaca$mutez,
+    hard_storage_limit_per_operation: bignum,
     quorum_min: { type: "integer", minimum: -2147483648, maximum: 2147483647 },
     quorum_max: { type: "integer", minimum: -2147483648, maximum: 2147483647 },
     min_proposal_quorum: {
@@ -75,7 +117,7 @@ const schema = {
       minimum: -2147483648,
       maximum: 2147483647,
     },
-    liquidity_baking_subsidy: { $ref: "#/definitions/012-Psithaca.mutez" },
+    liquidity_baking_subsidy: _012_Psithaca$mutez,
     liquidity_baking_sunset_level: {
       type: "integer",
       minimum: -2147483648,
@@ -91,8 +133,8 @@ const schema = {
       minimum: -32768,
       maximum: 32767,
     },
-    minimal_block_delay: { $ref: "#/definitions/int64" },
-    delay_increment_per_round: { $ref: "#/definitions/int64" },
+    minimal_block_delay: int64,
+    delay_increment_per_round: int64,
     consensus_committee_size: {
       type: "integer",
       minimum: -1073741824,
@@ -122,7 +164,7 @@ const schema = {
       minimum: -1073741824,
       maximum: 1073741823,
     },
-    double_baking_punishment: { $ref: "#/definitions/012-Psithaca.mutez" },
+    double_baking_punishment: _012_Psithaca$mutez,
     ratio_of_frozen_deposits_slashed_per_double_endorsement: {
       type: "object",
       properties: {
@@ -142,10 +184,7 @@ const schema = {
         {
           title: "Round_robin_over_delegates",
           type: "array",
-          items: {
-            type: "array",
-            items: { $ref: "#/definitions/Signature.Public_key" },
-          },
+          items: { type: "array", items: Signature$Public_key },
         },
       ],
     },
@@ -195,48 +234,8 @@ const schema = {
     "proof_of_work_nonce_size",
   ],
   additionalProperties: false,
-  definitions: {
-    "012-Psithaca.mutez": { $ref: "#/definitions/positive_bignum" },
-    "Signature.Public_key": {
-      title: "A Ed25519, Secp256k1, or P256 public key (Base58Check-encoded)",
-      $ref: "#/definitions/unistring",
-    },
-    bignum: {
-      title: "Big number",
-      description: "Decimal representation of a big number",
-      type: "string",
-    },
-    int64: {
-      title: "64 bit integers",
-      description: "Decimal representation of 64 bit integers",
-      type: "string",
-    },
-    positive_bignum: {
-      title: "Positive big number",
-      description: "Decimal representation of a positive big number",
-      type: "string",
-    },
-    unistring: {
-      title: "Universal string representation",
-      description:
-        "Either a plain UTF8 string, or a sequence of bytes for strings that contain invalid byte sequences.",
-      oneOf: [
-        { type: "string" },
-        {
-          type: "object",
-          properties: {
-            invalid_utf8_string: {
-              type: "array",
-              items: { type: "integer", minimum: 0, maximum: 255 },
-            },
-          },
-          required: ["invalid_utf8_string"],
-          additionalProperties: false,
-        },
-      ],
-    },
-  },
 } as const;
+
 import { FromSchema } from "json-schema-to-ts";
 type T = FromSchema<typeof schema>;
 export default T;

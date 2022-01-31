@@ -16,10 +16,16 @@ import { retry404 } from "./util";
 import NetworkConnection from "./types/NetworkConnection";
 import TezosVersion from "./types/TezosVersion";
 import BootstrappedStatus from "./types/BootstrappedStatus";
+import EndorsingRightsH from "./types/PtHangz2aRng/EndorsingRights";
+import EndorsingRightsI from "./types/Psithaca2MLR/EndorsingRights";
+import ConstantsH from "./types/PtHangz2aRng/Constants";
+import ConstantsI from "./types/Psithaca2MLR/Constants";
 
 import { E_NETWORK_CONNECTIONS } from "./urls";
 import { E_TEZOS_VERSION } from "./urls";
 import { E_IS_BOOTSTRAPPED } from "./urls";
+import { E_ENDORSING_RIGHTS } from "./urls";
+import { E_CONSTANTS } from "./urls";
 import { delegatesUrl } from "./urls";
 
 interface RPCOptions {
@@ -50,6 +56,19 @@ export const getBootstrappedStatus = async (
   return await rpcFetch(`${node}/${E_IS_BOOTSTRAPPED}`);
 };
 
+const getEndorsingRights = async (
+  node: string,
+  block: string,
+  level?: number
+): Promise<EndorsingRightsH | EndorsingRightsI> => {
+  const params = level === undefined ? undefined : { level: level.toString() };
+  return await rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`);
+};
+
+const getConstants = async (node: string): Promise<ConstantsH | ConstantsI> => {
+  return await rpcFetch(`${node}/${E_CONSTANTS("head")}`);
+};
+
 export type RpcClient = {
   url: URL;
   getTezosVersion: () => Promise<TezosVersion>;
@@ -66,6 +85,11 @@ export type RpcClient = {
   getStakingBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getGracePeriod: (pkh: TzAddress, block?: string) => Promise<number>;
   getDeactivated: (pkh: TzAddress, block?: string) => Promise<boolean>;
+  getEndorsingRights: (
+    block?: string,
+    level?: number
+  ) => Promise<EndorsingRightsH | EndorsingRightsI>;
+  getConstants: () => Promise<ConstantsH | ConstantsI>;
 };
 
 export default (nodeRpcUrl: URL): RpcClient => {
@@ -162,6 +186,11 @@ export default (nodeRpcUrl: URL): RpcClient => {
     getTezosVersion: fetchTezosVersion,
     getBootsrappedStatus: () => getBootstrappedStatus(nodeRpcUrl),
     getNetworkConnections: () => getNetworkConnections(nodeRpcUrl),
+    getEndorsingRights: (block = "head", level?: number) => {
+      return getEndorsingRights(nodeRpcUrl, block, level);
+    },
+
+    getConstants: () => getConstants(nodeRpcUrl),
 
     getBlockHeader: (options?: RPCOptions) => {
       return rpc.getBlockHeader(options);

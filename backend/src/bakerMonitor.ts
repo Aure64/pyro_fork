@@ -8,6 +8,7 @@ import {
   Events,
 } from "./events";
 import { getLogger } from "loglevel";
+
 import {
   BakingRightsResponse,
   BlockResponse,
@@ -18,6 +19,9 @@ import {
   DelegatesResponse,
   BakingRightsResponseItem,
 } from "@taquito/rpc";
+
+import NRpc from "./rpc/client";
+
 import { retry404, tryForever } from "./rpc/util";
 
 import { delay } from "./delay";
@@ -82,6 +86,7 @@ export const create = async (
 
   const log = getLogger(name);
   const rpc = new RpcClient(rpcUrl);
+  const nRpc = NRpc(rpcUrl);
 
   const chainId = await tryForever(
     () => rpc.getChainId(),
@@ -91,7 +96,7 @@ export const create = async (
 
   log.info(`Chain: ${chainId}`);
   const constants = await tryForever(
-    () => rpc.getConstants(),
+    () => nRpc.getConstants(),
     60e3,
     "get protocol constants"
   );
@@ -198,11 +203,7 @@ export const create = async (
     }
   };
 
-  const interval =
-    1000 *
-    (
-      constants.minimal_block_delay || constants.time_between_blocks[0]
-    ).toNumber();
+  const interval = 1000 * (parseInt(constants.minimal_block_delay) || 30);
 
   const srv = service.create(name, task, interval);
 
