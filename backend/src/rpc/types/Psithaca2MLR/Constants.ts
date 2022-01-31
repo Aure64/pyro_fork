@@ -1,44 +1,14 @@
-const positive_bignum = {
-  title: "Positive big number",
-  description: "Decimal representation of a positive big number",
-  type: "string",
-} as const;
+import positive_bignum from "../defs/positive_bignum";
 
-const unistring = {
-  title: "Universal string representation",
-  description:
-    "Either a plain UTF8 string, or a sequence of bytes for strings that contain invalid byte sequences.",
-  oneOf: [
-    { type: "string" },
-    {
-      type: "object",
-      properties: {
-        invalid_utf8_string: {
-          type: "array",
-          items: { type: "integer", minimum: 0, maximum: 255 },
-        },
-      },
-      required: ["invalid_utf8_string"],
-      additionalProperties: false,
-    },
-  ],
-} as const;
+import unistring from "../defs/unistring";
 
-const bignum = {
-  title: "Big number",
-  description: "Decimal representation of a big number",
-  type: "string",
-} as const;
+import bignum from "../defs/bignum";
 
-const int64 = {
-  title: "64 bit integers",
-  description: "Decimal representation of 64 bit integers",
-  type: "string",
-} as const;
+import int64 from "../defs/int64";
 
-const _012_Psithaca$mutez = positive_bignum;
+import _012_Psithaca$mutez from "../defs/_012_Psithaca$mutez";
 
-const Signature$Public_key = unistring;
+import Signature$Public_key from "../defs/Signature$Public_key";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",

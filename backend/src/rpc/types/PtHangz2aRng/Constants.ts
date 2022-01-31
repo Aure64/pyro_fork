@@ -1,22 +1,10 @@
-const positive_bignum = {
-  title: "Positive big number",
-  description: "Decimal representation of a positive big number",
-  type: "string",
-} as const;
+import positive_bignum from "../defs/positive_bignum";
 
-const bignum = {
-  title: "Big number",
-  description: "Decimal representation of a big number",
-  type: "string",
-} as const;
+import bignum from "../defs/bignum";
 
-const int64 = {
-  title: "64 bit integers",
-  description: "Decimal representation of 64 bit integers",
-  type: "string",
-} as const;
+import int64 from "../defs/int64";
 
-const _011_PtHangz2$mutez = positive_bignum;
+import _011_PtHangz2$mutez from "../defs/_011_PtHangz2$mutez";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",

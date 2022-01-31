@@ -60,8 +60,10 @@ const main = async () => {
 
   const outDirBase = `src/rpc/types`;
   const outDirProto = `${outDirBase}/${shortProtoHash}`;
+  const outDirDefs = `${outDirBase}/defs`;
 
   FS.mkdirSync(outDirProto, { recursive: true });
+  FS.mkdirSync(outDirDefs, { recursive: true });
 
   const typeNames = {
     [urls.E_IS_BOOTSTRAPPED]: { name: "BootstrappedStatus", protocol: false },
@@ -118,6 +120,7 @@ const main = async () => {
       const schema = desc["static"].get_service.output.json_schema;
 
       const serializedParts: string[] = [];
+      const serializedDefinitions: Record<string, string> = {};
 
       const seenKeys: string[] = [];
       console.log("Resolving definitions");
@@ -127,13 +130,32 @@ const main = async () => {
         if (processed[origKey]) continue;
         const v = definitions[origKey];
         if (v !== undefined) {
-          serializedParts.push(
-            fmtObjAsConst(ensureIdentifier(origKey), v as any)
-          );
+          const refKey = ensureIdentifier(origKey);
+          const code = fmtObjAsConst(refKey, v as any);
+          const importFrom = (protocol ? ".." : ".") + `/defs/${refKey}`;
+          serializedParts.push(`import ${refKey} from "${importFrom}";`);
+          serializedDefinitions[refKey] = `${code}\nexport default ${refKey};`;
           processed[origKey] = true;
         }
       }
       delete schema["definitions"];
+
+      const outDir = protocol ? outDirProto : outDirBase;
+
+      for (const [k, v] of Object.entries(serializedDefinitions)) {
+        const importNames: string[] = [];
+        for (const m of v.matchAll(/@(.+?)@/g)) {
+          importNames.push(m[1]);
+        }
+        const serialized =
+          importNames
+            .map((name) => `import ${name} from "./${name}";`)
+            .join("\n") +
+          "\n\n" +
+          v.replaceAll('"@', " ").replaceAll('@"', " ");
+        const pretty = prettier.format(serialized, { parser: "typescript" });
+        FS.writeFileSync(`${outDirDefs}/${k}.ts`, pretty);
+      }
 
       serializedParts.push(`${fmtObjAsConst(
         "schema",
@@ -148,7 +170,7 @@ export default T;
         .join("\n\n")
         .replaceAll('"@', " ")
         .replaceAll('@"', " ");
-      const outDir = protocol ? outDirProto : outDirBase;
+
       const pretty = prettier.format(serialized, { parser: "typescript" });
       FS.writeFileSync(`${outDir}/${name}.ts`, pretty);
     } catch (x) {
