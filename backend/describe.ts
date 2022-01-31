@@ -71,6 +71,11 @@ const main = async () => {
     },
     [urls.E_TEZOS_VERSION]: { name: "TezosVersion", protocol: false },
     [urls.E_CONSTANTS("head")]: { name: "Constants", protocol: true },
+    [urls.E_BAKING_RIGHTS("head")]: { name: "BakingRights", protocol: true },
+    [urls.E_ENDORSING_RIGHTS("head")]: {
+      name: "EndorsingRights",
+      protocol: true,
+    },
   };
 
   const defPrefix = "#/definitions/";

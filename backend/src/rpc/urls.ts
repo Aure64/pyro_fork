@@ -10,6 +10,22 @@ export const E_BLOCK = (block: string) => `chains/main/blocks/${block}`;
 export const E_BLOCK_HEADER = (block: string) =>
   `chains/main/blocks/${block}/header`;
 
+export const E_BAKING_RIGHTS = (
+  block: string,
+  params?: Record<string, string>
+) => {
+  const path = `/chains/main/blocks/${block}/helpers/baking_rights`;
+  return `${path}?${new URLSearchParams(params).toString()}`;
+};
+
+export const E_ENDORSING_RIGHTS = (
+  block: string,
+  params?: Record<string, string>
+) => {
+  const path = `/chains/main/blocks/${block}/helpers/endorsing_rights`;
+  return `${path}?${new URLSearchParams(params).toString()}`;
+};
+
 export const delegatesUrl = (rpcUrl: string, pkh: string, block: string) => {
   return `${rpcUrl}/${E_DELEGATES_PKH(block, pkh)}`;
 };
