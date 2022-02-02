@@ -13,7 +13,7 @@ import {
   BakingRightsResponse,
   BlockResponse,
   EndorsingRightsResponse,
-  OperationEntry,
+  // OperationEntry,
   OpKind,
   RpcClient,
   DelegatesResponse,
@@ -21,6 +21,12 @@ import {
 } from "@taquito/rpc";
 
 import NRpc from "./rpc/client";
+import { RpcClient as NRpcClient } from "./rpc/client";
+
+import { BlockHeader, Block, EndorsingRights, BakingRight } from "./rpc/client";
+
+import { Item as BakingRightH } from "./rpc/types/PtHangz2aRng/BakingRights";
+import { Item as BakingRightI } from "./rpc/types/Psithaca2MLR/BakingRights";
 
 import { retry404, tryForever } from "./rpc/util";
 
@@ -38,6 +44,14 @@ import { join as joinPath } from "path";
 const name = "bm";
 
 type URL = string;
+
+import Operation from "./rpc/types/PtHangz2aRng/operation";
+
+import { FromSchema } from "json-schema-to-ts";
+
+type OperationEntry = FromSchema<typeof Operation>;
+
+// console.log("" as unknown as OperationEntry);
 
 export type BakerMonitorConfig = {
   bakers: string[];
@@ -85,11 +99,11 @@ export const create = async (
   bakers = [...new Set(bakers)];
 
   const log = getLogger(name);
-  const rpc = new RpcClient(rpcUrl);
+  // const rpc = new RpcClient(rpcUrl);
   const nRpc = NRpc(rpcUrl);
 
   const chainId = await tryForever(
-    () => rpc.getChainId(),
+    () => nRpc.getChainId(),
     60e3,
     "get chain id"
   );
@@ -142,13 +156,18 @@ export const create = async (
       const lastBlockLevel = chainPosition.blockLevel;
       let lastBlockCycle = chainPosition.blockCycle;
       log.debug(`Getting block header for head~${headDistance}`);
-      const headMinusXHeader = await rpc.getBlockHeader({
-        block: `head~${headDistance}`,
-      });
+      // const headMinusXHeader = await rpc.getBlockHeader({
+      //   block: `head~${headDistance}`,
+      // });
+
+      const headMinusXHeader = await nRpc.getBlockHeader(
+        `head~${headDistance}`
+      );
 
       const { level, hash } = headMinusXHeader;
       if (log.getLevel() <= 1) {
-        const headHeader = await rpc.getBlockHeader();
+        // const headHeader = await rpc.getBlockHeader();
+        const headHeader = await nRpc.getBlockHeader("head");
         const { level: headLevel } = headHeader;
         log.debug(
           `Got block ${hash} at level ${level} [currently at ${lastBlockLevel}, head is ${headLevel}]`
@@ -170,7 +189,7 @@ export const create = async (
         );
         const { events, blockLevel, blockCycle } = await checkBlock({
           bakers,
-          rpc,
+          rpc: nRpc,
           blockId: currentLevel.toString(),
           lastCycle: lastBlockCycle,
         });
@@ -251,7 +270,7 @@ export const create = async (
 type CheckBlockArgs = {
   bakers: string[];
   blockId: string;
-  rpc: RpcClient;
+  rpc: NRpcClient;
   lastCycle: number | undefined;
 };
 
@@ -274,12 +293,16 @@ const checkBlock = async ({
   log.trace(`Fetching baker data for block ${blockId}`);
   const events: BakerEvent[] = [];
 
-  const { block, bakingRights, endorsingRights } = await loadBlockData({
+  const { block, bakingRights, endorsingRights } = await loadBlockData(
     blockId,
-    rpc,
-  });
+    rpc
+  );
 
   const metadata = block.metadata;
+
+  if (!metadata) {
+    throw new Error(`No metadata for block ${blockId}`);
+  }
 
   log.trace(`Successfully retrieved baker data for block ${blockId}`, metadata);
 
@@ -290,8 +313,11 @@ const checkBlock = async ({
 
   const blockLevel = metadata.level_info.level;
   const blockCycle = metadata.level_info.cycle;
+
+  const { header } = block;
+  const priority =
+    "priority" in header ? header.priority : header.payload_round;
   const blockTimestamp = new Date(block.header.timestamp);
-  const priority = block.header.priority;
 
   const createEvent = (
     baker: string,
@@ -319,10 +345,14 @@ const checkBlock = async ({
     return event;
   };
 
-  const bakingRightForBlock = bakingRights.find(
-    (bakingRight) =>
-      bakingRight.priority === priority && bakingRight.level === blockLevel
-  );
+  const bakingRightForBlock = bakingRights.find((bakingRight) => {
+    if ("priority" in bakingRight) {
+      return (
+        bakingRight.priority === priority && bakingRight.level === blockLevel
+      );
+    }
+    return bakingRight.round === priority && bakingRight.level === blockLevel;
+  });
   log.debug(
     `Baking right for block ${blockLevel} of priority ${priority}:`,
     bakingRightForBlock
@@ -386,27 +416,33 @@ const checkBlock = async ({
   return { events, blockLevel, blockCycle };
 };
 
-type LoadBlockDataArgs = {
-  blockId: string;
-  rpc: RpcClient;
-};
+// type LoadBlockDataArgs = {
+//   blockId: string;
+//   rpc: RpcClient;
+// };
+
+// type BlockData = {
+//   bakingRights: BakingRightsResponse;
+//   endorsingRights: EndorsingRightsResponse;
+//   block: BlockResponse;
+// };
 
 type BlockData = {
-  bakingRights: BakingRightsResponse;
-  endorsingRights: EndorsingRightsResponse;
-  block: BlockResponse;
+  bakingRights: BakingRight[];
+  endorsingRights: EndorsingRights;
+  block: Block;
 };
 
 /**
  * Fetches block data needed to identify baking events for all bakers.
  */
-export const loadBlockData = async ({
-  blockId,
-  rpc,
-}: LoadBlockDataArgs): Promise<BlockData> => {
+export const loadBlockData = async (
+  blockId: string,
+  rpc: NRpcClient
+): Promise<BlockData> => {
   const log = getLogger(name);
   log.debug(`Fetching block ${blockId}`);
-  const blockPromise = retry404(() => rpc.getBlock({ block: blockId }));
+  const blockPromise = retry404(() => rpc.getBlock(blockId));
   const block = await blockPromise;
 
   if (block === undefined) throw new Error(`Block ${blockId} not found`);
@@ -423,23 +459,17 @@ export const loadBlockData = async ({
     `Getting baking rights (cycle=${cycle}, level=${level}, block=${blockId})`
   );
   const t0 = new Date().getTime();
+
+  const { header } = block;
+  const priority =
+    "priority" in header ? header.priority : header.payload_round;
+
   const bakingRightsPromise = retry404(() =>
-    rpc.getBakingRights(
-      {
-        max_priority: block.header.priority,
-        level,
-      },
-      { block: blockId }
-    )
+    rpc.getBakingRights(blockId, level, priority)
   );
   log.debug(`Getting endorsement rights: cycle=${cycle}, block=${blockId}`);
   const endorsingRightsPromise = retry404(() =>
-    rpc.getEndorsingRights(
-      {
-        level: level - 1,
-      },
-      { block: blockId }
-    )
+    rpc.getEndorsingRights(blockId, level - 1)
   );
   const [bakingRights, endorsingRights] = await Promise.all([
     bakingRightsPromise,
@@ -460,7 +490,7 @@ type CheckBlockBakingRightsArgs = {
   baker: string;
   blockBaker: string;
   blockId: string;
-  bakingRight: BakingRightsResponseItem;
+  bakingRight: BakingRight;
   blockPriority: number;
 };
 

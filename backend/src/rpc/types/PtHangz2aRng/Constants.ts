@@ -1,10 +1,12 @@
-import positive_bignum from "../defs/positive_bignum";
+import positive_bignum from "./positive_bignum";
 
-import bignum from "../defs/bignum";
+import bignum from "./bignum";
 
-import int64 from "../defs/int64";
+import int64 from "./int64";
 
-import _011_PtHangz2$mutez from "../defs/_011_PtHangz2$mutez";
+import unistring from "./unistring";
+
+import _011_PtHangz2$mutez from "./_011_PtHangz2$mutez";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",

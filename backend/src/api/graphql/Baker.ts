@@ -241,11 +241,7 @@ export const BakerQuery = extendType({
         if (cycleProtocol.cycle === cycle) {
           protocol = cycleProtocol.protocol;
         } else {
-          protocol = (
-            await ctx.rpc.getBlockHeader({
-              block: `${level}`,
-            })
-          ).protocol;
+          protocol = (await ctx.rpc.getBlockHeader(`${level}`)).protocol;
           cycleProtocol = { cycle, protocol };
         }
         return {

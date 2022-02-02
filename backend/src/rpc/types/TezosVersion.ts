@@ -1,12 +1,12 @@
-import distributed_db_version from "./defs/distributed_db_version";
+import distributed_db_version from "./distributed_db_version";
 
-import unistring from "./defs/unistring";
+import unistring from "./unistring";
 
-import distributed_db_version$name from "./defs/distributed_db_version$name";
+import distributed_db_version$name from "./distributed_db_version$name";
 
-import p2p_version from "./defs/p2p_version";
+import p2p_version from "./p2p_version";
 
-import network_version from "./defs/network_version";
+import network_version from "./network_version";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",

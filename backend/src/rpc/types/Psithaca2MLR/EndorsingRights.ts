@@ -1,8 +1,8 @@
-import unistring from "../defs/unistring";
+import unistring from "./unistring";
 
-import Signature$Public_key_hash from "../defs/Signature$Public_key_hash";
+import Signature$Public_key_hash from "./Signature$Public_key_hash";
 
-import timestamp$protocol from "../defs/timestamp$protocol";
+import timestamp$protocol from "./timestamp$protocol";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",
@@ -33,4 +33,5 @@ const schema = {
 
 import { FromSchema } from "json-schema-to-ts";
 type T = FromSchema<typeof schema>;
+export type Item = T[number];
 export default T;

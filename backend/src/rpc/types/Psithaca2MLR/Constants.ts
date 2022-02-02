@@ -1,14 +1,14 @@
-import positive_bignum from "../defs/positive_bignum";
+import positive_bignum from "./positive_bignum";
 
-import unistring from "../defs/unistring";
+import unistring from "./unistring";
 
-import bignum from "../defs/bignum";
+import bignum from "./bignum";
 
-import int64 from "../defs/int64";
+import int64 from "./int64";
 
-import _012_Psithaca$mutez from "../defs/_012_Psithaca$mutez";
+import _012_Psithaca$mutez from "./_012_Psithaca$mutez";
 
-import Signature$Public_key from "../defs/Signature$Public_key";
+import Signature$Public_key from "./Signature$Public_key";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",

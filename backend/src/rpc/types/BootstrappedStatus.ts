@@ -1,4 +1,6 @@
-import chain_status from "./defs/chain_status";
+import chain_status from "./chain_status";
+
+import unistring from "./unistring";
 
 const schema = {
   $schema: "http://json-schema.org/draft-04/schema#",

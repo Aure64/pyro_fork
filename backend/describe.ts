@@ -23,7 +23,7 @@ const ensureIdentifier = (k: string) => {
   if (Number.isInteger(parseInt(k[0]))) {
     k = "_" + k;
   }
-  return k.replaceAll(".", "$").replaceAll("-", "_");
+  return k.replaceAll(".", "$").replaceAll("-", "_").replaceAll(" ", "_");
 };
 
 const fmtObjAsConst = (varName: string, obj: object) => {
@@ -60,10 +60,8 @@ const main = async () => {
 
   const outDirBase = `src/rpc/types`;
   const outDirProto = `${outDirBase}/${shortProtoHash}`;
-  const outDirDefs = `${outDirBase}/defs`;
 
   FS.mkdirSync(outDirProto, { recursive: true });
-  FS.mkdirSync(outDirDefs, { recursive: true });
 
   const typeNames = {
     [urls.E_IS_BOOTSTRAPPED]: { name: "BootstrappedStatus", protocol: false },
@@ -78,6 +76,14 @@ const main = async () => {
       name: "EndorsingRights",
       protocol: true,
     },
+    [urls.E_BLOCK("head")]: {
+      name: "Block",
+      protocol: true,
+    },
+    [urls.E_BLOCK_HEADER("head")]: {
+      name: "BlockHeader",
+      protocol: true,
+    },
   };
 
   const defPrefix = "#/definitions/";
@@ -88,6 +94,12 @@ const main = async () => {
       });
     }
     if (Object.prototype.toString.call(obj) === "[object Object]") {
+      if (obj.$ref && obj.$ref.startsWith(defPrefix)) {
+        const origKey = obj.$ref.substr(defPrefix.length);
+        const refKey = ensureIdentifier(origKey);
+        if (seenKeys) seenKeys.push(origKey);
+        return `@${refKey}@`;
+      }
       const result: any = {};
       for (const [k, v] of Object.entries(obj)) {
         if (Object.prototype.toString.call(v) === "[object Object]") {
@@ -124,7 +136,14 @@ const main = async () => {
 
       const seenKeys: string[] = [];
       console.log("Resolving definitions");
-      const definitions = resolveDefinitions(schema.definitions, seenKeys);
+      const definitionsFixedUnistring = {
+        ...schema.definitions,
+        unistring: { type: "string" },
+      };
+      const definitions = resolveDefinitions(
+        definitionsFixedUnistring,
+        seenKeys
+      );
       const processed: any = {};
       for (const origKey of seenKeys.concat(Object.keys(definitions))) {
         if (processed[origKey]) continue;
@@ -132,8 +151,11 @@ const main = async () => {
         if (v !== undefined) {
           const refKey = ensureIdentifier(origKey);
           const code = fmtObjAsConst(refKey, v as any);
-          const importFrom = (protocol ? ".." : ".") + `/defs/${refKey}`;
-          serializedParts.push(`import ${refKey} from "${importFrom}";`);
+          const importFrom = `./${refKey}`;
+          const importLine = `import ${refKey} from "${importFrom}";`;
+          if (!serializedParts.includes(importLine)) {
+            serializedParts.push(importLine);
+          }
           serializedDefinitions[refKey] = `${code}\nexport default ${refKey};`;
           processed[origKey] = true;
         }
@@ -145,7 +167,10 @@ const main = async () => {
       for (const [k, v] of Object.entries(serializedDefinitions)) {
         const importNames: string[] = [];
         for (const m of v.matchAll(/@(.+?)@/g)) {
-          importNames.push(m[1]);
+          const name = m[1];
+          if (!importNames.includes(name)) {
+            importNames.push(name);
+          }
         }
         const serialized =
           importNames
@@ -153,8 +178,13 @@ const main = async () => {
             .join("\n") +
           "\n\n" +
           v.replaceAll('"@', " ").replaceAll('@"', " ");
-        const pretty = prettier.format(serialized, { parser: "typescript" });
-        FS.writeFileSync(`${outDirDefs}/${k}.ts`, pretty);
+        try {
+          const pretty = prettier.format(serialized, { parser: "typescript" });
+          FS.writeFileSync(`${outDir}/${k}.ts`, pretty);
+        } catch (err) {
+          console.error(serialized);
+          throw err;
+        }
       }
 
       serializedParts.push(`${fmtObjAsConst(
@@ -164,6 +194,7 @@ const main = async () => {
 
 import { FromSchema } from "json-schema-to-ts";
 type T = FromSchema<typeof schema>;
+${schema.type === "array" ? "export type Item = T[number];" : ""};
 export default T;
 `);
       const serialized = serializedParts
