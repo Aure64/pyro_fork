@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "type": "integer",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "delegate": {
+        "$ref": "#/definitions/Signature$Public_key_hash"
+      },
+      "slots": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      },
+      "estimated_time": {
+        "$ref": "#/definitions/timestamp$protocol"
+      }
+    },
+    "required": [
+      "slots",
+      "delegate",
+      "level"
+    ],
+    "additionalProperties": false
+  },
+  "definitions": {
+    "Signature$Public_key_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "timestamp$protocol": {
+      "$ref": "#/definitions/unistring"
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}

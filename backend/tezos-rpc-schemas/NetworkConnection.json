@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "incoming": {
+        "type": "boolean"
+      },
+      "peer_id": {
+        "$ref": "#/definitions/Crypto_box$Public_key_hash"
+      },
+      "id_point": {
+        "$ref": "#/definitions/p2p_connection$id"
+      },
+      "remote_socket_port": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "announced_version": {
+        "$ref": "#/definitions/network_version"
+      },
+      "private": {
+        "type": "boolean"
+      },
+      "local_metadata": {
+        "type": "object",
+        "properties": {
+          "disable_mempool": {
+            "type": "boolean"
+          },
+          "private_node": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "private_node",
+          "disable_mempool"
+        ],
+        "additionalProperties": false
+      },
+      "remote_metadata": {
+        "type": "object",
+        "properties": {
+          "disable_mempool": {
+            "type": "boolean"
+          },
+          "private_node": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "private_node",
+          "disable_mempool"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "remote_metadata",
+      "local_metadata",
+      "private",
+      "announced_version",
+      "remote_socket_port",
+      "id_point",
+      "peer_id",
+      "incoming"
+    ],
+    "additionalProperties": false
+  },
+  "definitions": {
+    "Crypto_box$Public_key_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "distributed_db_version": {
+      "description": "A version number for the distributed DB protocol",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "distributed_db_version$name": {
+      "$ref": "#/definitions/unistring"
+    },
+    "network_version": {
+      "description": "A version number for the network protocol (includes distributed DB version and p2p version)",
+      "type": "object",
+      "properties": {
+        "chain_name": {
+          "$ref": "#/definitions/distributed_db_version$name"
+        },
+        "distributed_db_version": {
+          "$ref": "#/definitions/distributed_db_version"
+        },
+        "p2p_version": {
+          "$ref": "#/definitions/p2p_version"
+        }
+      },
+      "required": [
+        "p2p_version",
+        "distributed_db_version",
+        "chain_name"
+      ],
+      "additionalProperties": false
+    },
+    "p2p_address": {
+      "$ref": "#/definitions/unistring"
+    },
+    "p2p_connection$id": {
+      "description": "The identifier for a p2p connection. It includes an address and a port number.",
+      "type": "object",
+      "properties": {
+        "addr": {
+          "$ref": "#/definitions/p2p_address"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      },
+      "required": [
+        "addr"
+      ],
+      "additionalProperties": false
+    },
+    "p2p_version": {
+      "description": "A version number for the p2p layer.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}

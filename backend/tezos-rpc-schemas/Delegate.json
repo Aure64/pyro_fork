@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "balance": {
+      "$ref": "#/definitions/_011_PtHangz2$mutez"
+    },
+    "frozen_balance": {
+      "$ref": "#/definitions/_011_PtHangz2$mutez"
+    },
+    "frozen_balance_by_cycle": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "deposits": {
+            "$ref": "#/definitions/_011_PtHangz2$mutez"
+          },
+          "fees": {
+            "$ref": "#/definitions/_011_PtHangz2$mutez"
+          },
+          "rewards": {
+            "$ref": "#/definitions/_011_PtHangz2$mutez"
+          }
+        },
+        "required": [
+          "rewards",
+          "fees",
+          "deposits",
+          "cycle"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "staking_balance": {
+      "$ref": "#/definitions/_011_PtHangz2$mutez"
+    },
+    "delegated_contracts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/_011_PtHangz2$contract_id"
+      }
+    },
+    "delegated_balance": {
+      "$ref": "#/definitions/_011_PtHangz2$mutez"
+    },
+    "deactivated": {
+      "type": "boolean"
+    },
+    "grace_period": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "voting_power": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    }
+  },
+  "required": [
+    "voting_power",
+    "grace_period",
+    "deactivated",
+    "delegated_balance",
+    "delegated_contracts",
+    "staking_balance",
+    "frozen_balance_by_cycle",
+    "frozen_balance",
+    "balance"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "_011_PtHangz2$contract_id": {
+      "$ref": "#/definitions/unistring"
+    },
+    "_011_PtHangz2$mutez": {
+      "$ref": "#/definitions/positive_bignum"
+    },
+    "positive_bignum": {
+      "title": "Positive big number",
+      "description": "Decimal representation of a positive big number",
+      "type": "string"
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "integer",
+          "minimum": -1073741824,
+          "maximum": 1073741823
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": -1073741824,
+          "maximum": 1073741823
+        },
+        "additional_info": {
+          "oneOf": [
+            {
+              "title": "Dev",
+              "type": "string",
+              "enum": [
+                "dev"
+              ]
+            },
+            {
+              "title": "RC",
+              "type": "object",
+              "properties": {
+                "rc": {
+                  "type": "integer",
+                  "minimum": -1073741824,
+                  "maximum": 1073741823
+                }
+              },
+              "required": [
+                "rc"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "title": "Release",
+              "type": "string",
+              "enum": [
+                "release"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "additional_info",
+        "minor",
+        "major"
+      ],
+      "additionalProperties": false
+    },
+    "network_version": {
+      "$ref": "#/definitions/network_version"
+    },
+    "commit_info": {
+      "oneOf": [
+        {
+          "title": "Some",
+          "type": "object",
+          "properties": {
+            "commit_hash": {
+              "$ref": "#/definitions/unistring"
+            },
+            "commit_date": {
+              "$ref": "#/definitions/unistring"
+            }
+          },
+          "required": [
+            "commit_date",
+            "commit_hash"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "title": "None",
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "commit_info",
+    "network_version",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "distributed_db_version": {
+      "description": "A version number for the distributed DB protocol",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "distributed_db_version$name": {
+      "$ref": "#/definitions/unistring"
+    },
+    "network_version": {
+      "description": "A version number for the network protocol (includes distributed DB version and p2p version)",
+      "type": "object",
+      "properties": {
+        "chain_name": {
+          "$ref": "#/definitions/distributed_db_version$name"
+        },
+        "distributed_db_version": {
+          "$ref": "#/definitions/distributed_db_version"
+        },
+        "p2p_version": {
+          "$ref": "#/definitions/p2p_version"
+        }
+      },
+      "required": [
+        "p2p_version",
+        "distributed_db_version",
+        "chain_name"
+      ],
+      "additionalProperties": false
+    },
+    "p2p_version": {
+      "description": "A version number for the p2p layer.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}

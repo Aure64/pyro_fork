@@ -1,10 +1,11 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
-import { BlockHeaderResponse } from "@taquito/rpc";
+//import { BlockHeaderResponse } from "@taquito/rpc";
+import { ShellHeader as BlockHeader } from "./rpc/types/BlockHeader";
 import { readJson } from "./fs-utils";
 
-import BootstrappedStatus from "./rpc/types/BootstrappedStatus";
-import TezosVersion from "./rpc/types/TezosVersion";
+import { BootstrappedStatus } from "./rpc/types/BootstrappedStatus";
+import { TezosVersion } from "./rpc/types/TezosVersion";
 
 import client, { RpcClient } from "./rpc/client";
 
@@ -39,7 +40,7 @@ export type NodeInfo = {
   head: string | undefined;
   endpoints: EndpointsAvailability;
   bootstrappedStatus: BootstrappedStatus | undefined;
-  history: BlockHeaderResponse[];
+  history: BlockHeader[];
   peerCount: number | undefined;
   updatedAt: Date;
   unableToReach: boolean;
@@ -264,7 +265,7 @@ const updateNodeInfo = async ({
   if (!log) log = getLogger(__filename);
 
   let unableToReach = false;
-  let history: BlockHeaderResponse[];
+  let history: BlockHeader[];
   let error: NodeCommunicationError | undefined;
   let blockHash;
   try {
@@ -356,7 +357,7 @@ const minimumPeers = 10;
 type CheckBlockInfoArgs = {
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
-  referenceNodeBlockHistory: BlockHeaderResponse[] | undefined;
+  referenceNodeBlockHistory: BlockHeader[] | undefined;
   log?: Logger;
 };
 
@@ -436,8 +437,8 @@ export const checkBlockInfo = ({
 const NO_ANCESTOR = -1;
 
 const findSharedAncestor = (
-  nodeHistory: BlockHeaderResponse[],
-  referenceNodeHistory: BlockHeaderResponse[]
+  nodeHistory: BlockHeader[],
+  referenceNodeHistory: BlockHeader[]
 ): number => {
   // walk back through a node's blocks
   for (let i = 0; i < nodeHistory.length; i++) {

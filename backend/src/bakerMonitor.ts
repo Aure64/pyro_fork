@@ -9,24 +9,25 @@ import {
 } from "./events";
 import { getLogger } from "loglevel";
 
-import {
-  BakingRightsResponse,
-  BlockResponse,
-  EndorsingRightsResponse,
-  // OperationEntry,
-  OpKind,
-  RpcClient,
-  DelegatesResponse,
-  BakingRightsResponseItem,
-} from "@taquito/rpc";
+// import {
+//   BakingRightsResponse,
+//   BlockResponse,
+//   EndorsingRightsResponse,
+//   OperationEntry,
+//   OpKind,
+//   RpcClient,
+//   DelegatesResponse,
+//   BakingRightsResponseItem,
+// } from "@taquito/rpc";
 
 import NRpc from "./rpc/client";
 import { RpcClient as NRpcClient } from "./rpc/client";
 
-import { BlockHeader, Block, EndorsingRights, BakingRight } from "./rpc/client";
+import { Block, EndorsingRight, BakingRight, OpKind } from "./rpc/client";
+// import { ShellHeader as BlockHeader } from "./rpc/types/BlockHeader";
 
-import { Item as BakingRightH } from "./rpc/types/PtHangz2aRng/BakingRights";
-import { Item as BakingRightI } from "./rpc/types/Psithaca2MLR/BakingRights";
+// import { Item as BakingRightH } from "./rpc/types/PtHangz2aRng/BakingRights";
+// import { Item as BakingRightI } from "./rpc/types/Psithaca2MLR/BakingRights";
 
 import { retry404, tryForever } from "./rpc/util";
 
@@ -45,11 +46,13 @@ const name = "bm";
 
 type URL = string;
 
-import Operation from "./rpc/types/PtHangz2aRng/operation";
+import { Delegate } from "./rpc/types/Delegate";
 
-import { FromSchema } from "json-schema-to-ts";
+import { Operation as OperationH } from "./rpc/types/PtHangz2aRng/Block";
 
-type OperationEntry = FromSchema<typeof Operation>;
+import { Operation as OperationI } from "./rpc/types/Psithaca2MLR/Block";
+
+type OperationEntry = OperationH | OperationI;
 
 // console.log("" as unknown as OperationEntry);
 
@@ -429,7 +432,7 @@ const checkBlock = async ({
 
 type BlockData = {
   bakingRights: BakingRight[];
-  endorsingRights: EndorsingRights;
+  endorsingRights: EndorsingRight[];
   block: Block;
 };
 
@@ -526,7 +529,7 @@ type CheckBlockEndorsingRightsArgs = {
   baker: string;
   endorsementOperations: OperationEntry[];
   level: number;
-  endorsingRights: EndorsingRightsResponse;
+  endorsingRights: EndorsingRight[];
 };
 
 /**
@@ -586,7 +589,7 @@ const isEndorsementByDelegate = (
 type CheckBlockAccusationsForDoubleEndorsementArgs = {
   baker: string;
   operations: OperationEntry[];
-  rpc: RpcClient;
+  rpc: NRpcClient;
 };
 
 export const checkBlockAccusationsForDoubleEndorsement = async ({
@@ -658,7 +661,7 @@ const findEndorserForOperation = (operation: OperationEntry) => {
 type CheckBlockAccusationsForDoubleBakeArgs = {
   baker: string;
   operations: OperationEntry[];
-  rpc: RpcClient;
+  rpc: NRpcClient;
 };
 
 export const checkBlockAccusationsForDoubleBake = async ({
@@ -707,7 +710,7 @@ export const checkBlockAccusationsForDoubleBake = async ({
 type GetDeactivationEventsArgs = {
   baker: string;
   cycle: number;
-  rpc: RpcClient;
+  rpc: NRpcClient;
 };
 
 const getDeactivationEvent = async ({
@@ -717,14 +720,14 @@ const getDeactivationEvent = async ({
 }: GetDeactivationEventsArgs): Promise<
   Deactivated | DeactivationRisk | null
 > => {
-  const delegatesResponse = await retry404(() => rpc.getDelegates(baker));
+  const delegatesResponse = await retry404(() => rpc.getDelegate(baker));
   return checkForDeactivations({ baker, cycle, delegatesResponse });
 };
 
 type CheckForDeactivationsArgs = {
   baker: string;
   cycle: number;
-  delegatesResponse: DelegatesResponse;
+  delegatesResponse: Delegate;
 };
 
 export const checkForDeactivations = async ({

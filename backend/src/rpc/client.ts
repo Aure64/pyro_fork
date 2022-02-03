@@ -13,22 +13,19 @@ import { makeMemoizedAsyncFunction } from "../memoization";
 import { get as rpcFetch } from "./util";
 import { retry404 } from "./util";
 
-import NetworkConnection from "./types/NetworkConnection";
-import TezosVersion from "./types/TezosVersion";
-import BootstrappedStatus from "./types/BootstrappedStatus";
-import EndorsingRightsH from "./types/PtHangz2aRng/EndorsingRights";
-import EndorsingRightsI from "./types/Psithaca2MLR/EndorsingRights";
-import ConstantsH from "./types/PtHangz2aRng/Constants";
-import ConstantsI from "./types/Psithaca2MLR/Constants";
-import BakingRightsH from "./types/PtHangz2aRng/BakingRights";
-import BakingRightsI from "./types/Psithaca2MLR/BakingRights";
-import { Item as BakingRightH } from "./types/PtHangz2aRng/BakingRights";
-import { Item as BakingRightI } from "./types/Psithaca2MLR/BakingRights";
-
-import BlockH from "./types/PtHangz2aRng/Block";
-import BlockI from "./types/Psithaca2MLR/Block";
-import BlockHeaderH from "./types/PtHangz2aRng/BlockHeader";
-import BlockHeaderI from "./types/Psithaca2MLR/BlockHeader";
+import { NetworkConnection } from "./types/NetworkConnection";
+import { TezosVersion } from "./types/TezosVersion";
+import { BootstrappedStatus } from "./types/BootstrappedStatus";
+import { EndorsingRights as EndorsingRightsH } from "./types/PtHangz2aRng/EndorsingRights";
+import { EndorsingRights as EndorsingRightsI } from "./types/Psithaca2MLR/EndorsingRights";
+import { Constants as ConstantsH } from "./types/PtHangz2aRng/Constants";
+import { Constants as ConstantsI } from "./types/Psithaca2MLR/Constants";
+import { BakingRights as BakingRightsH } from "./types/PtHangz2aRng/BakingRights";
+import { BakingRights as BakingRightsI } from "./types/Psithaca2MLR/BakingRights";
+import { Block as BlockH } from "./types/PtHangz2aRng/Block";
+import { Block as BlockI } from "./types/Psithaca2MLR/Block";
+import { ShellHeader as BlockHeader } from "./types/BlockHeader";
+import { Delegate } from "./types/Delegate";
 
 import { E_NETWORK_CONNECTIONS } from "./urls";
 import { E_TEZOS_VERSION } from "./urls";
@@ -40,6 +37,7 @@ import { E_CHAIN_ID } from "./urls";
 import { E_BLOCK } from "./urls";
 import { E_BLOCK_HEADER } from "./urls";
 import { E_BLOCK_HASH } from "./urls";
+import { E_DELEGATES_PKH } from "./urls";
 import { delegatesUrl } from "./urls";
 
 // interface RPCOptions {
@@ -50,13 +48,29 @@ type TzAddress = string;
 
 type URL = string;
 
-export type BlockHeader = BlockHeaderH | BlockHeaderI;
 export type Block = BlockH | BlockI;
-export type EndorsingRights = EndorsingRightsH | EndorsingRightsI;
+export type EndorsingRight =
+  | EndorsingRightsH[number]
+  | EndorsingRightsI[number];
 
-export type BakingRights = BakingRightsH | BakingRightsI;
-export type BakingRight = BakingRightH | BakingRightI;
+export type BakingRight = BakingRightsH[number] | BakingRightsI[number];
 export type Constants = ConstantsH | ConstantsI;
+
+export declare enum OpKind {
+  ORIGINATION = "origination",
+  DELEGATION = "delegation",
+  REVEAL = "reveal",
+  TRANSACTION = "transaction",
+  ACTIVATION = "activate_account",
+  ENDORSEMENT = "endorsement",
+  ENDORSEMENT_WITH_SLOT = "endorsement_with_slot",
+  SEED_NONCE_REVELATION = "seed_nonce_revelation",
+  DOUBLE_ENDORSEMENT_EVIDENCE = "double_endorsement_evidence",
+  DOUBLE_BAKING_EVIDENCE = "double_baking_evidence",
+  PROPOSALS = "proposals",
+  BALLOT = "ballot",
+  FAILING_NOOP = "failing_noop",
+}
 
 // interface WithPayloadRound {
 //   payload_round: number;
@@ -82,7 +96,7 @@ const getEndorsingRights = async (
   node: string,
   block: string,
   level: number
-): Promise<EndorsingRights> => {
+): Promise<EndorsingRight[]> => {
   const params = { level: level.toString() };
   return await rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`);
 };
@@ -119,8 +133,16 @@ const getBlockHash = async (node: string, block: string): Promise<string> => {
 const getBlockHeader = async (
   node: string,
   block: string
-): Promise<BlockHeaderH> => {
+): Promise<BlockHeader> => {
   return await rpcFetch(`${node}/${E_BLOCK_HEADER(block)}`);
+};
+
+const getDelegate = async (
+  node: string,
+  pkh: string,
+  block: string
+): Promise<Delegate> => {
+  return await rpcFetch(`${node}/${E_DELEGATES_PKH(block, pkh)}`);
 };
 
 export type RpcClient = {
@@ -136,7 +158,7 @@ export type RpcClient = {
 
   // getBlockHash: (options?: RPCOptions) => Promise<string>;
 
-  getBlockHash: (block: string) => Promise<string>;
+  getBlockHash: (block?: string) => Promise<string>;
 
   getBlockHistory: (
     blockHash: string,
@@ -150,7 +172,7 @@ export type RpcClient = {
   getEndorsingRights: (
     block: string,
     level: number
-  ) => Promise<EndorsingRights>;
+  ) => Promise<EndorsingRight[]>;
   getBakingRights: (
     block: string,
     level: number,
@@ -158,6 +180,7 @@ export type RpcClient = {
   ) => Promise<BakingRight[]>;
   getConstants: () => Promise<Constants>;
   getChainId: () => Promise<string>;
+  getDelegate: (pkh: TzAddress, block?: string) => Promise<Delegate>;
 };
 
 export default (nodeRpcUrl: URL): RpcClient => {
@@ -297,11 +320,11 @@ export default (nodeRpcUrl: URL): RpcClient => {
       10
     ),
 
-    getBlock: (block: string) => {
+    getBlock: (block = "head") => {
       return getBlock(nodeRpcUrl, block);
     },
 
-    getBlockHash: (block: string) => {
+    getBlockHash: (block = "head") => {
       return getBlockHash(nodeRpcUrl, block);
     },
 
@@ -327,6 +350,10 @@ export default (nodeRpcUrl: URL): RpcClient => {
 
     getDeactivated: (pkh: TzAddress, block = "head") => {
       return fetchDelegateField(pkh, block, "deactivated");
+    },
+
+    getDelegate: (pkh: TzAddress, block = "head") => {
+      return getDelegate(nodeRpcUrl, pkh, block);
     },
 
     getChainId: () => getChainId(nodeRpcUrl),

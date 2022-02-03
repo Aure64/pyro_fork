@@ -143,9 +143,13 @@ const main = async () => {
 
   const shortProtoHash = blockHeader.protocol.substr(0, 12);
 
-  const outDirBase = `src/rpc/schemas`;
+  const outDirSchemasBase = `tezos-rpc-schemas`;
+  const outDirSchemasProto = `${outDirSchemasBase}/${shortProtoHash}`;
+
+  const outDirBase = `src/rpc/types`;
   const outDirProto = `${outDirBase}/${shortProtoHash}`;
 
+  FS.mkdirSync(outDirSchemasProto, { recursive: true });
   FS.mkdirSync(outDirProto, { recursive: true });
 
   const typeNames = {
@@ -169,35 +173,50 @@ const main = async () => {
       name: "BlockHeader",
       protocol: false,
     },
+    [urls.E_DELEGATES_PKH("head", "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9")]: {
+      name: "Delegate",
+      protocol: false,
+    },
   };
 
   for (const [url, { name, protocol }] of Object.entries(typeNames)) {
     console.log("=======", name);
+    const outDir = protocol ? outDirProto : outDirBase;
+    const outDirSchemas = protocol ? outDirSchemasProto : outDirSchemasBase;
+    const schemaFileName = `${outDirSchemas}/${name}.json`;
     try {
-      const desc = (await rpcFetch(
-        `${node}/describe/${url}`
-      )) as unknown as EndpointDescription;
-      let schema = desc["static"].get_service.output.json_schema;
-      schema.definitions = {
-        ...schema.definitions,
-        unistring: { type: "string" },
-      };
+      if (!FS.existsSync(schemaFileName)) {
+        console.log(`Downloading schema to ${schemaFileName}`);
+        const desc = (await rpcFetch(
+          `${node}/describe/${url}`
+        )) as unknown as EndpointDescription;
+        let schema = desc["static"].get_service.output.json_schema;
+        schema.definitions = {
+          ...schema.definitions,
+          unistring: { type: "string" },
+        };
 
-      if (schema.$ref) {
-        const defName = stripDefPrefix(schema.$ref);
-        const definition = schema.definitions[defName];
-        delete schema.definitions[defName];
-        delete schema.$ref;
-        schema = { ...definition, ...schema };
+        if (schema.$ref) {
+          const defName = stripDefPrefix(schema.$ref);
+          const definition = schema.definitions[defName];
+          delete schema.definitions[defName];
+          delete schema.$ref;
+          schema = { ...definition, ...schema };
+        }
+        const processedSchema = preprocessSchema(schema);
+        FS.writeFileSync(
+          `${outDirSchemas}/${name}.json`,
+          JSON.stringify(processedSchema, null, 2),
+          "utf8"
+        );
+      } else {
+        console.log(`Reading schema from ${schemaFileName}`);
       }
-      const outDir = protocol ? outDirProto : outDirBase;
-      const processedSchema = preprocessSchema(schema);
-      FS.writeFileSync(
-        `${outDir}/${name}.json`,
-        JSON.stringify(processedSchema, null, 2)
-      );
-      const ts = await compile(processedSchema, name);
-      FS.writeFileSync(`${outDir}/${name}.d.ts`, ts);
+      const schema = JSON.parse(FS.readFileSync(schemaFileName, "utf8"));
+      const ts = await compile(schema, name);
+      const tsFileName = `${outDir}/${name}.d.ts`;
+      FS.writeFileSync(tsFileName, ts);
+      console.log(`Wrote ${tsFileName}`);
     } catch (x) {
       console.error(x);
     }
