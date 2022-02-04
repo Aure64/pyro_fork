@@ -17,7 +17,7 @@ import RpcClient from "./rpc/client";
 
 import { URL } from "./rpc/types";
 
-import protocolH from "bm-proto-h";
+import protocolH from "./bm-proto-h";
 
 const name = "bm";
 
