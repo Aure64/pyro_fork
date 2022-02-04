@@ -23,7 +23,7 @@
     "test": "jest",
     "tsc:lint": "tsc --noEmit -p .",
     "generate:gql": "NODE_ENV=development ts-node --transpile-only src/api/schema.ts",
-    "generate:rpc": "ts-node ./src/describe2.ts",
+    "generate:rpc": "ts-node ./src/describe.ts",
     "prepublishOnly": "yarn build && (cd ../ui && yarn build) && cp -a ../ui/build/. ./ui"
   },
   "devDependencies": {
