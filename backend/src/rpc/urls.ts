@@ -13,7 +13,7 @@ export const E_BLOCK_HEADER = (block: string) =>
   `chains/main/blocks/${block}/header`;
 
 export const E_BLOCK_HASH = (block: string) =>
-  `chains/main/blocks/${block}/header`;
+  `chains/main/blocks/${block}/hash`;
 
 export const E_BAKING_RIGHTS = (
   block: string,
