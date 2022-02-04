@@ -76,8 +76,16 @@ class HttpResponseError extends Error {
 }
 
 // https://stackoverflow.com/questions/46946380/fetch-api-request-timeout/57888548#57888548
+
+export const fetchTimeout = (url: string, ms: number) => {
+  const controller = new AbortController();
+  const promise = fetch(url, { signal: controller.signal });
+  const timeout = setTimeout(() => controller.abort(), ms);
+  return promise.finally(() => clearTimeout(timeout));
+};
+
 export const get = async (url: string) => {
-  const response = await fetch(url);
+  const response = await fetchTimeout(url, 30e3);
   if (response.ok) {
     return response.json();
   }
