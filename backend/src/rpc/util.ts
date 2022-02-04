@@ -1,5 +1,4 @@
 import { getLogger } from "loglevel";
-import { HttpResponseError } from "@taquito/http-utils";
 import { delay } from "../delay";
 import fetch from "cross-fetch";
 
@@ -57,16 +56,35 @@ export const tryForever: TryForever = async (call, interval, label = "") => {
   }
 };
 
+class HttpResponseError extends Error {
+  status: number;
+  statusText: string;
+  url: string;
+  constructor(
+    message: string,
+    status: number,
+    statusText: string,
+    url: string
+  ) {
+    super(message);
+    this.message = message;
+    this.status = status;
+    this.statusText = statusText;
+    this.url = url;
+    this.name = "HttpResponseError";
+  }
+}
+
+// https://stackoverflow.com/questions/46946380/fetch-api-request-timeout/57888548#57888548
 export const get = async (url: string) => {
   const response = await fetch(url);
   if (response.ok) {
     return response.json();
   }
   throw new HttpResponseError(
-    `Http error response: (${response.status})`,
+    `HTTP error: (${response.status})`,
     response.status,
     response.statusText,
-    await response.text(),
     url
   );
 };

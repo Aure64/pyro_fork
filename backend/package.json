@@ -59,7 +59,6 @@
   "dependencies": {
     "@iarna/toml": "^2.2.5",
     "@slack/webhook": "6.0.0",
-    "@taquito/http-utils": "11.2.0",
     "@taquito/utils": "11.2.0",
     "chalk": "4.1.2",
     "cors": "^2.8.5",

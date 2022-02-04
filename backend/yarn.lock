@@ -874,13 +874,6 @@
   resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-1.0.1.tgz#d21401f1d59ade56a62e139462a97f104ed19a36"
   integrity sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==
 
-"@taquito/http-utils@11.2.0":
-  version "11.2.0"
-  resolved "https://registry.yarnpkg.com/@taquito/http-utils/-/http-utils-11.2.0.tgz#36778bd75fc1272111c9ee48dc3337209a7fca7f"
-  integrity sha512-9s9l4z70ah8/pjmc5ARxdwy6GCnsqwYxMITqCqKBT4DKVgI8m8kXkdxaVg+Ob5ZGvRQoVDSgTeSeNg8TUMtc+w==
-  dependencies:
-    xhr2-cookies "^1.1.0"
-
 "@taquito/utils@11.2.0":
   version "11.2.0"
   resolved "https://registry.yarnpkg.com/@taquito/utils/-/utils-11.2.0.tgz#19341a5222e078f70f3181692de75cb853ca02ee"
@@ -1889,11 +1882,6 @@ cookie@0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/cookie/-/cookie-0.4.1.tgz#afd713fe26ebd21ba95ceb61f9a8116e50a537d1"
   integrity sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==
-
-cookiejar@^2.1.1:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/cookiejar/-/cookiejar-2.1.2.tgz#dd8a235530752f988f9a0844f3fc589e3111125c"
-  integrity sha512-Mw+adcfzPxcPeI+0WlvRrr/3lGVO0bD75SxX6811cxSh1Wbxx7xZBGK1eVtDf6si8rg2lhnUjsVLMFMfbRIuwA==
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -5396,13 +5384,6 @@ ws@^7.4.5:
   version "7.4.6"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
   integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
-
-xhr2-cookies@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/xhr2-cookies/-/xhr2-cookies-1.1.0.tgz#7d77449d0999197f155cb73b23df72505ed89d48"
-  integrity sha1-fXdEnQmZGX8VXLc7I99yUF7YnUg=
-  dependencies:
-    cookiejar "^2.1.1"
 
 xml-name-validator@^3.0.0:
   version "3.0.0"
