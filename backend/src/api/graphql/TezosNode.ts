@@ -109,7 +109,7 @@ export const TezosNodeQuery = extendType({
                 unableToReach,
                 tezosVersion: {
                   version: fmtVersion(tezosVersion),
-                  commitHash: tezosVersion?.commit_info.commit_hash || "",
+                  commitHash: tezosVersion?.commit_info?.commit_hash || "",
                   chainName: tezosVersion?.network_version.chain_name || "",
                 },
                 updatedAt: updatedAt.toISOString(),
