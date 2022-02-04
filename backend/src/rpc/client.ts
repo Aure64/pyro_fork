@@ -1,14 +1,8 @@
 import { getLogger } from "loglevel";
-// import { HttpResponseError } from "@taquito/http-utils";
 import { delay } from "../delay";
-// import fetch from "cross-fetch";
 import LRU from "lru-cache";
 
 import { makeMemoizedAsyncFunction } from "../memoization";
-
-// import { RpcClient as TaquitoRpcClient } from "@taquito/rpc";
-
-// import type { BlockHeaderResponse } from "@taquito/rpc";
 
 import { get as rpcFetch } from "./util";
 import { retry404 } from "./util";
@@ -40,23 +34,23 @@ import { E_BLOCK_HASH } from "./urls";
 import { E_DELEGATES_PKH } from "./urls";
 import { delegatesUrl } from "./urls";
 
-// interface RPCOptions {
-//   block: string;
-// }
-
 type TzAddress = string;
 
 type URL = string;
 
-export type Block = BlockH | BlockI;
-export type EndorsingRight =
-  | EndorsingRightsH[number]
-  | EndorsingRightsI[number];
+// export type Block = BlockH | BlockI;
+// export type EndorsingRight =
+//   | EndorsingRightsH[number]
+//   | EndorsingRightsI[number];
+// export type BakingRight = BakingRightsH[number] | BakingRightsI[number];
+// export type Constants = ConstantsH | ConstantsI;
 
-export type BakingRight = BakingRightsH[number] | BakingRightsI[number];
-export type Constants = ConstantsH | ConstantsI;
+export type Block = BlockH;
+export type EndorsingRight = EndorsingRightsH[number];
+export type BakingRight = BakingRightsH[number];
+export type Constants = ConstantsH;
 
-export declare enum OpKind {
+export enum OpKind {
   ORIGINATION = "origination",
   DELEGATION = "delegation",
   REVEAL = "reveal",
@@ -105,12 +99,19 @@ const getBakingRights = async (
   node: string,
   block: string,
   level: number,
-  max_priority: number
+  max_priority?: number,
+  delegate?: string
 ): Promise<BakingRight[]> => {
-  const params = {
-    level: level.toString(),
-    max_priority: max_priority.toString(),
-  };
+  const params: Record<string, string> = { level: level.toString() };
+  if (level !== undefined) {
+    params.level = level.toString();
+  }
+  if (max_priority !== undefined) {
+    params.max_priority = max_priority.toString();
+  }
+  if (delegate !== undefined) {
+    params.delegate = delegate;
+  }
   return await rpcFetch(`${node}/${E_BAKING_RIGHTS(block, params)}`);
 };
 
@@ -150,16 +151,9 @@ export type RpcClient = {
   getTezosVersion: () => Promise<TezosVersion>;
   getBootsrappedStatus: () => Promise<BootstrappedStatus>;
   getNetworkConnections: () => Promise<NetworkConnection[]>;
-
-  //getBlockHeader: (options?: RPCOptions) => Promise<BlockHeaderResponse>;
   getBlockHeader: (block: string) => Promise<BlockHeader>;
-
   getBlock: (block: string) => Promise<Block>;
-
-  // getBlockHash: (options?: RPCOptions) => Promise<string>;
-
   getBlockHash: (block?: string) => Promise<string>;
-
   getBlockHistory: (
     blockHash: string,
     length?: number
@@ -176,7 +170,8 @@ export type RpcClient = {
   getBakingRights: (
     block: string,
     level: number,
-    max_priority: number
+    max_priority?: number,
+    delegate?: string
   ) => Promise<BakingRight[]>;
   getConstants: () => Promise<Constants>;
   getChainId: () => Promise<string>;
@@ -184,25 +179,7 @@ export type RpcClient = {
 };
 
 export default (nodeRpcUrl: URL): RpcClient => {
-  //const rpc = new TaquitoRpcClient(nodeRpcUrl);
   const log = getLogger("rpc");
-
-  // const origGetBlockReader = rpc.getBlockHeader.bind(rpc);
-  // rpc.getBlockHeader = makeMemoizedAsyncFunction(
-  //   (async (options?: RPCOptions): Promise<BlockHeaderResponse> => {
-  //     const b = await origGetBlockReader(options);
-  //     return (b.priority === null || b.priority === undefined) &&
-  //       "payload_round" in b
-  //       ? {
-  //           ...b,
-  //           priority: (b as unknown as WithPayloadRound).payload_round,
-  //         }
-  //       : b;
-  //   }).bind(rpc),
-  //   ({ block }: { block: string }) =>
-  //     block.toLowerCase().startsWith("head") ? null : block,
-  //   10
-  // );
 
   const delegateCache = new LRU<string, any>({
     max: 5 * 25,
@@ -254,24 +231,6 @@ export default (nodeRpcUrl: URL): RpcClient => {
     return tezosVersion;
   };
 
-  // const fetchBlockHeaders = async (
-  //   blockHash: string,
-  //   rpc: TaquitoRpcClient,
-  //   length: number
-  // ): Promise<BlockHeaderResponse[]> => {
-  //   const history: BlockHeaderResponse[] = [];
-  //   let nextHash = blockHash;
-  //   // very primitive approach: we simply iterate up our chain to find the most recent blocks
-  //   while (history.length < length) {
-  //     const header = await retry404(() =>
-  //       rpc.getBlockHeader({ block: nextHash })
-  //     );
-  //     nextHash = header.predecessor;
-  //     history.push(header);
-  //   }
-  //   return history;
-  // };
-
   const fetchBlockHeaders = async (
     node: string,
     blockHash: string,
@@ -301,15 +260,16 @@ export default (nodeRpcUrl: URL): RpcClient => {
       return getEndorsingRights(nodeRpcUrl, block, level);
     },
 
-    getBakingRights: (block: string, level: number, max_priority: number) => {
-      return getBakingRights(nodeRpcUrl, block, level, max_priority);
+    getBakingRights: (
+      block: string,
+      level: number,
+      max_priority?: number,
+      delegate?: string
+    ) => {
+      return getBakingRights(nodeRpcUrl, block, level, max_priority, delegate);
     },
 
     getConstants: () => getConstants(nodeRpcUrl),
-
-    // getBlockHeader: (options?: RPCOptions) => {
-    //   return rpc.getBlockHeader(options);
-    // },
 
     getBlockHeader: makeMemoizedAsyncFunction(
       (block: string) => {

@@ -1,6 +1,6 @@
 import { Events } from "./events";
 import { checkBlockInfo } from "./nodeMonitor";
-import BootstrappedStatus from "./rpc/types/BootstrappedStatus";
+import { BootstrappedStatus } from "./rpc/types/BootstrappedStatus";
 import { history } from "./testFixtures/nodeMonitoring";
 
 Date.now = jest.fn(() => 1624758855227);

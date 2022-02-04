@@ -24,11 +24,6 @@ import NRpc from "./rpc/client";
 import { RpcClient as NRpcClient } from "./rpc/client";
 
 import { Block, EndorsingRight, BakingRight, OpKind } from "./rpc/client";
-// import { ShellHeader as BlockHeader } from "./rpc/types/BlockHeader";
-
-// import { Item as BakingRightH } from "./rpc/types/PtHangz2aRng/BakingRights";
-// import { Item as BakingRightI } from "./rpc/types/Psithaca2MLR/BakingRights";
-
 import { retry404, tryForever } from "./rpc/util";
 
 import { delay } from "./delay";
@@ -52,7 +47,9 @@ import { Operation as OperationH } from "./rpc/types/PtHangz2aRng/Block";
 
 import { Operation as OperationI } from "./rpc/types/Psithaca2MLR/Block";
 
-type OperationEntry = OperationH | OperationI;
+// type OperationEntry = OperationH | OperationI;
+
+type OperationEntry = OperationH;
 
 // console.log("" as unknown as OperationEntry);
 
@@ -318,8 +315,9 @@ const checkBlock = async ({
   const blockCycle = metadata.level_info.cycle;
 
   const { header } = block;
-  const priority =
-    "priority" in header ? header.priority : header.payload_round;
+  // const priority =
+  //   "priority" in header ? header.priority : header.payload_round;
+  const priority = header.priority;
   const blockTimestamp = new Date(block.header.timestamp);
 
   const createEvent = (
@@ -349,12 +347,15 @@ const checkBlock = async ({
   };
 
   const bakingRightForBlock = bakingRights.find((bakingRight) => {
-    if ("priority" in bakingRight) {
-      return (
-        bakingRight.priority === priority && bakingRight.level === blockLevel
-      );
-    }
-    return bakingRight.round === priority && bakingRight.level === blockLevel;
+    return (
+      bakingRight.priority === priority && bakingRight.level === blockLevel
+    );
+    // if ("priority" in bakingRight) {
+    //   return (
+    //     bakingRight.priority === priority && bakingRight.level === blockLevel
+    //   );
+    // }
+    // return bakingRight.round === priority && bakingRight.level === blockLevel;
   });
   log.debug(
     `Baking right for block ${blockLevel} of priority ${priority}:`,
@@ -464,8 +465,10 @@ export const loadBlockData = async (
   const t0 = new Date().getTime();
 
   const { header } = block;
-  const priority =
-    "priority" in header ? header.priority : header.payload_round;
+  // const priority =
+  //   "priority" in header ? header.priority : header.payload_round;
+
+  const priority = header.priority;
 
   const bakingRightsPromise = retry404(() =>
     rpc.getBakingRights(blockId, level, priority)
@@ -604,9 +607,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
         const accusedLevel = contentsItem.op1.operations.level;
         const accusedSignature = contentsItem.op1.signature;
         try {
-          const block = await retry404(() =>
-            rpc.getBlock({ block: `${accusedLevel}` })
-          );
+          const block = await retry404(() => rpc.getBlock(`${accusedLevel}`));
           const endorsementOperations = block.operations[0];
           const operation = endorsementOperations.find((operation) => {
             for (const c of operation.contents) {
@@ -679,8 +680,10 @@ export const checkBlockAccusationsForDoubleBake = async ({
         try {
           const bakingRights = await retry404(() =>
             rpc.getBakingRights(
-              { delegate: baker, level: accusedLevel },
-              { block: `${accusedLevel}` }
+              `${accusedLevel}`,
+              accusedLevel,
+              undefined,
+              baker
             )
           );
           const hadBakingRights =

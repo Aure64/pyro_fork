@@ -21,9 +21,11 @@ import {
   operationsWithDoubleEndorsementAccusation,
   operationsWithDoubleBakeAccusation,
 } from "./testFixtures/endorsing";
+
 setLevel("SILENT");
-import { DelegatesResponse, RpcClient } from "@taquito/rpc";
-import { BigNumber } from "bignumber.js";
+
+import { Delegate } from "rpc/types/Delegate";
+import { RpcClient } from "rpc/client";
 
 import { Events } from "./events";
 
@@ -84,10 +86,7 @@ describe("loadBlockData", () => {
       getEndorsingRights,
     } as unknown as RpcClient;
 
-    await loadBlockData({
-      blockId: "some_hash",
-      rpc,
-    });
+    await loadBlockData("some_hash", rpc);
 
     expect(getBakingRights.mock.calls.length).toEqual(1);
     expect(getBlock.mock.calls.length).toEqual(1);
@@ -112,12 +111,7 @@ describe("loadBlockData", () => {
 
     const blockId = "some_hash";
 
-    await expect(
-      loadBlockData({
-        blockId,
-        rpc,
-      })
-    ).rejects.toThrow();
+    await expect(loadBlockData(blockId, rpc)).rejects.toThrow();
   });
 });
 
@@ -229,14 +223,15 @@ describe("checkBlockAccusationsForDoubleBake", () => {
 });
 
 describe("checkForDeactivations", () => {
-  const baseDelegatesResponse: DelegatesResponse = {
-    balance: new BigNumber(1000),
-    frozen_balance: new BigNumber(0),
+  const baseDelegatesResponse: Delegate = {
+    voting_power: 1,
+    balance: "1000",
+    frozen_balance: "0",
     frozen_balance_by_cycle: [],
-    staking_balance: new BigNumber(1000),
+    staking_balance: "1000",
     deactivated: false,
     grace_period: 1010,
-    delegated_balance: new BigNumber(0),
+    delegated_balance: "0",
     delegated_contracts: [],
   };
 

@@ -1,8 +1,9 @@
-import { BlockHeaderResponse } from "@taquito/rpc";
+import { ShellHeader as BlockHeader } from "rpc/types/BlockHeader";
 
-export const history: BlockHeaderResponse[] = [
+export const history: BlockHeader[] = [
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
+    liquidity_baking_escape_vote: false,
     chain_id: "NetXdQprcVkpaWU",
     hash: "BKpCPNBa5SrQ4uAA5mnJJfgFRmUFQX8ME4vJZgDLhJpmoNJJN6n",
     level: 1337557,
@@ -19,7 +20,8 @@ export const history: BlockHeaderResponse[] = [
       "sigmrLJnszNaQLnizmzXpYXVgjhEW1AnUU2Z2UKwQCq8UffFEhVH1twPzexKVKsEAFJ4pp8ArgikQQ8vrLLJwiDXEh6HS8H1",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
+    liquidity_baking_escape_vote: false,
     chain_id: "NetXdQprcVkpaWU",
     hash: "BMAbAXpKGAo3jrGvLz615asWfa4Ro54Vnimyh4ZqPHDwQPjUWTQ",
     level: 1337556,
@@ -36,7 +38,8 @@ export const history: BlockHeaderResponse[] = [
       "sigbP7w3Y4A33MmJwJfYQAhjf3fiMmoTs9rWdR4PcxfJb8SZPmKTZHmXQS4iu1vCzfn5bgdj3mvWkUKGePUoL4gXZnsMFWyD",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
+    liquidity_baking_escape_vote: false,
     chain_id: "NetXdQprcVkpaWU",
     hash: "BL9NcXitxtcydaAYJbM5UijUQo1CrJgKuEDTZUNuG2zxTpaom9m",
     level: 1337555,
@@ -53,7 +56,8 @@ export const history: BlockHeaderResponse[] = [
       "sigRzGogUhF24iPEGw6void7AsmLANBkBbszZHVWnCcdm4Fb94oQh1czDjfyG1WPX68abbuRBxWrykHM4avBdbM72hYcAHJ8",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
+    liquidity_baking_escape_vote: false,
     chain_id: "NetXdQprcVkpaWU",
     hash: "BM67jtawdpLg3Gjup7JXGgEJz9N13MjQo7GqJQzEr3pbYZ6aZh6",
     level: 1337554,
@@ -70,7 +74,8 @@ export const history: BlockHeaderResponse[] = [
       "sigbgLLrcUPgbckXJHexfDN5aNhPejPuhyyk79heCWtCcxfvsEGSZwnTQ59Wf5rABn88ypVPwdGe3h3cw1CiJLqtaPsiCVPj",
   },
   {
-    protocol: "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
+    liquidity_baking_escape_vote: false,
     chain_id: "NetXdQprcVkpaWU",
     hash: "BLx2tF8NbJMNRnkrfkiMG8YwTFM4fEaGNBSDB3aCrrysVXt4U6a",
     level: 1337553,
