@@ -1,4 +1,4 @@
-import { ShellHeader as BlockHeader } from "rpc/types/BlockHeader";
+import { BlockHeader } from "rpc/types";
 
 export const history: BlockHeader[] = [
   {

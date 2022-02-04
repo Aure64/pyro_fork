@@ -1,11 +1,11 @@
-import { OpKind } from "../rpc/client";
-import { EndorsingRight } from "../rpc/client";
+import { OpKind } from "../rpc/types";
+import { EndorsingRight } from "../rpc/types";
 import {
-  Operation as OperationEntry,
-  DoubleBakingEvidence1 as DoubleBakingEvidence,
-  DoubleEndorsementEvidence1 as DoubleEndorsementEvidence,
-  EndorsementWithSlot1 as EndorsementWithSlot,
-} from "rpc/types/PtHangz2aRng/Block";
+  OperationEntry,
+  DoubleBakingEvidence,
+  DoubleEndorsementEvidence,
+  EndorsementWithSlot,
+} from "rpc/types";
 
 export const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
 export const level = 1318230;

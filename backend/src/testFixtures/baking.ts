@@ -1,4 +1,4 @@
-import { BakingRight } from "rpc/client";
+import { BakingRight } from "rpc/types";
 
 export const levelWithMultipleBakers = 1298498;
 

@@ -1,3 +1,6 @@
+import { join as joinPath } from "path";
+import { getLogger } from "loglevel";
+
 //import { BakerEvent, TezosNodeEvent } from "./types";
 import {
   BakerEvent,
@@ -7,23 +10,7 @@ import {
   Event,
   Events,
 } from "./events";
-import { getLogger } from "loglevel";
 
-// import {
-//   BakingRightsResponse,
-//   BlockResponse,
-//   EndorsingRightsResponse,
-//   OperationEntry,
-//   OpKind,
-//   RpcClient,
-//   DelegatesResponse,
-//   BakingRightsResponseItem,
-// } from "@taquito/rpc";
-
-import NRpc from "./rpc/client";
-import { RpcClient as NRpcClient } from "./rpc/client";
-
-import { Block, EndorsingRight, BakingRight, OpKind } from "./rpc/client";
 import { retry404, tryForever } from "./rpc/util";
 
 import { delay } from "./delay";
@@ -35,21 +22,21 @@ import now from "./now";
 import * as format from "./format";
 import * as EventLog from "./eventlog";
 
-import { join as joinPath } from "path";
+import NRpc from "./rpc/client";
+import { RpcClient as NRpcClient } from "./rpc/client";
+import {
+  Block,
+  EndorsingRight,
+  BakingRight,
+  OpKind,
+  URL,
+  Delegate,
+  OperationEntry,
+} from "./rpc/types";
 
 const name = "bm";
 
-type URL = string;
-
-import { Delegate } from "./rpc/types/Delegate";
-
-import { Operation as OperationH } from "./rpc/types/PtHangz2aRng/Block";
-
-import { Operation as OperationI } from "./rpc/types/Psithaca2MLR/Block";
-
 // type OperationEntry = OperationH | OperationI;
-
-type OperationEntry = OperationH;
 
 // console.log("" as unknown as OperationEntry);
 

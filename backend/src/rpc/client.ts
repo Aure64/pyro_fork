@@ -7,19 +7,11 @@ import { makeMemoizedAsyncFunction } from "../memoization";
 import { get as rpcFetch } from "./util";
 import { retry404 } from "./util";
 
-import { NetworkConnection } from "./types/NetworkConnection";
-import { TezosVersion } from "./types/TezosVersion";
-import { BootstrappedStatus } from "./types/BootstrappedStatus";
-import { EndorsingRights as EndorsingRightsH } from "./types/PtHangz2aRng/EndorsingRights";
-import { EndorsingRights as EndorsingRightsI } from "./types/Psithaca2MLR/EndorsingRights";
-import { Constants as ConstantsH } from "./types/PtHangz2aRng/Constants";
-import { Constants as ConstantsI } from "./types/Psithaca2MLR/Constants";
-import { BakingRights as BakingRightsH } from "./types/PtHangz2aRng/BakingRights";
-import { BakingRights as BakingRightsI } from "./types/Psithaca2MLR/BakingRights";
-import { Block as BlockH } from "./types/PtHangz2aRng/Block";
-import { Block as BlockI } from "./types/Psithaca2MLR/Block";
-import { ShellHeader as BlockHeader } from "./types/BlockHeader";
-import { Delegate } from "./types/Delegate";
+import { NetworkConnection } from "./types";
+import { TezosVersion } from "./types";
+import { BootstrappedStatus } from "./types";
+import { BlockHeader } from "./types";
+import { Delegate } from "./types";
 
 import { E_NETWORK_CONNECTIONS } from "./urls";
 import { E_TEZOS_VERSION } from "./urls";
@@ -34,37 +26,13 @@ import { E_BLOCK_HASH } from "./urls";
 import { E_DELEGATES_PKH } from "./urls";
 import { delegatesUrl } from "./urls";
 
-type TzAddress = string;
+import { TzAddress } from "rpc/types";
+import { URL } from "rpc/types";
 
-type URL = string;
-
-// export type Block = BlockH | BlockI;
-// export type EndorsingRight =
-//   | EndorsingRightsH[number]
-//   | EndorsingRightsI[number];
-// export type BakingRight = BakingRightsH[number] | BakingRightsI[number];
-// export type Constants = ConstantsH | ConstantsI;
-
-export type Block = BlockH;
-export type EndorsingRight = EndorsingRightsH[number];
-export type BakingRight = BakingRightsH[number];
-export type Constants = ConstantsH;
-
-export enum OpKind {
-  ORIGINATION = "origination",
-  DELEGATION = "delegation",
-  REVEAL = "reveal",
-  TRANSACTION = "transaction",
-  ACTIVATION = "activate_account",
-  ENDORSEMENT = "endorsement",
-  ENDORSEMENT_WITH_SLOT = "endorsement_with_slot",
-  SEED_NONCE_REVELATION = "seed_nonce_revelation",
-  DOUBLE_ENDORSEMENT_EVIDENCE = "double_endorsement_evidence",
-  DOUBLE_BAKING_EVIDENCE = "double_baking_evidence",
-  PROPOSALS = "proposals",
-  BALLOT = "ballot",
-  FAILING_NOOP = "failing_noop",
-}
+import { Block } from "./types";
+import { BakingRight } from "./types";
+import { EndorsingRight } from "./types";
+import { Constants } from "./types";
 
 // interface WithPayloadRound {
 //   payload_round: number;

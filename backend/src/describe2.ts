@@ -146,7 +146,7 @@ const main = async () => {
   const outDirSchemasBase = `tezos-rpc-schemas`;
   const outDirSchemasProto = `${outDirSchemasBase}/${shortProtoHash}`;
 
-  const outDirBase = `src/rpc/types`;
+  const outDirBase = `src/rpc/types/gen`;
   const outDirProto = `${outDirBase}/${shortProtoHash}`;
 
   FS.mkdirSync(outDirSchemasProto, { recursive: true });

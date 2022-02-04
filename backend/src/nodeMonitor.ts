@@ -1,11 +1,11 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
 //import { BlockHeaderResponse } from "@taquito/rpc";
-import { ShellHeader as BlockHeader } from "./rpc/types/BlockHeader";
+import { BlockHeader } from "./rpc/types";
 import { readJson } from "./fs-utils";
 
-import { BootstrappedStatus } from "./rpc/types/BootstrappedStatus";
-import { TezosVersion } from "./rpc/types/TezosVersion";
+import { BootstrappedStatus } from "./rpc/types";
+import { TezosVersion } from "./rpc/types";
 
 import client, { RpcClient } from "./rpc/client";
 

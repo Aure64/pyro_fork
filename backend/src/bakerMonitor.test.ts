@@ -24,7 +24,7 @@ import {
 
 setLevel("SILENT");
 
-import { Delegate } from "rpc/types/Delegate";
+import { Delegate } from "rpc/types";
 import { RpcClient } from "rpc/client";
 
 import { Events } from "./events";
