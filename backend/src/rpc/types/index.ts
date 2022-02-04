@@ -22,24 +22,41 @@ import {
   EndorsementWithSlot1 as EndorsementWithSlotH,
 } from "./gen/PtHangz2aRng/Block";
 
-// export type Block = BlockH | BlockI;
-// export type EndorsingRight =
-//   | EndorsingRightsH[number]
-//   | EndorsingRightsI[number];
-// export type BakingRight = BakingRightsH[number] | BakingRightsI[number];
-// export type Constants = ConstantsH | ConstantsI;
+import {
+  DoubleBakingEvidence1 as DoubleBakingEvidenceI,
+  DoubleEndorsementEvidence1 as DoubleEndorsementEvidenceI,
+  Endorsement1 as EndorsementWithSlotI,
+} from "./gen/Psithaca2MLR/Block";
 
-export type Block = BlockH;
-export { BlockH };
+export { BlockH, BlockI };
+export type Block = BlockH | BlockI;
 
-export type OperationEntry = OperationH;
-export type DoubleBakingEvidence = DoubleBakingEvidenceH;
-export type DoubleEndorsementEvidence = DoubleEndorsementEvidenceH;
-export type EndorsementWithSlot = EndorsementWithSlotH;
+export type EndorsingRightH = EndorsingRightsH[number];
+export type EndorsingRightI = EndorsingRightsI[number];
+export type { EndorsingRightsH, EndorsingRightsI };
+export type EndorsingRight = EndorsingRightH | EndorsingRightI;
+export type EndorsingRights = EndorsingRightsH | EndorsingRightsI;
 
-export type EndorsingRight = EndorsingRightsH[number];
-export type BakingRight = BakingRightsH[number];
-export type Constants = ConstantsH;
+export type BakingRightH = BakingRightsH[number];
+export type BakingRightI = BakingRightsI[number];
+export type { BakingRightsH, BakingRightsI };
+export type BakingRights = BakingRightsH | BakingRightI;
+export type BakingRight = BakingRightH | BakingRightI;
+export type Constants = ConstantsH | ConstantsI;
+
+export type { OperationH, OperationI };
+export type OperationEntry = OperationH | OperationI;
+
+export type DoubleBakingEvidence =
+  | DoubleBakingEvidenceH
+  | DoubleBakingEvidenceI;
+
+export type DoubleEndorsementEvidence =
+  | DoubleEndorsementEvidenceH
+  | DoubleEndorsementEvidenceI;
+
+export type EndorsementWithSlot = EndorsementWithSlotH | EndorsementWithSlotI;
+export { EndorsementWithSlotH, EndorsementWithSlotI };
 
 export enum OpKind {
   ORIGINATION = "origination",

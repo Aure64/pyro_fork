@@ -1,16 +1,16 @@
 import { OpKind } from "../rpc/types";
-import { EndorsingRight } from "../rpc/types";
+import { EndorsingRightsH } from "../rpc/types";
 import {
-  OperationEntry,
+  OperationH,
   DoubleBakingEvidence,
   DoubleEndorsementEvidence,
-  EndorsementWithSlot,
+  EndorsementWithSlotH,
 } from "rpc/types";
 
 export const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
 export const level = 1318230;
 
-export const successfulEndorsement: OperationEntry = {
+export const successfulEndorsement: OperationH = {
   protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
   chain_id: "NetXxkAx4woPLyu",
   hash: "op2Vjgfz5sESAgf9droANKQ35toL43ySFCmDzGWTb1nnaaQnSa8",
@@ -60,7 +60,7 @@ export const successfulEndorsement: OperationEntry = {
   ],
 };
 
-export const endorsementsWithMiss: OperationEntry[] = [
+export const endorsementsWithMiss: OperationH[] = [
   {
     protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
     chain_id: "NetXdQprcVkpaWU",
@@ -173,7 +173,7 @@ export const endorsementsWithSuccess = [
   successfulEndorsement,
 ];
 
-export const endorsingRightsResponse: EndorsingRight[] = [
+export const endorsingRightsResponse: EndorsingRightsH = [
   {
     level: 1318230,
     delegate: "tz3bvNMQ95vfAYtG8193ymshqjSvmxiCUuR5",
@@ -317,7 +317,7 @@ const operationContentsWithDoubleEndorsement: DoubleEndorsementEvidence = {
       kind: OpKind.ENDORSEMENT,
       level,
     },
-    signature: (successfulEndorsement.contents[0] as EndorsementWithSlot)
+    signature: (successfulEndorsement.contents[0] as EndorsementWithSlotH)
       .endorsement.signature,
   },
   op2: {
@@ -330,7 +330,7 @@ const operationContentsWithDoubleEndorsement: DoubleEndorsementEvidence = {
   },
 };
 
-export const operationsWithDoubleEndorsementAccusation: OperationEntry[] = [
+export const operationsWithDoubleEndorsementAccusation: OperationH[] = [
   {
     protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
     chain_id: "NetXdQprcVkpaWU",
@@ -372,7 +372,7 @@ const operationContentsWithDoubleBake: DoubleBakingEvidence = {
   },
 };
 
-export const operationsWithDoubleBakeAccusation: OperationEntry[] = [
+export const operationsWithDoubleBakeAccusation: OperationH[] = [
   {
     protocol: "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
     chain_id: "NetXdQprcVkpaWU",

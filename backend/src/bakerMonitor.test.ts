@@ -5,7 +5,7 @@ import {
   checkBlockEndorsingRights,
   checkForDeactivations,
   loadBlockData,
-} from "./bakerMonitor";
+} from "./bm-proto-h";
 import { setLevel } from "loglevel";
 import {
   responseWithPriorityZero,

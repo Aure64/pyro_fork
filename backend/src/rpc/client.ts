@@ -30,8 +30,8 @@ import { TzAddress } from "rpc/types";
 import { URL } from "rpc/types";
 
 import { Block } from "./types";
-import { BakingRight } from "./types";
-import { EndorsingRight } from "./types";
+import { BakingRights } from "./types";
+import { EndorsingRights } from "./types";
 import { Constants } from "./types";
 
 // interface WithPayloadRound {
@@ -58,7 +58,7 @@ const getEndorsingRights = async (
   node: string,
   block: string,
   level: number
-): Promise<EndorsingRight[]> => {
+): Promise<EndorsingRights> => {
   const params = { level: level.toString() };
   return await rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`);
 };
@@ -69,7 +69,7 @@ const getBakingRights = async (
   level: number,
   max_priority?: number,
   delegate?: string
-): Promise<BakingRight[]> => {
+): Promise<BakingRights> => {
   const params: Record<string, string> = { level: level.toString() };
   if (level !== undefined) {
     params.level = level.toString();
@@ -134,13 +134,13 @@ export type RpcClient = {
   getEndorsingRights: (
     block: string,
     level: number
-  ) => Promise<EndorsingRight[]>;
+  ) => Promise<EndorsingRights>;
   getBakingRights: (
     block: string,
     level: number,
     max_priority?: number,
     delegate?: string
-  ) => Promise<BakingRight[]>;
+  ) => Promise<BakingRights>;
   getConstants: () => Promise<Constants>;
   getChainId: () => Promise<string>;
   getDelegate: (pkh: TzAddress, block?: string) => Promise<Delegate>;
