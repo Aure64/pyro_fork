@@ -214,7 +214,7 @@ const main = async () => {
       }
       const schema = JSON.parse(FS.readFileSync(schemaFileName, "utf8"));
       const ts = await compile(schema, name);
-      const tsFileName = `${outDir}/${name}.d.ts`;
+      const tsFileName = `${outDir}/${name}.ts`;
       FS.writeFileSync(tsFileName, ts);
       console.log(`Wrote ${tsFileName}`);
     } catch (x) {
