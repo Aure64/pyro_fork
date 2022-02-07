@@ -9,6 +9,7 @@ query getNodes($offset: Int!, $limit: Int!)
         level
         timestamp
         priority
+        payloadRound
       }
       tezosVersion {
         version,

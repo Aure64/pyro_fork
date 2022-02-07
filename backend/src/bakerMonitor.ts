@@ -1,7 +1,7 @@
 import { join as joinPath } from "path";
 import { getLogger } from "loglevel";
 
-import { BakerBlockEvent, Event } from "./events";
+import { BakerBlockEvent, Event, BakerEvent } from "./events";
 
 import { tryForever } from "./rpc/util";
 
@@ -18,6 +18,7 @@ import RpcClient from "./rpc/client";
 import { URL } from "./rpc/types";
 
 import protocolH from "./bm-proto-h";
+import protocolI from "./bm-proto-i";
 
 const name = "bm";
 
@@ -157,17 +158,52 @@ export const create = async (
         log.debug(
           `Processing block at level ${currentLevel} for ${bakers.length} baker(s)`
         );
-        const { events, blockLevel, blockCycle } = await protocolH({
-          bakers,
-          rpc: rpc,
-          blockId: currentLevel.toString(),
-          lastCycle: lastBlockCycle,
-        });
+        const block = await rpc.getBlock(`${currentLevel}`);
+
+        if (block === undefined)
+          throw new Error(`Block ${currentLevel} not found`);
+        if (block.metadata === undefined)
+          throw new Error(
+            `Block ${block.hash} at level ${currentLevel} has no metadata`
+          );
+        if (block.metadata.level_info === undefined)
+          throw new Error(
+            `Metadata for block ${block.hash} at level ${currentLevel} has no level info`
+          );
+
+        const blockLevel = block.metadata.level_info.level;
+        const blockCycle = block.metadata.level_info.cycle;
+
         if (blockLevel !== currentLevel) {
           throw new Error(
             `Block level ${currentLevel} was requested but data returned level ${blockLevel}`
           );
         }
+
+        let events: BakerEvent[];
+
+        switch (block.protocol) {
+          case "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx":
+            events = await protocolH({
+              bakers,
+              block,
+              rpc: rpc,
+              lastCycle: lastBlockCycle,
+            });
+            break;
+          case "Psithaca2MLRFYargivpo7YvUr7wUDqyxrdhC5CQq78mRvimz6A":
+            events = await protocolI({
+              bakers,
+              block,
+              rpc: rpc,
+              lastCycle: lastBlockCycle,
+            });
+            break;
+          default:
+            console.warn(`Unknown protocol at level ${blockLevel}`);
+            events = [];
+        }
+
         log.debug(
           `About to post ${events.length} baking events`,
           format.aggregateByBaker(events)

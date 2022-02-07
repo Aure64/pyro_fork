@@ -44,7 +44,7 @@ export type EndorsingRights = EndorsingRightsH | EndorsingRightsI;
 export type BakingRightH = BakingRightsH[number];
 export type BakingRightI = BakingRightsI[number];
 export type { BakingRightsH, BakingRightsI };
-export type BakingRights = BakingRightsH | BakingRightI;
+export type BakingRights = BakingRightsH | BakingRightsI;
 export type BakingRight = BakingRightH | BakingRightI;
 export type Constants = ConstantsH | ConstantsI;
 

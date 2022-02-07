@@ -1,7 +1,6 @@
-import { getLogger } from "loglevel";
 import { delay } from "../delay";
+import { getLogger } from "loglevel";
 import fetch from "cross-fetch";
-
 /**
  * Wraps provided API function so that it is retried on 404.
  * These are common on server clusters where a node may slightly lag
@@ -85,7 +84,10 @@ export const fetchTimeout = (url: string, ms: number) => {
 };
 
 export const get = async (url: string) => {
+  const t0 = new Date().getTime();
   const response = await fetchTimeout(url, 30e3);
+  const dt = new Date().getTime() - t0;
+  getLogger("rpc").debug(`|> ${url} in ${dt} ms`);
   if (response.ok) {
     return response.json();
   }

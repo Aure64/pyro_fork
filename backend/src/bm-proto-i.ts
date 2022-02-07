@@ -6,20 +6,20 @@ import now from "./now";
 
 import { RpcClient } from "./rpc/client";
 import {
-  BlockH,
-  EndorsingRightsH,
-  BakingRightsH,
-  BakingRightH,
+  BlockI,
+  EndorsingRightsI,
+  BakingRightsI,
+  BakingRightI,
   OpKind,
   Delegate,
-  OperationH as OperationEntry,
+  OperationI as OperationEntry,
 } from "./rpc/types";
 
 const name = "bm-proto-h";
 
 export type CheckBlockArgs = {
   bakers: string[];
-  block: BlockH;
+  block: BlockI;
   rpc: RpcClient;
   lastCycle: number | undefined;
 };
@@ -41,7 +41,7 @@ export default async ({
   const blockId = `${blockLevel}`;
 
   const { header } = block;
-  const priority = header.priority;
+  const priority = header.payload_round;
   const blockTimestamp = new Date(header.timestamp);
 
   const { bakingRights, endorsingRights } = await loadBlockRights(
@@ -80,9 +80,13 @@ export default async ({
   };
 
   const bakingRightForBlock = bakingRights.find((bakingRight) => {
-    return (
-      bakingRight.priority === priority && bakingRight.level === blockLevel
-    );
+    return bakingRight.round === priority && bakingRight.level === blockLevel;
+    // if ("priority" in bakingRight) {
+    //   return (
+    //     bakingRight.priority === priority && bakingRight.level === blockLevel
+    //   );
+    // }
+    // return bakingRight.round === priority && bakingRight.level === blockLevel;
   });
   log.debug(
     `Baking right for block ${blockLevel} of priority ${priority}:`,
@@ -147,9 +151,20 @@ export default async ({
   return events;
 };
 
+// type LoadBlockDataArgs = {
+//   blockId: string;
+//   rpc: RpcClient;
+// };
+
+// type BlockData = {
+//   bakingRights: BakingRightsResponse;
+//   endorsingRights: EndorsingRightsResponse;
+//   block: BlockResponse;
+// };
+
 type BlockData = {
-  bakingRights: BakingRightsH;
-  endorsingRights: EndorsingRightsH;
+  bakingRights: BakingRightsI;
+  endorsingRights: EndorsingRightsI;
 };
 
 export const loadBlockRights = async (
@@ -166,8 +181,8 @@ export const loadBlockRights = async (
   ]);
 
   return {
-    bakingRights: bakingRights as BakingRightsH,
-    endorsingRights: endorsingRights as EndorsingRightsH,
+    bakingRights: bakingRights as BakingRightsI,
+    endorsingRights: endorsingRights as EndorsingRightsI,
   };
 };
 
@@ -175,7 +190,7 @@ type CheckBlockBakingRightsArgs = {
   baker: string;
   blockBaker: string;
   blockId: string;
-  bakingRight: BakingRightH;
+  bakingRight: BakingRightI;
   blockPriority: number;
 };
 
@@ -211,7 +226,7 @@ type CheckBlockEndorsingRightsArgs = {
   baker: string;
   endorsementOperations: OperationEntry[];
   level: number;
-  endorsingRights: EndorsingRightsH;
+  endorsingRights: EndorsingRightsI;
 };
 
 /**
@@ -226,11 +241,16 @@ export const checkBlockEndorsingRights = ({
   | [Events.Endorsed | Events.MissedEndorsement, number]
   | null => {
   const log = getLogger(name);
-  const endorsingRight = endorsingRights.find(
-    (right) => right.level === level && right.delegate === baker
+  const levelRights = endorsingRights.find((right) => right.level === level);
+  if (!levelRights) {
+    log.warn(`did not find rights for level ${level} in`, endorsingRights);
+    return null;
+  }
+  const endorsingRight = levelRights.delegates.find(
+    (d) => d.delegate === baker
   );
   if (endorsingRight) {
-    const slotCount = endorsingRight.slots.length;
+    const slotCount = endorsingRight.endorsing_power;
     log.debug(
       `found ${slotCount} endorsement slots for baker ${baker} at level ${level}`
     );
@@ -239,10 +259,10 @@ export const checkBlockEndorsingRights = ({
       undefined;
     if (didEndorse) {
       log.debug(`Successful endorse for baker ${baker}`);
-      return [Events.Endorsed, endorsingRight.slots.length];
+      return [Events.Endorsed, slotCount];
     } else {
       log.debug(`Missed endorse for baker ${baker} at level ${level}`);
-      return [Events.MissedEndorsement, endorsingRight.slots.length];
+      return [Events.MissedEndorsement, slotCount];
     }
   }
 
@@ -256,7 +276,7 @@ const isEndorsementByDelegate = (
 ): boolean => {
   for (const contentsItem of operation.contents) {
     if (
-      contentsItem.kind === OpKind.ENDORSEMENT_WITH_SLOT &&
+      contentsItem.kind === OpKind.ENDORSEMENT &&
       "metadata" in contentsItem
     ) {
       if (contentsItem.metadata.delegate === delegate) {
@@ -286,14 +306,15 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
         const accusedLevel = contentsItem.op1.operations.level;
         const accusedSignature = contentsItem.op1.signature;
         try {
-          const block = (await rpc.getBlock(`${accusedLevel}`)) as BlockH;
+          const block = (await rpc.getBlock(`${accusedLevel}`)) as BlockI;
           const endorsementOperations = block.operations[0];
           const operation = endorsementOperations.find((operation) => {
             for (const c of operation.contents) {
-              if (c.kind === OpKind.ENDORSEMENT_WITH_SLOT) {
-                if (c.endorsement.signature === accusedSignature) {
-                  return true;
-                }
+              if (c.kind === OpKind.ENDORSEMENT) {
+                // FIXME This doesn't exist in Ithaca
+                // if (c.endorsement.signature === accusedSignature) {
+                //   return true;
+                // }
               }
             }
           });
@@ -328,10 +349,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
  */
 const findEndorserForOperation = (operation: OperationEntry) => {
   for (const contentsItem of operation.contents) {
-    if (
-      contentsItem.kind === OpKind.ENDORSEMENT_WITH_SLOT &&
-      "metadata" in contentsItem
-    )
+    if (contentsItem.kind === OpKind.ENDORSEMENT && "metadata" in contentsItem)
       return contentsItem.metadata.delegate;
   }
 
@@ -355,18 +373,18 @@ export const checkBlockAccusationsForDoubleBake = async ({
       if (contentsItem.kind === OpKind.DOUBLE_BAKING_EVIDENCE) {
         const accusedHash = operation.hash;
         const accusedLevel = contentsItem.bh1.level;
-        const accusedPriority = contentsItem.bh1.priority;
+        const accusedPriority = contentsItem.bh1.payload_round;
         try {
-          const bakingRights = await rpc.getBakingRights(
+          const bakingRights = (await rpc.getBakingRights(
             `${accusedLevel}`,
             accusedLevel,
             undefined,
             baker
-          );
+          )) as BakingRightsI;
           const hadBakingRights =
-            (bakingRights as BakingRightsH).find(
+            bakingRights.find(
               (right) =>
-                right.priority === accusedPriority && right.delegate === baker
+                right.round === accusedPriority && right.delegate === baker
             ) !== undefined;
           if (hadBakingRights) {
             log.info(

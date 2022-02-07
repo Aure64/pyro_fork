@@ -8,6 +8,7 @@ import type { BlockInfo } from './api';
 export default ({ recentBlocks }: { recentBlocks: Array<BlockInfo> }) => (
   <>
     {recentBlocks.slice(0, 3).map((block, index) => {
+      const { priority, payloadRound } = block;
       return (
         <RelativeTimeRow
           key={block.hash}
@@ -16,7 +17,12 @@ export default ({ recentBlocks }: { recentBlocks: Array<BlockInfo> }) => (
         >
           <Box>
             <code>
-              {block.level} <Priority priority={block.priority} />
+              {block.level}{' '}
+              <Priority
+                priority={
+                  typeof priority === 'number' ? priority : payloadRound
+                }
+              />
             </code>{' '}
             <code>{ellipsifyMiddle(block.hash)}</code>{' '}
           </Box>

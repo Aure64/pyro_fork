@@ -10,9 +10,14 @@ export const BlockInfo = objectType({
     t.nonNull.string("hash");
     t.nonNull.int("level");
     t.nonNull.string("timestamp");
-    //priority is never supposed to be null according
-    //to docs and Taquito, but it is null in very early tenderbake impl
     t.int("priority");
+    t.int("payload_round");
+    t.field("payloadRound", {
+      type: "Int",
+      async resolve(root, _args, _ctx) {
+        return root.payload_round;
+      },
+    });
   },
 });
 

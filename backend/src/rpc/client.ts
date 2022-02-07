@@ -60,7 +60,9 @@ const getEndorsingRights = async (
   level: number
 ): Promise<EndorsingRights> => {
   const params = { level: level.toString() };
-  return await rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`);
+  return retry404(() =>
+    rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`)
+  );
 };
 
 const getBakingRights = async (
@@ -80,7 +82,7 @@ const getBakingRights = async (
   if (delegate !== undefined) {
     params.delegate = delegate;
   }
-  return await rpcFetch(`${node}/${E_BAKING_RIGHTS(block, params)}`);
+  return retry404(() => rpcFetch(`${node}/${E_BAKING_RIGHTS(block, params)}`));
 };
 
 const getConstants = async (node: string): Promise<Constants> => {
@@ -92,18 +94,18 @@ const getChainId = async (node: string): Promise<string> => {
 };
 
 const getBlock = async (node: string, block: string): Promise<Block> => {
-  return await rpcFetch(`${node}/${E_BLOCK(block)}`);
+  return retry404(() => rpcFetch(`${node}/${E_BLOCK(block)}`));
 };
 
 const getBlockHash = async (node: string, block: string): Promise<string> => {
-  return await rpcFetch(`${node}/${E_BLOCK_HASH(block)}`);
+  return retry404(() => rpcFetch(`${node}/${E_BLOCK_HASH(block)}`));
 };
 
 const getBlockHeader = async (
   node: string,
   block: string
 ): Promise<BlockHeader> => {
-  return await rpcFetch(`${node}/${E_BLOCK_HEADER(block)}`);
+  return retry404(() => rpcFetch(`${node}/${E_BLOCK_HEADER(block)}`));
 };
 
 const getDelegate = async (

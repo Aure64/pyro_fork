@@ -82,20 +82,24 @@ export const Baker = objectType({
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getBalance(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        return null;
+        //FIXME
+        // return ctx.rpc.getBalance(
+        //   parent.address,
+        //   `head~${parent.headDistance}`
+        // );
       },
     });
     t.field("frozenBalance", {
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getFrozenBalance(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        // FIXME
+        return null;
+        // return ctx.rpc.getFrozenBalance(
+        //   parent.address,
+        //   `head~${parent.headDistance}`
+        // );
       },
     });
 
@@ -114,6 +118,7 @@ export const Baker = objectType({
       type: "Int",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
+        // return 0;
         const { cycle, level } = parent.lastProcessed;
         const { address } = parent;
         return await getGracePeriod(ctx.rpc, cycle, level, address);
