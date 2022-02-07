@@ -1,0 +1,128 @@
+{
+  "title": "Shell header",
+  "description": "Block header's shell-related content. It contains information such as the block level, its predecessor and timestamp.",
+  "type": "object",
+  "properties": {
+    "protocol": {
+      "type": "string",
+      "enum": [
+        "Psithaca2MLRFYargivpo7YvUr7wUDqyxrdhC5CQq78mRvimz6A"
+      ]
+    },
+    "chain_id": {
+      "$ref": "#/definitions/Chain_id"
+    },
+    "hash": {
+      "$ref": "#/definitions/block_hash"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "proto": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "predecessor": {
+      "$ref": "#/definitions/block_hash"
+    },
+    "timestamp": {
+      "$ref": "#/definitions/timestamp$protocol"
+    },
+    "validation_pass": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "operations_hash": {
+      "$ref": "#/definitions/Operation_list_list_hash"
+    },
+    "fitness": {
+      "$ref": "#/definitions/fitness"
+    },
+    "context": {
+      "$ref": "#/definitions/Context_hash"
+    },
+    "payload_hash": {
+      "$ref": "#/definitions/value_hash"
+    },
+    "payload_round": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "proof_of_work_nonce": {
+      "type": "string",
+      "pattern": "^([a-zA-Z0-9][a-zA-Z0-9])*$"
+    },
+    "seed_nonce_hash": {
+      "$ref": "#/definitions/cycle_nonce"
+    },
+    "liquidity_baking_escape_vote": {
+      "type": "boolean"
+    },
+    "signature": {
+      "$ref": "#/definitions/Signature"
+    }
+  },
+  "required": [
+    "signature",
+    "liquidity_baking_escape_vote",
+    "proof_of_work_nonce",
+    "payload_round",
+    "payload_hash",
+    "context",
+    "fitness",
+    "operations_hash",
+    "validation_pass",
+    "timestamp",
+    "predecessor",
+    "proto",
+    "level",
+    "hash",
+    "chain_id",
+    "protocol"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "definitions": {
+    "Chain_id": {
+      "$ref": "#/definitions/unistring"
+    },
+    "Context_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "Operation_list_list_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "Signature": {
+      "$ref": "#/definitions/unistring"
+    },
+    "block_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "cycle_nonce": {
+      "$ref": "#/definitions/unistring"
+    },
+    "fitness": {
+      "title": "Block fitness",
+      "description": "The fitness, or score, of a block, that allow the Tezos to decide which chain is the best. A fitness value is a list of byte sequences. They are compared as follows: shortest lists are smaller; lists of the same length are compared according to the lexicographical order.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^([a-zA-Z0-9][a-zA-Z0-9])*$"
+      }
+    },
+    "timestamp$protocol": {
+      "$ref": "#/definitions/unistring"
+    },
+    "unistring": {
+      "type": "string"
+    },
+    "value_hash": {
+      "$ref": "#/definitions/unistring"
+    }
+  }
+}

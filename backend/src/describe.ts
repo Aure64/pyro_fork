@@ -171,7 +171,7 @@ const main = async () => {
     },
     [urls.E_BLOCK_HEADER("head")]: {
       name: "BlockHeader",
-      protocol: false,
+      protocol: true,
     },
     [urls.E_DELEGATES_PKH("head", "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9")]: {
       name: "Delegate",

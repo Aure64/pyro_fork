@@ -1,9 +1,10 @@
 export { NetworkConnection } from "./gen/NetworkConnection";
 export { TezosVersion } from "./gen/TezosVersion";
 export { BootstrappedStatus } from "./gen/BootstrappedStatus";
-export { ShellHeader as BlockHeader } from "./gen/BlockHeader";
 export { Delegate } from "./gen/Delegate";
 
+import { ShellHeader as BlockHeaderH } from "./gen/PtHangz2aRng/BlockHeader";
+import { ShellHeader as BlockHeaderI } from "./gen/Psithaca2MLR/BlockHeader";
 import { EndorsingRights as EndorsingRightsH } from "./gen/PtHangz2aRng/EndorsingRights";
 import { EndorsingRights as EndorsingRightsI } from "./gen/Psithaca2MLR/EndorsingRights";
 import { Constants as ConstantsH } from "./gen/PtHangz2aRng/Constants";
@@ -30,6 +31,9 @@ import {
 
 export { BlockH, BlockI };
 export type Block = BlockH | BlockI;
+
+export { BlockHeaderH, BlockHeaderI };
+export type BlockHeader = BlockHeaderH | BlockHeaderI;
 
 export type EndorsingRightH = EndorsingRightsH[number];
 export type EndorsingRightI = EndorsingRightsI[number];
