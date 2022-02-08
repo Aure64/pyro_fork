@@ -4,7 +4,7 @@ import {
   checkBlockBakingRights,
   checkBlockEndorsingRights,
   checkForDeactivations,
-  loadBlockData,
+  loadBlockRights,
 } from "./bm-proto-h";
 import { setLevel } from "loglevel";
 import {
@@ -70,48 +70,32 @@ describe("checkBlockBakingRights", () => {
   });
 });
 
-describe("loadBlockData", () => {
-  it("fetches bakingRights, endorsingRights and block from rpc", async () => {
+describe("loadBlockRights", () => {
+  it("fetches baking and endorsing rights", async () => {
     const getBakingRights = jest.fn().mockResolvedValue({});
-    const getBlockMetadata = jest.fn().mockResolvedValue({ level: {} });
     const getEndorsingRights = jest.fn().mockResolvedValue({});
-    const getBlock = jest.fn().mockResolvedValue({
-      metadata: { level_info: { level: 123 } },
-      header: { pirority: 0 },
-    });
     const rpc = {
       getBakingRights,
-      getBlock,
-      getBlockMetadata,
       getEndorsingRights,
     } as unknown as RpcClient;
 
-    await loadBlockData("some_hash", rpc);
+    await loadBlockRights("some_hash", 123, 0, rpc);
 
     expect(getBakingRights.mock.calls.length).toEqual(1);
-    expect(getBlock.mock.calls.length).toEqual(1);
-    //metadata included in block
-    expect(getBlockMetadata.mock.calls.length).toEqual(0);
     expect(getEndorsingRights.mock.calls.length).toEqual(1);
   });
 
   it("throws error for failed block data fetch", async () => {
     const getBakingRights = jest.fn().mockResolvedValue({});
-    // const getBlockMetadata = jest.fn().mockRejectedValue({});
-    const getEndorsingRights = jest.fn().mockResolvedValue({});
-    const getBlock = jest.fn().mockRejectedValue(new Error());
-    const getConstants = jest.fn().mockResolvedValue({});
+    const getEndorsingRights = jest.fn().mockRejectedValue(new Error());
     const rpc = {
       getBakingRights,
-      getBlock,
-      // getBlockMetadata,
       getEndorsingRights,
-      getConstants,
     } as unknown as RpcClient;
 
     const blockId = "some_hash";
 
-    await expect(loadBlockData(blockId, rpc)).rejects.toThrow();
+    await expect(loadBlockRights(blockId, 123, 0, rpc)).rejects.toThrow();
   });
 });
 
