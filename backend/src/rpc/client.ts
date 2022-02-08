@@ -101,12 +101,21 @@ const getBlockHash = async (node: string, block: string): Promise<string> => {
   return retry404(() => rpcFetch(`${node}/${E_BLOCK_HASH(block)}`));
 };
 
-const getBlockHeader = async (
+const _getBlockHeader = async (
   node: string,
   block: string
 ): Promise<BlockHeader> => {
   return retry404(() => rpcFetch(`${node}/${E_BLOCK_HEADER(block)}`));
 };
+
+const getBlockHeader = makeMemoizedAsyncFunction(
+  (nodeRpcUrl: string, block: string) => {
+    return _getBlockHeader(nodeRpcUrl, block);
+  },
+  (_nodeRpcUrl: string, block: string) =>
+    block.toLowerCase().startsWith("head") ? null : block,
+  10
+);
 
 const getDelegate = async (
   node: string,
@@ -210,7 +219,7 @@ export default (nodeRpcUrl: URL): RpcClient => {
     let nextHash = blockHash;
     // very primitive approach: we simply iterate up our chain to find the most recent blocks
     while (history.length < length) {
-      const header = await retry404(() => getBlockHeader(node, nextHash));
+      const header = await getBlockHeader(node, nextHash);
       nextHash = header.predecessor;
       history.push(header);
     }
