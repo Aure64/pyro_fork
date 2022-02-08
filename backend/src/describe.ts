@@ -85,24 +85,12 @@ function preprocessProperties(inputProperties: any) {
   if (inputProperties) {
     const outputProperties: any = {};
     Object.entries(inputProperties).forEach(([name, value]) => {
-      // console.log("~~~~~~", name, value);
       outputProperties[ensureIdentifier(name)] = preprocessSchema(value);
     });
-    // console.log("xxxxx", outputProperties);
     return outputProperties;
   }
   return undefined;
 }
-
-// const schemaFile = '...';
-// const outFileName = '..';
-// const schema = preprocessSchema(require(schemaFile));
-// const ts = await compile(schema, schemaFile, {
-//   style: {
-//     singleQuote: true,
-//   },
-// });
-// fs.writeFileSync(outFileName, ts, 'utf8');
 
 type EndpointDescription = {
   static: {
