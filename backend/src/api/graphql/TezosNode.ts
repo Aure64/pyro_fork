@@ -15,6 +15,9 @@ export const BlockInfo = objectType({
     t.field("payloadRound", {
       type: "Int",
       async resolve(root, _args, _ctx) {
+        if (root.payload_round === undefined) {
+          return null;
+        }
         return root.payload_round;
       },
     });
