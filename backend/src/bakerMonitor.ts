@@ -22,10 +22,6 @@ import protocolI from "./bm-proto-i";
 
 const name = "bm";
 
-// type OperationEntry = OperationH | OperationI;
-
-// console.log("" as unknown as OperationEntry);
-
 export type BakerMonitorConfig = {
   bakers: string[];
   rpc: URL;
