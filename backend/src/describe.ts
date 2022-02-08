@@ -27,7 +27,7 @@ const ensureIdentifierInRef = (value: string) => {
 
 function preprocessSchema(inputSchema: any): any {
   switch (inputSchema.type) {
-    case "object":
+    case "object": {
       const outputSchema: any = {};
       Object.entries(inputSchema).forEach(([name, value]) => {
         outputSchema[ensureIdentifier(name)] = value;
@@ -37,6 +37,7 @@ function preprocessSchema(inputSchema: any): any {
         properties: preprocessProperties(inputSchema.properties),
         definitions: preprocessProperties(inputSchema.definitions),
       };
+    }
     case "array":
       return {
         ...inputSchema,
@@ -107,8 +108,9 @@ type WithProtocol = {
 };
 
 const main = async () => {
+  //eslint-disable-next-line @typescript-eslint/no-var-requires
   const { hideBin } = require("yargs/helpers");
-
+  //eslint-disable-next-line @typescript-eslint/no-var-requires
   const argv = require("yargs/yargs")(hideBin(process.argv))
     .usage(
       "$0 <url>",
