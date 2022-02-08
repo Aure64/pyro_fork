@@ -37,7 +37,12 @@ export type Subsidy2 = "subsidy";
 export type BlockApplication3 = "block";
 export type ProtocolMigration3 = "migration";
 export type Subsidy3 = "subsidy";
-export type _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates = (Contract | Rewards | Fees | Deposits)[];
+export type _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates = (
+  | Contract
+  | Rewards
+  | Fees
+  | Deposits
+)[];
 export type _011_PtHangz2$Operation$Alpha$SuccessfulManagerOperationResult =
   | Reveal
   | Transaction
@@ -264,14 +269,24 @@ export type _011_PtHangz2$Operation$Alpha$OperationContentsAndResult =
   | Delegation2
   | RegisterGlobalConstant1;
 export type _011_PtHangz2$Inlined$Endorsement$Contents = Endorsement1;
-export type _011_PtHangz2$Operation$Alpha$OperationResult$Reveal = Applied | Failed | Skipped | Backtracked;
+export type _011_PtHangz2$Operation$Alpha$OperationResult$Reveal =
+  | Applied
+  | Failed
+  | Skipped
+  | Backtracked;
 export type _011_PtHangz2$Operation$Alpha$InternalOperationResult =
   | Reveal2
   | Transaction1
   | Origination1
   | Delegation1
   | RegisterGlobalConstant;
-export type _011_PtHangz2$Entrypoint = Default | Root | Do | SetDelegate | RemoveDelegate | Named;
+export type _011_PtHangz2$Entrypoint =
+  | Default
+  | Root
+  | Do
+  | SetDelegate
+  | RemoveDelegate
+  | Named;
 export type Default = "default";
 export type Root = "root";
 export type Do = "do";
@@ -279,7 +294,11 @@ export type SetDelegate = "set_delegate";
 export type RemoveDelegate = "remove_delegate";
 export type Named = string;
 export type Sequence18 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
-export type _011_PtHangz2$Operation$Alpha$OperationResult$Transaction = Applied1 | Failed1 | Skipped1 | Backtracked1;
+export type _011_PtHangz2$Operation$Alpha$OperationResult$Transaction =
+  | Applied1
+  | Failed1
+  | Skipped1
+  | Backtracked1;
 export type Sequence19 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence20 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence21 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
@@ -292,7 +311,11 @@ export type Sequence27 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence28 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence29 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence30 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
-export type _011_PtHangz2$Operation$Alpha$OperationResult$Origination = Applied2 | Failed2 | Skipped2 | Backtracked2;
+export type _011_PtHangz2$Operation$Alpha$OperationResult$Origination =
+  | Applied2
+  | Failed2
+  | Skipped2
+  | Backtracked2;
 export type Sequence31 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence32 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence33 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
@@ -301,13 +324,14 @@ export type Sequence35 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence36 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence37 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence38 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
-export type _011_PtHangz2$Operation$Alpha$OperationResult$Delegation = Applied3 | Failed3 | Skipped3 | Backtracked3;
+export type _011_PtHangz2$Operation$Alpha$OperationResult$Delegation =
+  | Applied3
+  | Failed3
+  | Skipped3
+  | Backtracked3;
 export type Sequence39 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type _011_PtHangz2$Operation$Alpha$OperationResult$RegisterGlobalConstant =
-  | Applied4
-  | Failed4
-  | Skipped4
-  | Backtracked4;
+  Applied4 | Failed4 | Skipped4 | Backtracked4;
 export type Sequence40 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type Sequence41 = Micheline$011_PtHangz2$MichelsonV1$Expression[];
 export type _011_PtHangz2$Operation$Alpha$Contents =
@@ -471,7 +495,12 @@ export interface Reveal {
 }
 export interface Transaction {
   kind: "transaction";
-  storage?: Int | String | Bytes | Sequence | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot1;
+  storage?:
+    | Int
+    | String
+    | Bytes
+    | Sequence
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot1;
   big_map_diff?: (Update | Remove | Copy | Alloc)[];
   balance_updates?: _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates;
   originated_contracts?: _011_PtHangz2$ContractId[];
@@ -514,8 +543,18 @@ export interface Update {
   action: "update";
   big_map: BigNumber;
   key_hash: _011_PtHangz2$ContractId;
-  key: Int2 | String2 | Bytes2 | Sequence2 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot2;
-  value?: Int3 | String3 | Bytes3 | Sequence3 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot3;
+  key:
+    | Int2
+    | String2
+    | Bytes2
+    | Sequence2
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot2;
+  value?:
+    | Int3
+    | String3
+    | Bytes3
+    | Sequence3
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot3;
 }
 export interface Int2 {
   int: BigNumber;
@@ -557,8 +596,18 @@ export interface Copy {
 export interface Alloc {
   action: "alloc";
   big_map: BigNumber;
-  key_type: Int4 | String4 | Bytes4 | Sequence4 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot4;
-  value_type: Int5 | String5 | Bytes5 | Sequence5 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot5;
+  key_type:
+    | Int4
+    | String4
+    | Bytes4
+    | Sequence4
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot4;
+  value_type:
+    | Int5
+    | String5
+    | Bytes5
+    | Sequence5
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot5;
 }
 export interface Int4 {
   int: BigNumber;
@@ -597,8 +646,18 @@ export interface Update1 {
   action: "update";
   updates: {
     key_hash: _011_PtHangz2$ContractId;
-    key: Int6 | String6 | Bytes6 | Sequence6 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot6;
-    value?: Int7 | String7 | Bytes7 | Sequence7 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot7;
+    key:
+      | Int6
+      | String6
+      | Bytes6
+      | Sequence6
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot6;
+    value?:
+      | Int7
+      | String7
+      | Bytes7
+      | Sequence7
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot7;
   }[];
 }
 export interface Int6 {
@@ -637,8 +696,18 @@ export interface Copy1 {
   source: BigNumber;
   updates: {
     key_hash: _011_PtHangz2$ContractId;
-    key: Int8 | String8 | Bytes8 | Sequence8 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot8;
-    value?: Int9 | String9 | Bytes9 | Sequence9 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot9;
+    key:
+      | Int8
+      | String8
+      | Bytes8
+      | Sequence8
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot8;
+    value?:
+      | Int9
+      | String9
+      | Bytes9
+      | Sequence9
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot9;
   }[];
 }
 export interface Int8 {
@@ -673,11 +742,31 @@ export interface Alloc1 {
   action: "alloc";
   updates: {
     key_hash: _011_PtHangz2$ContractId;
-    key: Int10 | String10 | Bytes10 | Sequence10 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot10;
-    value?: Int11 | String11 | Bytes11 | Sequence11 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot11;
+    key:
+      | Int10
+      | String10
+      | Bytes10
+      | Sequence10
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot10;
+    value?:
+      | Int11
+      | String11
+      | Bytes11
+      | Sequence11
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot11;
   }[];
-  key_type: Int12 | String12 | Bytes12 | Sequence12 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot12;
-  value_type: Int13 | String13 | Bytes13 | Sequence13 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot13;
+  key_type:
+    | Int12
+    | String12
+    | Bytes12
+    | Sequence12
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot12;
+  value_type:
+    | Int13
+    | String13
+    | Bytes13
+    | Sequence13
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot13;
 }
 export interface Int10 {
   int: BigNumber;
@@ -798,8 +887,18 @@ export interface Update3 {
   action: "update";
   big_map: BigNumber;
   key_hash: _011_PtHangz2$ContractId;
-  key: Int14 | String14 | Bytes14 | Sequence14 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot14;
-  value?: Int15 | String15 | Bytes15 | Sequence15 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot15;
+  key:
+    | Int14
+    | String14
+    | Bytes14
+    | Sequence14
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot14;
+  value?:
+    | Int15
+    | String15
+    | Bytes15
+    | Sequence15
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot15;
 }
 export interface Int14 {
   int: BigNumber;
@@ -841,8 +940,18 @@ export interface Copy3 {
 export interface Alloc3 {
   action: "alloc";
   big_map: BigNumber;
-  key_type: Int16 | String16 | Bytes16 | Sequence16 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot16;
-  value_type: Int17 | String17 | Bytes17 | Sequence17 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot17;
+  key_type:
+    | Int16
+    | String16
+    | Bytes16
+    | Sequence16
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot16;
+  value_type:
+    | Int17
+    | String17
+    | Bytes17
+    | Sequence17
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot17;
 }
 export interface Int16 {
   int: BigNumber;
@@ -1029,7 +1138,12 @@ export interface Transaction1 {
   destination: _011_PtHangz2$ContractId;
   parameters?: {
     entrypoint: _011_PtHangz2$Entrypoint;
-    value: Int18 | String18 | Bytes18 | Sequence18 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot18;
+    value:
+      | Int18
+      | String18
+      | Bytes18
+      | Sequence18
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot18;
   };
   result: _011_PtHangz2$Operation$Alpha$OperationResult$Transaction;
 }
@@ -1049,7 +1163,12 @@ export interface GenericPrimAnyNumberOfArgsWithOrWithoutAnnot18 {
 }
 export interface Applied1 {
   status: "applied";
-  storage?: Int19 | String19 | Bytes19 | Sequence19 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot19;
+  storage?:
+    | Int19
+    | String19
+    | Bytes19
+    | Sequence19
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot19;
   big_map_diff?: (Update4 | Remove4 | Copy4 | Alloc4)[];
   balance_updates?: _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates;
   originated_contracts?: _011_PtHangz2$ContractId[];
@@ -1078,8 +1197,18 @@ export interface Update4 {
   action: "update";
   big_map: BigNumber;
   key_hash: _011_PtHangz2$ContractId;
-  key: Int20 | String20 | Bytes20 | Sequence20 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot20;
-  value?: Int21 | String21 | Bytes21 | Sequence21 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot21;
+  key:
+    | Int20
+    | String20
+    | Bytes20
+    | Sequence20
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot20;
+  value?:
+    | Int21
+    | String21
+    | Bytes21
+    | Sequence21
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot21;
 }
 export interface Int20 {
   int: BigNumber;
@@ -1121,8 +1250,18 @@ export interface Copy4 {
 export interface Alloc4 {
   action: "alloc";
   big_map: BigNumber;
-  key_type: Int22 | String22 | Bytes22 | Sequence22 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot22;
-  value_type: Int23 | String23 | Bytes23 | Sequence23 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot23;
+  key_type:
+    | Int22
+    | String22
+    | Bytes22
+    | Sequence22
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot22;
+  value_type:
+    | Int23
+    | String23
+    | Bytes23
+    | Sequence23
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot23;
 }
 export interface Int22 {
   int: BigNumber;
@@ -1162,7 +1301,12 @@ export interface Skipped1 {
 export interface Backtracked1 {
   status: "backtracked";
   errors?: _011_PtHangz2$Error[];
-  storage?: Int24 | String24 | Bytes24 | Sequence24 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot24;
+  storage?:
+    | Int24
+    | String24
+    | Bytes24
+    | Sequence24
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot24;
   big_map_diff?: (Update5 | Remove5 | Copy5 | Alloc5)[];
   balance_updates?: _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates;
   originated_contracts?: _011_PtHangz2$ContractId[];
@@ -1191,8 +1335,18 @@ export interface Update5 {
   action: "update";
   big_map: BigNumber;
   key_hash: _011_PtHangz2$ContractId;
-  key: Int25 | String25 | Bytes25 | Sequence25 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot25;
-  value?: Int26 | String26 | Bytes26 | Sequence26 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot26;
+  key:
+    | Int25
+    | String25
+    | Bytes25
+    | Sequence25
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot25;
+  value?:
+    | Int26
+    | String26
+    | Bytes26
+    | Sequence26
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot26;
 }
 export interface Int25 {
   int: BigNumber;
@@ -1234,8 +1388,18 @@ export interface Copy5 {
 export interface Alloc5 {
   action: "alloc";
   big_map: BigNumber;
-  key_type: Int27 | String27 | Bytes27 | Sequence27 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot27;
-  value_type: Int28 | String28 | Bytes28 | Sequence28 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot28;
+  key_type:
+    | Int27
+    | String27
+    | Bytes27
+    | Sequence27
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot27;
+  value_type:
+    | Int28
+    | String28
+    | Bytes28
+    | Sequence28
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot28;
 }
 export interface Int27 {
   int: BigNumber;
@@ -1275,8 +1439,18 @@ export interface Origination1 {
   result: _011_PtHangz2$Operation$Alpha$OperationResult$Origination;
 }
 export interface _011_PtHangz2$Scripted$Contracts {
-  code: Int29 | String29 | Bytes29 | Sequence29 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot29;
-  storage: Int30 | String30 | Bytes30 | Sequence30 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot30;
+  code:
+    | Int29
+    | String29
+    | Bytes29
+    | Sequence29
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot29;
+  storage:
+    | Int30
+    | String30
+    | Bytes30
+    | Sequence30
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot30;
 }
 export interface Int29 {
   int: BigNumber;
@@ -1321,8 +1495,18 @@ export interface Update6 {
   action: "update";
   big_map: BigNumber;
   key_hash: _011_PtHangz2$ContractId;
-  key: Int31 | String31 | Bytes31 | Sequence31 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot31;
-  value?: Int32 | String32 | Bytes32 | Sequence32 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot32;
+  key:
+    | Int31
+    | String31
+    | Bytes31
+    | Sequence31
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot31;
+  value?:
+    | Int32
+    | String32
+    | Bytes32
+    | Sequence32
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot32;
 }
 export interface Int31 {
   int: BigNumber;
@@ -1364,8 +1548,18 @@ export interface Copy6 {
 export interface Alloc6 {
   action: "alloc";
   big_map: BigNumber;
-  key_type: Int33 | String33 | Bytes33 | Sequence33 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot33;
-  value_type: Int34 | String34 | Bytes34 | Sequence34 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot34;
+  key_type:
+    | Int33
+    | String33
+    | Bytes33
+    | Sequence33
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot33;
+  value_type:
+    | Int34
+    | String34
+    | Bytes34
+    | Sequence34
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot34;
 }
 export interface Int33 {
   int: BigNumber;
@@ -1418,8 +1612,18 @@ export interface Update7 {
   action: "update";
   big_map: BigNumber;
   key_hash: _011_PtHangz2$ContractId;
-  key: Int35 | String35 | Bytes35 | Sequence35 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot35;
-  value?: Int36 | String36 | Bytes36 | Sequence36 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot36;
+  key:
+    | Int35
+    | String35
+    | Bytes35
+    | Sequence35
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot35;
+  value?:
+    | Int36
+    | String36
+    | Bytes36
+    | Sequence36
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot36;
 }
 export interface Int35 {
   int: BigNumber;
@@ -1461,8 +1665,18 @@ export interface Copy7 {
 export interface Alloc7 {
   action: "alloc";
   big_map: BigNumber;
-  key_type: Int37 | String37 | Bytes37 | Sequence37 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot37;
-  value_type: Int38 | String38 | Bytes38 | Sequence38 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot38;
+  key_type:
+    | Int37
+    | String37
+    | Bytes37
+    | Sequence37
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot37;
+  value_type:
+    | Int38
+    | String38
+    | Bytes38
+    | Sequence38
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot38;
 }
 export interface Int37 {
   int: BigNumber;
@@ -1521,7 +1735,12 @@ export interface RegisterGlobalConstant {
   kind: "register_global_constant";
   source: _011_PtHangz2$ContractId;
   nonce: number;
-  value: Int39 | String39 | Bytes39 | Sequence39 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot39;
+  value:
+    | Int39
+    | String39
+    | Bytes39
+    | Sequence39
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot39;
   result: _011_PtHangz2$Operation$Alpha$OperationResult$RegisterGlobalConstant;
 }
 export interface Int39 {
@@ -1571,7 +1790,12 @@ export interface Transaction2 {
   destination: _011_PtHangz2$ContractId;
   parameters?: {
     entrypoint: _011_PtHangz2$Entrypoint;
-    value: Int40 | String40 | Bytes40 | Sequence40 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot40;
+    value:
+      | Int40
+      | String40
+      | Bytes40
+      | Sequence40
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot40;
   };
   metadata: {
     balance_updates: _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates;
@@ -1630,7 +1854,12 @@ export interface RegisterGlobalConstant1 {
   counter: PositiveBigNumber;
   gas_limit: PositiveBigNumber;
   storage_limit: PositiveBigNumber;
-  value: Int41 | String41 | Bytes41 | Sequence41 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot41;
+  value:
+    | Int41
+    | String41
+    | Bytes41
+    | Sequence41
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot41;
   metadata: {
     balance_updates: _011_PtHangz2$OperationMetadata$Alpha$BalanceUpdates;
     operation_result: _011_PtHangz2$Operation$Alpha$OperationResult$RegisterGlobalConstant;
@@ -1714,7 +1943,12 @@ export interface Transaction3 {
   destination: _011_PtHangz2$ContractId;
   parameters?: {
     entrypoint: _011_PtHangz2$Entrypoint;
-    value: Int42 | String42 | Bytes42 | Sequence42 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot42;
+    value:
+      | Int42
+      | String42
+      | Bytes42
+      | Sequence42
+      | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot42;
   };
 }
 export interface Int42 {
@@ -1762,7 +1996,12 @@ export interface RegisterGlobalConstant2 {
   counter: PositiveBigNumber;
   gas_limit: PositiveBigNumber;
   storage_limit: PositiveBigNumber;
-  value: Int43 | String43 | Bytes43 | Sequence43 | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot43;
+  value:
+    | Int43
+    | String43
+    | Bytes43
+    | Sequence43
+    | GenericPrimAnyNumberOfArgsWithOrWithoutAnnot43;
 }
 export interface Int43 {
   int: BigNumber;

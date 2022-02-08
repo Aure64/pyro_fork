@@ -142,7 +142,12 @@ export type _012_Psithaca$Operation$Alpha$SuccessfulManagerOperationResult =
  * Decimal representation of a big number
  */
 export type BigNumber = string;
-export type Micheline$012_Psithaca$MichelsonV1$Expression = Int1 | String1 | Bytes1 | Sequence1 | Prim_Generic;
+export type Micheline$012_Psithaca$MichelsonV1$Expression =
+  | Int1
+  | String1
+  | Bytes1
+  | Sequence1
+  | Prim_Generic;
 export type Sequence1 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type _012_Psithaca$Michelson$V1$Primitives =
   | "ABS"
@@ -358,7 +363,11 @@ export type _012_Psithaca$Operation$Alpha$OperationContentsAndResult =
   | SetDepositsLimit2;
 export type _012_Psithaca$Inlined$Preendorsement$Contents = Preendorsement1;
 export type _012_Psithaca$Inlined$EndorsementMempool$Contents = Endorsement1;
-export type _012_Psithaca$Operation$Alpha$OperationResult$Reveal = Applied | Failed | Skipped | Backtracked;
+export type _012_Psithaca$Operation$Alpha$OperationResult$Reveal =
+  | Applied
+  | Failed
+  | Skipped
+  | Backtracked;
 export type _012_Psithaca$Operation$Alpha$InternalOperationResult =
   | Reveal2
   | Transaction1
@@ -366,7 +375,13 @@ export type _012_Psithaca$Operation$Alpha$InternalOperationResult =
   | Delegation1
   | RegisterGlobalConstant
   | SetDepositsLimit1;
-export type _012_Psithaca$Entrypoint = Default | Root | Do | SetDelegate | RemoveDelegate | Named;
+export type _012_Psithaca$Entrypoint =
+  | Default
+  | Root
+  | Do
+  | SetDelegate
+  | RemoveDelegate
+  | Named;
 export type Default = "default";
 export type Root = "root";
 export type Do = "do";
@@ -374,7 +389,11 @@ export type SetDelegate = "set_delegate";
 export type RemoveDelegate = "remove_delegate";
 export type Named = string;
 export type Sequence18 = Micheline$012_Psithaca$MichelsonV1$Expression[];
-export type _012_Psithaca$Operation$Alpha$OperationResult$Transaction = Applied1 | Failed1 | Skipped1 | Backtracked1;
+export type _012_Psithaca$Operation$Alpha$OperationResult$Transaction =
+  | Applied1
+  | Failed1
+  | Skipped1
+  | Backtracked1;
 export type Sequence19 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence20 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence21 = Micheline$012_Psithaca$MichelsonV1$Expression[];
@@ -387,7 +406,11 @@ export type Sequence27 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence28 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence29 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence30 = Micheline$012_Psithaca$MichelsonV1$Expression[];
-export type _012_Psithaca$Operation$Alpha$OperationResult$Origination = Applied2 | Failed2 | Skipped2 | Backtracked2;
+export type _012_Psithaca$Operation$Alpha$OperationResult$Origination =
+  | Applied2
+  | Failed2
+  | Skipped2
+  | Backtracked2;
 export type Sequence31 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence32 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence33 = Micheline$012_Psithaca$MichelsonV1$Expression[];
@@ -396,13 +419,14 @@ export type Sequence35 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence36 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence37 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type Sequence38 = Micheline$012_Psithaca$MichelsonV1$Expression[];
-export type _012_Psithaca$Operation$Alpha$OperationResult$Delegation = Applied3 | Failed3 | Skipped3 | Backtracked3;
+export type _012_Psithaca$Operation$Alpha$OperationResult$Delegation =
+  | Applied3
+  | Failed3
+  | Skipped3
+  | Backtracked3;
 export type Sequence39 = Micheline$012_Psithaca$MichelsonV1$Expression[];
 export type _012_Psithaca$Operation$Alpha$OperationResult$RegisterGlobalConstant =
-  | Applied4
-  | Failed4
-  | Skipped4
-  | Backtracked4;
+  Applied4 | Failed4 | Skipped4 | Backtracked4;
 export type _012_Psithaca$Operation$Alpha$OperationResult$SetDepositsLimit =
   | Applied5
   | Failed5
