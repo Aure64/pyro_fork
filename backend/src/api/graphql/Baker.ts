@@ -1,5 +1,6 @@
 import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType, list, intArg } from "nexus";
+import { Context } from "../context";
 
 import LRU from "lru-cache";
 import { RpcClient } from "../../rpc/client";
@@ -82,24 +83,20 @@ export const Baker = objectType({
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return null;
-        //FIXME
-        // return ctx.rpc.getBalance(
-        //   parent.address,
-        //   `head~${parent.headDistance}`
-        // );
+        return ctx.rpc.getFullBalance(
+          parent.address,
+          `head~${parent.headDistance}`
+        );
       },
     });
     t.field("frozenBalance", {
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        // FIXME
-        return null;
-        // return ctx.rpc.getFrozenBalance(
-        //   parent.address,
-        //   `head~${parent.headDistance}`
-        // );
+        return ctx.rpc.getFrozenDeposits(
+          parent.address,
+          `head~${parent.headDistance}`
+        );
       },
     });
 
@@ -178,6 +175,17 @@ export const Bakers = objectType({
 
 let cycleProtocol = { cycle: -1, protocol: "" };
 
+const getProtocol = async (cycle: number, level: number, ctx: Context) => {
+  let protocol;
+  if (cycleProtocol.cycle === cycle) {
+    protocol = cycleProtocol.protocol;
+  } else {
+    protocol = (await ctx.rpc.getBlockHeader(`${level}`)).protocol;
+    cycleProtocol = { cycle, protocol };
+  }
+  return protocol;
+};
+
 export const BakerQuery = extendType({
   type: "Query",
 
@@ -218,7 +226,6 @@ export const BakerQuery = extendType({
                 };
               }
             );
-
             return {
               address: bakerInfo.address,
               explorerUrl: ctx.explorerUrl
@@ -242,13 +249,7 @@ export const BakerQuery = extendType({
         const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
         if (!bakerMonitorInfo || !bakerMonitorInfo.lastProcessed) return null;
         const { level, cycle } = bakerMonitorInfo.lastProcessed;
-        let protocol;
-        if (cycleProtocol.cycle === cycle) {
-          protocol = cycleProtocol.protocol;
-        } else {
-          protocol = (await ctx.rpc.getBlockHeader(`${level}`)).protocol;
-          cycleProtocol = { cycle, protocol };
-        }
+        const protocol = await getProtocol(cycle, level, ctx);
         return {
           level,
           protocol,

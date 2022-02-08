@@ -55,7 +55,7 @@ export const tryForever: TryForever = async (call, interval, label = "") => {
   }
 };
 
-class HttpResponseError extends Error {
+export class HttpResponseError extends Error {
   status: number;
   statusText: string;
   url: string;

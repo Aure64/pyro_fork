@@ -6,6 +6,7 @@ import { makeMemoizedAsyncFunction } from "../memoization";
 
 import { get as rpcFetch } from "./util";
 import { retry404 } from "./util";
+import { HttpResponseError } from "./util";
 
 import { NetworkConnection } from "./types";
 import { TezosVersion } from "./types";
@@ -125,6 +126,12 @@ const getDelegate = async (
   return await rpcFetch(`${node}/${E_DELEGATES_PKH(block, pkh)}`);
 };
 
+const F_FROZEN_DEPOSITS = "frozen_deposits";
+const F_FROZEN_BALANCE = "frozen_balance";
+
+const F_BALANCE = "balance";
+const F_FULL_BALANCE = "full_balance";
+
 export type RpcClient = {
   url: URL;
   getTezosVersion: () => Promise<TezosVersion>;
@@ -138,7 +145,9 @@ export type RpcClient = {
     length?: number
   ) => Promise<BlockHeader[]>;
   getBalance: (pkh: TzAddress, block?: string) => Promise<string>;
+  getFullBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getFrozenBalance: (pkh: TzAddress, block?: string) => Promise<string>;
+  getFrozenDeposits: (pkh: TzAddress, block?: string) => Promise<string>;
   getStakingBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getGracePeriod: (pkh: TzAddress, block?: string) => Promise<number>;
   getDeactivated: (pkh: TzAddress, block?: string) => Promise<boolean>;
@@ -226,6 +235,10 @@ export default (nodeRpcUrl: URL): RpcClient => {
     return history;
   };
 
+  //try Ithaca endpoint first
+  let frozenDepositsFields = [F_FROZEN_DEPOSITS, F_FROZEN_BALANCE];
+  let fullBalanceFields = [F_FULL_BALANCE, F_BALANCE];
+
   return {
     url: nodeRpcUrl,
 
@@ -271,12 +284,44 @@ export default (nodeRpcUrl: URL): RpcClient => {
       return fetchBlockHeaders(nodeRpcUrl, blockHash, length);
     },
 
-    getBalance: (pkh: TzAddress, block = "head") => {
-      return fetchDelegateField(pkh, block, "balance");
+    //.../balance renamed .../full_balance in Ithaca
+    getFullBalance: async (pkh: TzAddress, block = "head") => {
+      try {
+        return await fetchDelegateField(pkh, block, fullBalanceFields[0]);
+      } catch (err) {
+        if (err instanceof HttpResponseError && err.status === 404) {
+          log.info(
+            `Got 404 for ${fullBalanceFields[0]}, switching to ${fullBalanceFields[1]}`
+          );
+          const result = await fetchDelegateField(
+            pkh,
+            block,
+            fullBalanceFields[1]
+          );
+          fullBalanceFields = [...fullBalanceFields].reverse();
+          return result;
+        }
+      }
     },
 
-    getFrozenBalance: (pkh: TzAddress, block = "head") => {
-      return fetchDelegateField(pkh, block, "frozen_balance");
+    //.../frozen_balance renamed .../frozen_deposits in Ithaca
+    getFrozenDeposits: async (pkh: TzAddress, block = "head") => {
+      try {
+        return await fetchDelegateField(pkh, block, frozenDepositsFields[0]);
+      } catch (err) {
+        if (err instanceof HttpResponseError && err.status === 404) {
+          log.info(
+            `Got 404 for ${frozenDepositsFields[0]}, switching to ${frozenDepositsFields[1]}`
+          );
+          const result = await fetchDelegateField(
+            pkh,
+            block,
+            frozenDepositsFields[1]
+          );
+          frozenDepositsFields = [...frozenDepositsFields].reverse();
+          return result;
+        }
+      }
     },
 
     getStakingBalance: (pkh: TzAddress, block = "head") => {
