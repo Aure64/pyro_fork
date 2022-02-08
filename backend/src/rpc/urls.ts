@@ -36,6 +36,9 @@ export const E_CHAIN_ID = "/chains/main/chain_id";
 export const E_DELEGATES_PKH = (block: string, pkh: string) =>
   `chains/main/blocks/${block}/context/delegates/${pkh}`;
 
+export const E_DELEGATE_PARTICIPATION = (block: string, pkh: string) =>
+  `chains/main/blocks/${block}/context/delegates/${pkh}/participation`;
+
 export const delegatesUrl = (rpcUrl: string, pkh: string, block: string) => {
   return `${rpcUrl}/${E_DELEGATES_PKH(block, pkh)}`;
 };

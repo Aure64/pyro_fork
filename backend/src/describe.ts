@@ -142,6 +142,8 @@ const main = async () => {
   FS.mkdirSync(outDirSchemasProto, { recursive: true });
   FS.mkdirSync(outDirProto, { recursive: true });
 
+  const sampleAddress = "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9";
+
   const typeNames = {
     [urls.E_IS_BOOTSTRAPPED]: { name: "BootstrappedStatus", protocol: false },
     [urls.E_NETWORK_CONNECTIONS]: {
@@ -163,9 +165,13 @@ const main = async () => {
       name: "BlockHeader",
       protocol: true,
     },
-    [urls.E_DELEGATES_PKH("head", "tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9")]: {
+    [urls.E_DELEGATES_PKH("head", sampleAddress)]: {
       name: "Delegate",
       protocol: false,
+    },
+    [urls.E_DELEGATE_PARTICIPATION("head", sampleAddress)]: {
+      name: "Participation",
+      protocol: true,
     },
   };
 

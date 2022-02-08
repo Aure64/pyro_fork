@@ -49,6 +49,14 @@ query getBakers($offset: Int!, $limit: Int!)
       }
       gracePeriod
       atRisk
+      participation {
+        expected_cycle_activity
+        minimal_cycle_activity
+        missed_slots
+        missed_levels
+        remaining_allowed_missed_slots
+        expected_endorsing_rewards
+      }
       updatedAt
     }
     totalCount

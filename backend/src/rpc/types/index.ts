@@ -2,6 +2,7 @@ export { NetworkConnection } from "./gen/NetworkConnection";
 export { TezosVersion } from "./gen/TezosVersion";
 export { BootstrappedStatus } from "./gen/BootstrappedStatus";
 export { Delegate } from "./gen/Delegate";
+export { Participation } from "./gen/Psithaca2MLR/Participation";
 
 import { ShellHeader as BlockHeaderH } from "./gen/PtHangz2aRng/BlockHeader";
 import { ShellHeader as BlockHeaderI } from "./gen/Psithaca2MLR/BlockHeader";

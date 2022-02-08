@@ -53,6 +53,18 @@ export const LastProcessed = objectType({
   },
 });
 
+export const Participation = objectType({
+  name: "Participation",
+  definition(t) {
+    t.nonNull.int("expected_cycle_activity");
+    t.nonNull.int("minimal_cycle_activity");
+    t.nonNull.int("missed_slots");
+    t.nonNull.int("missed_levels");
+    t.nonNull.int("remaining_allowed_missed_slots");
+    t.nonNull.string("expected_endorsing_rewards");
+  },
+});
+
 const bakerCache = new LRU<string, any>({ max: 100 });
 
 const getGracePeriod = async (
@@ -152,6 +164,17 @@ export const Baker = objectType({
           bakerCache.set(cacheKey, value);
         }
         return value;
+      },
+    });
+
+    t.field("participation", {
+      type: Participation,
+      async resolve(parent, _args, ctx) {
+        if (!parent.lastProcessed) return null;
+        return ctx.rpc.getParticipation(
+          parent.address,
+          `head~${parent.headDistance}`
+        );
       },
     });
 

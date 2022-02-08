@@ -13,6 +13,7 @@ import { TezosVersion } from "./types";
 import { BootstrappedStatus } from "./types";
 import { BlockHeader } from "./types";
 import { Delegate } from "./types";
+import { Participation } from "./types";
 
 import { E_NETWORK_CONNECTIONS } from "./urls";
 import { E_TEZOS_VERSION } from "./urls";
@@ -25,6 +26,7 @@ import { E_BLOCK } from "./urls";
 import { E_BLOCK_HEADER } from "./urls";
 import { E_BLOCK_HASH } from "./urls";
 import { E_DELEGATES_PKH } from "./urls";
+import { E_DELEGATE_PARTICIPATION } from "./urls";
 import { delegatesUrl } from "./urls";
 
 import { TzAddress } from "rpc/types";
@@ -126,6 +128,14 @@ const getDelegate = async (
   return await rpcFetch(`${node}/${E_DELEGATES_PKH(block, pkh)}`);
 };
 
+const getParticipation = async (
+  node: string,
+  pkh: string,
+  block: string
+): Promise<Participation> => {
+  return await rpcFetch(`${node}/${E_DELEGATE_PARTICIPATION(block, pkh)}`);
+};
+
 const F_FROZEN_DEPOSITS = "frozen_deposits";
 const F_FROZEN_BALANCE = "frozen_balance";
 
@@ -162,6 +172,7 @@ export type RpcClient = {
   getConstants: () => Promise<Constants>;
   getChainId: () => Promise<string>;
   getDelegate: (pkh: TzAddress, block?: string) => Promise<Delegate>;
+  getParticipation: (pkh: TzAddress, block?: string) => Promise<Participation>;
 };
 
 export default (nodeRpcUrl: URL): RpcClient => {
@@ -336,6 +347,10 @@ export default (nodeRpcUrl: URL): RpcClient => {
 
     getDelegate: (pkh: TzAddress, block = "head") => {
       return getDelegate(nodeRpcUrl, pkh, block);
+    },
+
+    getParticipation: (pkh: TzAddress, block = "head") => {
+      return getParticipation(nodeRpcUrl, pkh, block);
     },
 
     getChainId: () => getChainId(nodeRpcUrl),

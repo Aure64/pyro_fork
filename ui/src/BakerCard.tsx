@@ -6,6 +6,7 @@ import {
   Text,
   Tooltip,
   VStack,
+  Progress,
 } from '@chakra-ui/react';
 import React from 'react';
 import { FaSnowflake } from 'react-icons/fa';
@@ -66,6 +67,7 @@ export default ({
     gracePeriod,
     atRisk,
     updatedAt,
+    participation,
   },
 }: {
   baker: Omit<Baker, 'headDistance'>;
@@ -97,21 +99,50 @@ export default ({
   return (
     <Card minHeight="248px">
       <HStack w="100%" justifyContent="space-between" alignItems="flex-start">
-        <HStack maxW={250}>
-          <Tooltip label={deactivationStatusText}>
-            <Box>
-              <Icon
-                as={deactivationStatusIcon}
-                color={deactivationStatusColor}
-              />
-            </Box>
-          </Tooltip>
-          <Tooltip label={address}>
-            <Link href={explorerUrl || undefined} isExternal>
-              <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
-            </Link>
-          </Tooltip>
-        </HStack>
+        <VStack>
+          <HStack maxW={250}>
+            <Tooltip label={deactivationStatusText}>
+              <Box>
+                <Icon
+                  as={deactivationStatusIcon}
+                  color={deactivationStatusColor}
+                />
+              </Box>
+            </Tooltip>
+            <Tooltip label={address}>
+              <Link href={explorerUrl || undefined} isExternal>
+                <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
+              </Link>
+            </Tooltip>
+          </HStack>
+          {participation && (
+            <HStack w="100%" d="flex">
+              <Tooltip
+                label={`Missed slots: ${participation.missed_slots} of ${
+                  participation.remaining_allowed_missed_slots +
+                  participation.missed_slots
+                } allowed`}
+              >
+                <Box flexGrow={1}>
+                  <Progress
+                    value={
+                      100 *
+                      (1 -
+                        participation.missed_slots /
+                          (participation.missed_slots +
+                            participation.remaining_allowed_missed_slots))
+                    }
+                  />
+                </Box>
+              </Tooltip>
+              <Tooltip label="Expected endorsing rewards">
+                <Text fontSize="x-small" fontFamily="mono">
+                  {formatMutezAsTez(participation.expected_endorsing_rewards)}
+                </Text>
+              </Tooltip>
+            </HStack>
+          )}
+        </VStack>
         <VStack align="flex-end" spacing={0}>
           <Tooltip label="Staking balance">
             <Text fontSize="small" fontFamily="mono">
