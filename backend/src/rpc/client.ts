@@ -144,9 +144,7 @@ export type RpcClient = {
     blockHash: string,
     length?: number
   ) => Promise<BlockHeader[]>;
-  getBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getFullBalance: (pkh: TzAddress, block?: string) => Promise<string>;
-  getFrozenBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getFrozenDeposits: (pkh: TzAddress, block?: string) => Promise<string>;
   getStakingBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getGracePeriod: (pkh: TzAddress, block?: string) => Promise<number>;
