@@ -68,6 +68,8 @@ query getNetworkInfo {
     chainName,
     protocol,
     level,
-    cycle
+    cycle,
+    cyclePosition,
+    blocksPerCycle
   }
 }

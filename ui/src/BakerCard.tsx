@@ -70,7 +70,7 @@ export default ({
     participation,
   },
 }: {
-  baker: Omit<Baker, 'headDistance'>;
+  baker: Omit<Baker, 'headDistance' | 'blocksPerCycle'>;
 }) => {
   const healthy = !deactivated && isHealthy(recentEvents);
 

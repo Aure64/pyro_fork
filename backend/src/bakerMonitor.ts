@@ -29,7 +29,11 @@ export type BakerMonitorConfig = {
   head_distance: number;
 };
 
-type ChainPositionInfo = { blockLevel: number; blockCycle: number };
+type ChainPositionInfo = {
+  blockLevel: number;
+  blockCycle: number;
+  cyclePosition?: number;
+};
 
 export type BakerInfo = {
   address: string;
@@ -39,12 +43,14 @@ export type BakerInfo = {
 export type LastProcessed = {
   cycle: number;
   level: number;
+  cyclePosition?: number;
 };
 
 export type BakerMonitorInfo = {
   bakerInfo: BakerInfo[];
   lastProcessed?: LastProcessed;
   headDistance: number;
+  blocksPerCycle: number;
 };
 
 export type BakerInfoCollection = { info: () => Promise<BakerMonitorInfo> };
@@ -114,6 +120,7 @@ export const create = async (
     (await store.get(CHAIN_POSITION_KEY, {
       blockLevel: -1,
       blockCycle: -1,
+      cyclePosition: -1,
     })) as ChainPositionInfo;
 
   const setPosition = async (value: ChainPositionInfo) =>
@@ -158,17 +165,22 @@ export const create = async (
 
         if (block === undefined)
           throw new Error(`Block ${currentLevel} not found`);
-        if (block.metadata === undefined)
+
+        const { metadata } = block;
+
+        if (metadata === undefined)
           throw new Error(
             `Block ${block.hash} at level ${currentLevel} has no metadata`
           );
-        if (block.metadata.level_info === undefined)
+
+        if (metadata.level_info === undefined)
           throw new Error(
             `Metadata for block ${block.hash} at level ${currentLevel} has no level info`
           );
 
-        const blockLevel = block.metadata.level_info.level;
-        const blockCycle = block.metadata.level_info.cycle;
+        const blockLevel = metadata.level_info.level;
+        const blockCycle = metadata.level_info.cycle;
+        const cyclePosition = metadata.level_info.cycle_position;
 
         if (blockLevel !== currentLevel) {
           throw new Error(
@@ -210,7 +222,11 @@ export const create = async (
             await addToHistory(event);
           }
         }
-        await setPosition({ blockLevel: currentLevel, blockCycle });
+        await setPosition({
+          blockLevel: currentLevel,
+          blockCycle,
+          cyclePosition,
+        });
         currentLevel++;
         lastBlockCycle = blockCycle;
         await delay(1000);
@@ -250,14 +266,16 @@ export const create = async (
     const chainPosition = await getPosition();
     const lastBlockLevel = chainPosition.blockLevel;
     const lastBlockCycle = chainPosition.blockCycle;
+    const cyclePosition = chainPosition.cyclePosition;
 
     return {
       bakerInfo,
       lastProcessed:
         lastBlockLevel > 0
-          ? { level: lastBlockLevel, cycle: lastBlockCycle }
+          ? { level: lastBlockLevel, cycle: lastBlockCycle, cyclePosition }
           : undefined,
       headDistance,
+      blocksPerCycle: constants.blocks_per_cycle,
     };
   };
 

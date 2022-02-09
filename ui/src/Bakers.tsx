@@ -1,4 +1,4 @@
-import { HStack, Text, Tooltip } from '@chakra-ui/react';
+import { HStack, Text, Tooltip, Box } from '@chakra-ui/react';
 import React from 'react';
 import {
   useGetBakersQuery,
@@ -8,6 +8,7 @@ import {
 import BakerCard from './BakerCard';
 import { takeStart } from './format';
 import PaginatedSection from './PaginatedSection';
+import { CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
 
 const InfoItem = ({
   text,
@@ -45,13 +46,29 @@ export default () => {
         return (
           (networkInfo && (
             <HStack flexWrap="wrap">
+              <Tooltip label={`Cycle ${networkInfo.cycle}`}>
+                <Box>
+                  <CircularProgress
+                    value={
+                      (100 * networkInfo.cyclePosition) /
+                      networkInfo.blocksPerCycle
+                    }
+                    color="green.400"
+                    size="24px"
+                  >
+                    <CircularProgressLabel>
+                      {networkInfo.cycle}
+                    </CircularProgressLabel>
+                  </CircularProgress>
+                </Box>
+              </Tooltip>
+              <InfoItem tooltip="Level" text={networkInfo.level} />
+
               <InfoItem tooltip="Chain name" text={networkInfo.chainName} />
               <InfoItem
                 tooltip="Current protocol"
                 text={takeStart(networkInfo.protocol, 12)}
               />
-              <InfoItem tooltip="Cycle" text={networkInfo.cycle} />
-              <InfoItem tooltip="Level" text={networkInfo.level} />
             </HStack>
           )) || <></>
         );

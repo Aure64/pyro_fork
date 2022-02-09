@@ -41,6 +41,8 @@ export const NetworkInfo = objectType({
     t.nonNull.int("level");
     t.nonNull.int("cycle");
     t.nonNull.string("protocol");
+    t.nonNull.int("cyclePosition");
+    t.nonNull.int("blocksPerCycle");
   },
 });
 
@@ -50,6 +52,7 @@ export const LastProcessed = objectType({
   definition(t) {
     t.nonNull.int("level");
     t.nonNull.int("cycle");
+    t.nonNull.int("cyclePosition");
   },
 });
 
@@ -90,6 +93,7 @@ export const Baker = objectType({
     t.string("explorerUrl");
     t.field("lastProcessed", { type: LastProcessed });
     t.nonNull.int("headDistance");
+    t.nonNull.int("blocksPerCycle");
     t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
     t.field("balance", {
       type: "String",
@@ -251,6 +255,7 @@ export const BakerQuery = extendType({
             );
             return {
               address: bakerInfo.address,
+              blocksPerCycle: bakerMonitorInfo.blocksPerCycle,
               explorerUrl: ctx.explorerUrl
                 ? `${ctx.explorerUrl}/${bakerInfo.address}`
                 : null,
@@ -271,12 +276,14 @@ export const BakerQuery = extendType({
       async resolve(_root, _args, ctx) {
         const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
         if (!bakerMonitorInfo || !bakerMonitorInfo.lastProcessed) return null;
-        const { level, cycle } = bakerMonitorInfo.lastProcessed;
+        const { level, cycle, cyclePosition } = bakerMonitorInfo.lastProcessed;
         const protocol = await getProtocol(cycle, level, ctx);
         return {
           level,
           protocol,
           cycle,
+          cyclePosition: typeof cyclePosition === "number" ? cyclePosition : 0,
+          blocksPerCycle: bakerMonitorInfo.blocksPerCycle,
         };
       },
     });
