@@ -43,7 +43,7 @@ export type BakerInfo = {
 export type LastProcessed = {
   cycle: number;
   level: number;
-  cyclePosition?: number;
+  cyclePosition: number;
 };
 
 export type BakerMonitorInfo = {
@@ -266,7 +266,7 @@ export const create = async (
     const chainPosition = await getPosition();
     const lastBlockLevel = chainPosition.blockLevel;
     const lastBlockCycle = chainPosition.blockCycle;
-    const cyclePosition = chainPosition.cyclePosition;
+    const cyclePosition = chainPosition.cyclePosition || 0;
 
     return {
       bakerInfo,
