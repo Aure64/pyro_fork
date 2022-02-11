@@ -57,6 +57,12 @@ query getBakers($offset: Int!, $limit: Int!)
         remaining_allowed_missed_slots
         expected_endorsing_rewards
       }
+      lastProcessed {
+        cyclePosition
+        cycle
+        level
+      }
+      blocksPerCycle
       updatedAt
     }
     totalCount

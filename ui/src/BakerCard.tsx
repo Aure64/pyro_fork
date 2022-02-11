@@ -68,9 +68,11 @@ export default ({
     atRisk,
     updatedAt,
     participation,
+    blocksPerCycle,
+    lastProcessed,
   },
 }: {
-  baker: Omit<Baker, 'headDistance' | 'blocksPerCycle'>;
+  baker: Omit<Baker, 'headDistance'>;
 }) => {
   const healthy = !deactivated && isHealthy(recentEvents);
 
@@ -95,6 +97,31 @@ export default ({
     : atRisk
     ? MdOutlineCloud
     : MdCloud;
+
+  let cycleProgress = 0;
+  const cyclePosition = lastProcessed?.cyclePosition;
+  if (cyclePosition) {
+    cycleProgress = 100 * (1 - cyclePosition / blocksPerCycle);
+  }
+
+  const participationReserve = participation
+    ? 100 *
+      (1 -
+        participation.missed_slots /
+          (participation.missed_slots +
+            participation.remaining_allowed_missed_slots))
+    : 0;
+
+  const marginOfWarning = 8;
+  const b1 = cycleProgress - marginOfWarning;
+  const b2 = cycleProgress + marginOfWarning;
+
+  let rewardsRiskColor = 'green';
+  if (participationReserve < b1) {
+    rewardsRiskColor = 'red';
+  } else if (b1 < participationReserve && participationReserve < b2) {
+    rewardsRiskColor = 'yellow';
+  }
 
   return (
     <Card minHeight="248px">
@@ -123,20 +150,29 @@ export default ({
                   participation.missed_slots
                 } allowed`}
               >
-                <Box flexGrow={1}>
+                <Box flexGrow={1} position="relative">
+                  <Box
+                    w="2px"
+                    h="100%"
+                    bg="white"
+                    opacity={0.8}
+                    position="absolute"
+                    left={`${cycleProgress}%`}
+                    zIndex={100}
+                  />
                   <Progress
-                    value={
-                      100 *
-                      (1 -
-                        participation.missed_slots /
-                          (participation.missed_slots +
-                            participation.remaining_allowed_missed_slots))
-                    }
+                    value={participationReserve}
+                    colorScheme={rewardsRiskColor}
                   />
                 </Box>
               </Tooltip>
               <Tooltip label="Expected endorsing rewards">
-                <Text fontSize="x-small" fontFamily="mono">
+                <Text
+                  fontSize="x-small"
+                  fontFamily="mono"
+                  fontWeight="bold"
+                  color={rewardsRiskColor}
+                >
                   {formatMutezAsTez(participation.expected_endorsing_rewards)}
                 </Text>
               </Tooltip>
