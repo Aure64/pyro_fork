@@ -81,6 +81,7 @@ const getBakingRights = async (
   }
   if (max_priority !== undefined) {
     params.max_priority = max_priority.toString();
+    params.max_round = params.max_priority; //renamed in Ithaca
   }
   if (delegate !== undefined) {
     params.delegate = delegate;
