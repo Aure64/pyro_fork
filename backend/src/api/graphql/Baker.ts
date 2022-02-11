@@ -175,6 +175,11 @@ export const Baker = objectType({
       type: Participation,
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
+        const { cycle, level } = parent.lastProcessed;
+        const protocol = await getProtocol(cycle, level, ctx);
+        if (protocol.startsWith("PtHangz2")) {
+          return null;
+        }
         return ctx.rpc.getParticipation(
           parent.address,
           `head~${parent.headDistance}`
