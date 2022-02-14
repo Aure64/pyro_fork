@@ -171,7 +171,7 @@ export default ({
                   fontSize="x-small"
                   fontFamily="mono"
                   fontWeight="bold"
-                  color={rewardsRiskColor}
+                  color={`${rewardsRiskColor}.500`}
                 >
                   {formatMutezAsTez(participation.expected_endorsing_rewards)}
                 </Text>
