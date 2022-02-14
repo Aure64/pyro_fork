@@ -304,6 +304,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
         const accusedLevel = contentsItem.op1.operations.level;
+        const accusedRound = contentsItem.op1.operations.round;
         const accusedSignature = contentsItem.op1.signature;
         try {
           const block = (await rpc.getBlock(`${accusedLevel}`)) as BlockI;
@@ -311,10 +312,12 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
           const operation = endorsementOperations.find((operation) => {
             for (const c of operation.contents) {
               if (c.kind === OpKind.ENDORSEMENT) {
-                // FIXME This doesn't exist in Ithaca
-                // if (c.endorsement.signature === accusedSignature) {
-                //   return true;
-                // }
+                if (
+                  c.round === accusedRound &&
+                  operation.signature === accusedSignature
+                ) {
+                  return true;
+                }
               }
             }
           });
