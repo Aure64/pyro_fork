@@ -81,12 +81,6 @@ export default async ({
 
   const bakingRightForBlock = bakingRights.find((bakingRight) => {
     return bakingRight.round === priority && bakingRight.level === blockLevel;
-    // if ("priority" in bakingRight) {
-    //   return (
-    //     bakingRight.priority === priority && bakingRight.level === blockLevel
-    //   );
-    // }
-    // return bakingRight.round === priority && bakingRight.level === blockLevel;
   });
   log.debug(
     `Baking right for block ${blockLevel} of priority ${priority}:`,
