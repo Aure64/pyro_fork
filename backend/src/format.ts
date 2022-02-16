@@ -32,10 +32,10 @@ const KindEmojiFormatters: {
 } = {
   [E.MissedBake]: "😡",
   [E.Baked]: "🥖",
-  [E.DoubleBaked]: "🛑️️",
+  [E.DoubleBaked]: "✂️️️️",
   [E.MissedEndorsement]: "😕",
   [E.Endorsed]: "👍",
-  [E.DoubleEndorsed]: "🛑️",
+  [E.DoubleEndorsed]: "‼️️",
   [E.NodeBehind]: "🐌",
   [E.NodeSynced]: "✨",
   [E.NodeLowPeers]: "🤔",

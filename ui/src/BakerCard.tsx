@@ -26,10 +26,10 @@ import Priority from './Priority';
 const emoji: { [key: string]: string } = {
   missed_bake: '😡',
   baked: '🥖',
-  double_baked: '🛑️️',
+  double_baked: '✂️️️️',
   missed_endorsement: '😕',
   endorsed: '👍',
-  double_endorsed: '🛑️',
+  double_endorsed: '‼️️️',
 };
 
 const eventLabels: { [key: string]: string } = {
