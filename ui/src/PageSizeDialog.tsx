@@ -15,6 +15,8 @@ import {
   ButtonGroup,
 } from '@chakra-ui/react';
 
+const MAX_PAGE_SIZE = 16;
+
 export default ({
   isOpen,
   onClose,
@@ -48,7 +50,7 @@ export default ({
     return (
       typeof valueAsNumber === 'number' &&
       valueAsNumber > 0 &&
-      valueAsNumber <= 12
+      valueAsNumber <= MAX_PAGE_SIZE
     );
   };
 
@@ -64,7 +66,9 @@ export default ({
         <ModalCloseButton />
         <ModalBody pb={6}>
           <FormControl>
-            <FormLabel>Number of items per page (12 max)</FormLabel>
+            <FormLabel>
+              Number of items per page ({MAX_PAGE_SIZE} max)
+            </FormLabel>
             <Input
               ref={initialRef}
               value={value}
