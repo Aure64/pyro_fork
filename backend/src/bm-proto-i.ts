@@ -79,29 +79,19 @@ export default async ({
     return event;
   };
 
-  const bakingRightForBlock = bakingRights.find((bakingRight) => {
-    return bakingRight.round === priority && bakingRight.level === blockLevel;
-  });
-  log.debug(
-    `Baking right for block ${blockLevel} of priority ${priority}:`,
-    bakingRightForBlock
-  );
-
   for (const baker of bakers) {
     const endorsementOperations = block.operations[0];
     const anonymousOperations = block.operations[2];
-    if (bakingRightForBlock) {
-      const bakingEvent = checkBlockBakingRights({
-        baker,
-        bakingRights: bakingRights,
-        blockBaker: metadata.baker,
-        blockProposer: metadata.proposer,
-        blockId,
-        blockPriority: priority,
-      });
-      if (bakingEvent) {
-        events.push(createEvent(baker, bakingEvent));
-      }
+    const bakingEvent = checkBlockBakingRights({
+      baker,
+      bakingRights: bakingRights,
+      blockBaker: metadata.baker,
+      blockProposer: metadata.proposer,
+      blockId,
+      blockPriority: priority,
+    });
+    if (bakingEvent) {
+      events.push(createEvent(baker, bakingEvent));
     }
 
     const endorsingEvent = checkBlockEndorsingRights({
@@ -228,7 +218,7 @@ export const checkBlockBakingRights = ({
 
   if (blockProposer === baker && blockBaker !== baker) {
     log.info(
-      `${baker} proposed block at level ${blockRight.level}, but didn't baker it`
+      `${baker} proposed block at level ${blockRight.level}, but didn't bake it`
     );
     return Events.MissedBonus;
   }
@@ -240,18 +230,17 @@ export const checkBlockBakingRights = ({
     return Events.MissedBake;
   }
 
-  if (blockRight.delegate === baker && blockRight.round === bakerRight.round) {
-    if (blockBaker === baker) {
-      log.debug(
-        `${baker} baked block ${blockId} at round ${blockPriority} of level ${blockRight.level}`
-      );
-      return Events.Baked;
-    }
-    log.info(`${baker} missed bake at ${blockRight.level}`);
-    return Events.MissedBake;
+  if (
+    blockRight.delegate === baker &&
+    blockRight.round === bakerRight.round &&
+    blockBaker === baker
+  ) {
+    log.info(
+      `${baker} baked block ${blockId} at round ${blockPriority} of level ${blockRight.level}`
+    );
+    return Events.Baked;
   }
 
-  log.debug(`No bake event for block ${blockId} for baker ${baker}`);
   return null;
 };
 

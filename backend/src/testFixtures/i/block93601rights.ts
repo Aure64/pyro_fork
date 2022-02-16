@@ -16,6 +16,11 @@ const rights: BakingRightsI = [
     delegate: "tz1e42w8ZaGAbM3gucbBy8iRypdbnqUj7oWY",
     round: 2,
   },
+  {
+    level: 93601,
+    delegate: "tz1Wn7JnLVf7PpTbaLQNzmNaF9z9UudWHGBR",
+    round: 3,
+  },
 ];
 
 export default rights;

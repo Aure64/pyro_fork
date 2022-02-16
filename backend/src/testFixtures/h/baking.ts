@@ -2,7 +2,7 @@ import { BakingRightsH, BakingRightH } from "rpc/types";
 
 export const levelWithMultipleBakers = 1298498;
 
-export const responseWithLowerPriorities: BakingRightsH = [
+const responseWithLowerPriorities: BakingRightsH = [
   {
     level: 1298433,
     delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",

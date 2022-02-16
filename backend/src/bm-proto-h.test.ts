@@ -41,19 +41,31 @@ describe("checkBlockBakingRights", () => {
       baker: delegate,
       blockBaker: delegate,
       blockId: "some_block",
-      bakingRight: priorityZero,
+      bakingRights: [priorityZero],
       blockPriority: 0,
     });
     expect(result).toEqual(Events.Baked);
   });
 
   it("returns missed block baked by other baker", () => {
+    const rights = [
+      {
+        level: 1298433,
+        delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+        priority: 0,
+      },
+      {
+        level: 1298441,
+        delegate: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
+        priority: 1,
+      },
+    ];
     const result = checkBlockBakingRights({
-      baker: delegate,
-      blockBaker: "other_baker",
+      baker: rights[0].delegate,
+      blockBaker: rights[1].delegate,
       blockId: "some_block",
-      bakingRight: priorityZero,
-      blockPriority: 0,
+      bakingRights: rights,
+      blockPriority: 1,
     });
     expect(result).toEqual(Events.MissedBake);
   });
@@ -63,7 +75,7 @@ describe("checkBlockBakingRights", () => {
       baker: delegate,
       blockBaker: "other_baker",
       blockId: "some_block",
-      bakingRight: priorityZeroOtherBaker,
+      bakingRights: [priorityZeroOtherBaker],
       blockPriority: 0,
     });
     expect(result).toBe(null);
