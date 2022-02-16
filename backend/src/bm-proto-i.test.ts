@@ -1,7 +1,12 @@
-import { checkBlockBakingRights } from "./bm-proto-i";
+import {
+  checkBlockBakingRights,
+  checkBlockEndorsingRights,
+} from "./bm-proto-i";
 
 import block93416 from "./testFixtures/i/block93416";
 import block93416rights from "./testFixtures/i/block93416rights";
+import block93415erights from "./testFixtures/i/block93415erights";
+
 import block93516 from "./testFixtures/i/block93516";
 import block93516rights from "./testFixtures/i/block93516rights";
 
@@ -15,7 +20,7 @@ describe("checkBlockBakingRights", () => {
     const block = block93416;
     const rights = block93416rights;
 
-    expect(block.metadata?.level_info.level).toEqual(rights[0].level);
+    expect(block.header.level).toEqual(rights[0].level);
 
     const delegate = rights[0].delegate;
 
@@ -33,7 +38,7 @@ describe("checkBlockBakingRights", () => {
   it("returns missed bake for block baked by another baker", () => {
     const block = block93516;
     const rights = block93516rights;
-    expect(block.metadata?.level_info.level).toEqual(rights[0].level);
+    expect(block.header.level).toEqual(rights[0].level);
 
     expect(block.header.payload_round).toEqual(1);
     expect(block.metadata!.baker).toEqual(rights[1].delegate);
@@ -71,7 +76,7 @@ describe("checkBlockBakingRights", () => {
   it("returns null for a block that baker has no rights for", () => {
     const block = block93416;
     const rights = block93416rights;
-    expect(block.metadata?.level_info.level).toEqual(rights[0].level);
+    expect(block.header.level).toEqual(rights[0].level);
 
     const result = checkBlockBakingRights({
       baker: "some baker",
@@ -90,7 +95,7 @@ describe("checkBlockBakingRights", () => {
   it("returns null for a block that baker has rights for in a later round", () => {
     const block = block93601;
     const rights = block93601rights;
-    expect(block.metadata?.level_info.level).toEqual(rights[0].level);
+    expect(block.header.level).toEqual(rights[0].level);
     expect(rights[rights.length - 1].round).toEqual(
       block.header.payload_round + 1
     );
@@ -112,7 +117,7 @@ describe("checkBlockBakingRights", () => {
       ...block93516,
       metadata: { ...block93516.metadata, proposer: rights[0].delegate },
     };
-    expect(block.metadata!.level_info!.level).toEqual(rights[0].level);
+    expect(block.header.level).toEqual(rights[0].level);
 
     expect(block.header.payload_round).toEqual(1);
     expect(block.metadata!.baker).toEqual(rights[1].delegate);
@@ -126,5 +131,61 @@ describe("checkBlockBakingRights", () => {
       blockPriority: block.header.payload_round,
     });
     expect(result).toBe(Events.MissedBonus);
+  });
+});
+
+describe("checkBlockEndorsingRights", () => {
+  it("returns endorsed event when present in rights and endorsement was made", () => {
+    const block = block93416;
+    const rights = block93415erights;
+    expect(block.header.level - 1).toEqual(rights[0].level);
+
+    const result = checkBlockEndorsingRights({
+      baker: "tz1MeT8NACB8Q4uV9dPQ3YxXBmYgapbxQxQ5",
+      endorsementOperations: block.operations[0],
+      level: block.header.level - 1,
+      endorsingRights: rights,
+    });
+    expect(result).toEqual([Events.Endorsed, 780]);
+  });
+
+  it("returns missed endorsement event when present in rights but not in block operations", () => {
+    const block = block93416;
+    const rights = block93415erights;
+    expect(block.header.level - 1).toEqual(rights[0].level);
+
+    const result = checkBlockEndorsingRights({
+      baker: "tz1evTDcDb1Da5z9reoNRjx5ZXoPXS3D1K1A",
+      endorsementOperations: block.operations[0],
+      level: block.header.level - 1,
+      endorsingRights: rights,
+    });
+    expect(result).toEqual([Events.MissedEndorsement, 9]);
+  });
+
+  it("returns none when not in rights and not in block operations", () => {
+    const block = block93416;
+    const rights = [
+      {
+        ...block93415erights[0],
+        delegates: [...block93415erights[0].delegates],
+      },
+    ];
+    expect(block.header.level - 1).toEqual(rights[0].level);
+
+    const delegate3 = rights[0].delegates[3];
+    const baker = "tz1evTDcDb1Da5z9reoNRjx5ZXoPXS3D1K1A";
+    expect(delegate3.delegate).toEqual(baker);
+
+    delegate3.delegate = "some other address";
+
+    const result = checkBlockEndorsingRights({
+      baker,
+      endorsementOperations: block.operations[0],
+      level: block.header.level - 1,
+      endorsingRights: rights,
+    });
+
+    expect(result).toBe(null);
   });
 });
