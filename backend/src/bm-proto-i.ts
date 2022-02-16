@@ -9,7 +9,6 @@ import {
   BlockI,
   EndorsingRightsI,
   BakingRightsI,
-  BakingRightI,
   OpKind,
   Delegate,
   OperationI as OperationEntry,
@@ -58,6 +57,7 @@ export default async ({
     kind:
       | Events.Baked
       | Events.MissedBake
+      | Events.MissedBonus
       | Events.Endorsed
       | Events.MissedEndorsement
       | Events.DoubleBaked
@@ -93,8 +93,9 @@ export default async ({
     if (bakingRightForBlock) {
       const bakingEvent = checkBlockBakingRights({
         baker,
-        bakingRight: bakingRightForBlock,
+        bakingRights: bakingRights,
         blockBaker: metadata.baker,
+        blockProposer: metadata.proposer,
         blockId,
         blockPriority: priority,
       });
@@ -180,14 +181,6 @@ export const loadBlockRights = async (
   };
 };
 
-type CheckBlockBakingRightsArgs = {
-  baker: string;
-  blockBaker: string;
-  blockId: string;
-  bakingRight: BakingRightI;
-  blockPriority: number;
-};
-
 /**
  * Check the baking rights for a block to see if the provided baker had a successful or missed bake.
  */
@@ -195,20 +188,66 @@ type CheckBlockBakingRightsArgs = {
 export const checkBlockBakingRights = ({
   baker,
   blockBaker,
-  bakingRight,
+  blockProposer,
+  bakingRights,
   blockId,
   blockPriority,
-}: CheckBlockBakingRightsArgs): Events.MissedBake | Events.Baked | null => {
+}: {
+  baker: string;
+  blockBaker: string;
+  blockProposer: string;
+  blockId: string;
+  bakingRights: BakingRightsI;
+  blockPriority: number;
+}): Events.MissedBake | Events.MissedBonus | Events.Baked | null => {
   const log = getLogger(name);
 
-  if (bakingRight.delegate === baker) {
+  //baher's scheduled right
+  const bakerRight = bakingRights.find((bakingRight) => {
+    return bakingRight.delegate == baker;
+  });
+
+  if (!bakerRight) {
+    //baker had no baking rights at this level
+    log.debug(`No baking slot at block ${blockId} for ${baker}`);
+    return null;
+  }
+
+  //actual baking right at block's round
+  const blockRight = bakingRights.find((bakingRight) => {
+    return bakingRight.round == blockPriority;
+  });
+
+  if (!blockRight) {
+    log.error(
+      `No rights found block ${blockId} at round ${blockPriority}`,
+      bakingRights
+    );
+    return null;
+  }
+
+  if (blockProposer === baker && blockBaker !== baker) {
+    log.info(
+      `${baker} proposed block at level ${blockRight.level}, but didn't baker it`
+    );
+    return Events.MissedBonus;
+  }
+
+  if (bakerRight.round < blockRight.round) {
+    log.info(
+      `${baker} had baking slot for round ${bakerRight.round}, but missed it (block baked at round ${blockPriority})`
+    );
+    return Events.MissedBake;
+  }
+
+  if (blockRight.delegate === baker && blockRight.round === bakerRight.round) {
     if (blockBaker === baker) {
       log.debug(
-        `Successful bake for block ${blockId} for baker ${baker} at priority ${blockPriority}`
+        `${baker} baked block ${blockId} at round ${blockPriority} of level ${blockRight.level}`
       );
       return Events.Baked;
     }
-    log.info(`Missed bake detected for baker ${baker}`);
+    log.info(`${baker} missed bake at ${blockRight.level}`);
     return Events.MissedBake;
   }
 

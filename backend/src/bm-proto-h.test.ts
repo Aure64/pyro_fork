@@ -11,7 +11,7 @@ import {
   responseWithPriorityZero,
   priorityZero,
   priorityZeroOtherBaker,
-} from "./testFixtures/baking";
+} from "./testFixtures/h/baking";
 import {
   endorsementsWithMiss,
   endorsementsWithSuccess,
@@ -20,7 +20,7 @@ import {
   level as endorsementLevel,
   operationsWithDoubleEndorsementAccusation,
   operationsWithDoubleBakeAccusation,
-} from "./testFixtures/endorsing";
+} from "./testFixtures/h/endorsing";
 
 setLevel("SILENT");
 

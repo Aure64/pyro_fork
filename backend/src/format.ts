@@ -31,6 +31,7 @@ const KindEmojiFormatters: {
   [K in eventTypes.Event["kind"]]: string;
 } = {
   [E.MissedBake]: "😡",
+  [E.MissedBonus]: "😾",
   [E.Baked]: "🥖",
   [E.DoubleBaked]: "✂️️️️",
   [E.MissedEndorsement]: "😕",
@@ -57,6 +58,7 @@ const Formatters: {
   ) => string;
 } = {
   [E.MissedBake]: (e) => `${e.baker} missed a bake at level ${e.level}`,
+  [E.MissedBonus]: (e) => `${e.baker} missed a bonus at level ${e.level}`,
   [E.Baked]: (e) => `${e.baker} baked block ${e.level}`,
   [E.DoubleBaked]: (e) => `${e.baker} double baked block ${e.level}`,
   [E.MissedEndorsement]: (e) =>

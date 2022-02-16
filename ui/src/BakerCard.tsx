@@ -25,6 +25,7 @@ import Priority from './Priority';
 
 const emoji: { [key: string]: string } = {
   missed_bake: '😡',
+  missed_bonus: '😾',
   baked: '🥖',
   double_baked: '✂️️️️',
   missed_endorsement: '😕',
@@ -34,6 +35,7 @@ const emoji: { [key: string]: string } = {
 
 const eventLabels: { [key: string]: string } = {
   missed_bake: 'Missed bake',
+  missed_bonus: 'Missed bonus',
   baked: 'Baked',
   double_baked: 'Double bake️d',
   missed_endorsement: 'Missed endorsement',

@@ -1,5 +1,5 @@
-import { OpKind } from "../rpc/types";
-import { EndorsingRightsH } from "../rpc/types";
+import { OpKind } from "../../rpc/types";
+import { EndorsingRightsH } from "../../rpc/types";
 import {
   OperationH,
   DoubleBakingEvidence,

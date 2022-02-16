@@ -1,6 +1,7 @@
 export enum Events {
   Baked = "baked",
   MissedBake = "missed_bake",
+  MissedBonus = "missed_bonus",
   DoubleBaked = "double_baked",
   Endorsed = "endorsed",
   MissedEndorsement = "missed_endorsement",
@@ -38,6 +39,8 @@ export type Baked = BlockEvent & { kind: Events.Baked; priority: number };
 
 export type MissedBake = BlockEvent & { kind: Events.MissedBake };
 
+export type MissedBonus = BlockEvent & { kind: Events.MissedBonus };
+
 export type DoubleBaked = BlockEvent & { kind: Events.DoubleBaked };
 
 export type Endorsed = BlockEvent & {
@@ -59,6 +62,7 @@ export type DeactivationRisk = CycleEvent & { kind: Events.DeactivationRisk };
 export type BakerBlockEvent =
   | Baked
   | MissedBake
+  | MissedBonus
   | DoubleBaked
   | Endorsed
   | MissedEndorsement
