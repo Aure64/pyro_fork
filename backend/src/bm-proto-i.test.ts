@@ -1,7 +1,10 @@
 import {
   checkBlockBakingRights,
   checkBlockEndorsingRights,
+  checkBlockAccusationsForDoubleBake,
 } from "./bm-proto-i";
+
+import { RpcClient } from "rpc/client";
 
 import block93416 from "./testFixtures/i/block93416";
 import block93416rights from "./testFixtures/i/block93416rights";
@@ -12,6 +15,8 @@ import block93516rights from "./testFixtures/i/block93516rights";
 
 import block93601 from "./testFixtures/i/block93601";
 import block93601rights from "./testFixtures/i/block93601rights";
+
+import block96849 from "./testFixtures/i/block96849";
 
 import { Events } from "./events";
 
@@ -187,5 +192,60 @@ describe("checkBlockEndorsingRights", () => {
     });
 
     expect(result).toBe(null);
+  });
+});
+
+describe("checkBlockAccusationsForDoubleBake", () => {
+  it("returns double bake when baker is accused", async () => {
+    const getBakingRights = jest.fn().mockResolvedValue([
+      {
+        level: 96848,
+        delegate: "tz3Q67aMz7gSMiQRcW729sXSfuMtkyAHYfqc",
+        round: 0,
+      },
+      {
+        level: 96848,
+        delegate: "tz1evTDcDb1Da5z9reoNRjx5ZXoPXS3D1K1A",
+        round: 1,
+      },
+      {
+        level: 96848,
+        delegate: "tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP",
+        round: 2,
+      },
+      {
+        level: 96848,
+        delegate: "tz1aWXP237BLwNHJcCD4b3DutCevhqq2T1Z9",
+        round: 3,
+      },
+    ]);
+    const rpc = {
+      getBakingRights,
+    } as unknown as RpcClient;
+
+    const block = block96849;
+
+    const result = await checkBlockAccusationsForDoubleBake({
+      baker: "tz3Q67aMz7gSMiQRcW729sXSfuMtkyAHYfqc",
+      rpc,
+      operations: block.operations[2],
+    });
+    expect(result).toEqual(true);
+  });
+
+  it("Does not fetch baking rights when there are no accusations", async () => {
+    const block = block93416;
+    const getBakingRights = jest.fn();
+    const rpc = {
+      getBakingRights,
+    } as unknown as RpcClient;
+
+    const result = await checkBlockAccusationsForDoubleBake({
+      baker: block.metadata!.baker,
+      rpc,
+      operations: block.operations[2],
+    });
+    expect(result).toEqual(false);
+    expect(getBakingRights.mock.calls.length).toEqual(0);
   });
 });
