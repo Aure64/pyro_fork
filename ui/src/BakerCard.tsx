@@ -112,9 +112,10 @@ export default ({
             participation.remaining_allowed_missed_slots))
     : 0;
 
-  const marginOfWarning = 8;
-  const b1 = cycleProgress - marginOfWarning;
-  const b2 = cycleProgress + marginOfWarning;
+  const marginOfWarningL = Math.min(8, cycleProgress);
+  const marginOfWarningH = Math.min(8, 100 - cycleProgress);
+  const b1 = cycleProgress - marginOfWarningL;
+  const b2 = cycleProgress + marginOfWarningH;
 
   let rewardsRiskColor = 'green';
   if (participationReserve < b1) {
