@@ -15,7 +15,7 @@ import {
   OperationI as OperationEntry,
 } from "./rpc/types";
 
-const name = "bm-proto-h";
+const name = "bm-proto-i";
 
 export type CheckBlockArgs = {
   bakers: string[];
