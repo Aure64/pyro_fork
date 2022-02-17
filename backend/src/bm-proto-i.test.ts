@@ -25,6 +25,9 @@ import block96849 from "./testFixtures/i/block96849";
 
 import { Events } from "./events";
 
+import { setLevel } from "loglevel";
+setLevel("SILENT");
+
 describe("checkBlockBakingRights", () => {
   it("returns baked event for block baked by baker with rights at round 0", () => {
     const block = block93416;
