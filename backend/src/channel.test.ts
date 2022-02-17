@@ -6,6 +6,9 @@ import { Event, Events } from "./events";
 import * as eventlog from "./eventlog";
 import * as channel from "./channel";
 
+import { setLevel } from "loglevel";
+setLevel("SILENT");
+
 const mkTempDir = async (): Promise<string> => {
   const tmpDir = os.tmpdir();
   return await fs.promises.mkdtemp(
