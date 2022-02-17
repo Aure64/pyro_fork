@@ -9,7 +9,6 @@ import {
   DoubleBakingEvidenceI,
   DoubleEndorsementEvidenceI,
   OperationI,
-  OpKind,
 } from "./rpc/types";
 
 import block93416 from "./testFixtures/i/block93416";
