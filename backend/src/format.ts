@@ -37,6 +37,7 @@ const KindEmojiFormatters: {
   [E.MissedEndorsement]: "😕",
   [E.Endorsed]: "👍",
   [E.DoubleEndorsed]: "‼️️",
+  [E.DoublePreendorsed]: "‼️️",
   [E.NodeBehind]: "🐌",
   [E.NodeSynced]: "✨",
   [E.NodeLowPeers]: "🤔",
@@ -65,6 +66,8 @@ const Formatters: {
     `${e.baker} missed endorsement of block ${e.level}`,
   [E.Endorsed]: (e) => `${e.baker} endorsed block ${e.level}`,
   [E.DoubleEndorsed]: (e) => `${e.baker} double endorsed block ${e.level}`,
+  [E.DoublePreendorsed]: (e) =>
+    `${e.baker} double preendorsed block ${e.level}`,
   [E.NodeBehind]: (e) => `Node ${e.node} is behind`,
   [E.NodeSynced]: (e) => `Node ${e.node} has caught up`,
   [E.NodeLowPeers]: (e) => `Node ${e.node} has a low peer count`,

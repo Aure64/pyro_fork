@@ -61,7 +61,8 @@ export default async ({
       | Events.Endorsed
       | Events.MissedEndorsement
       | Events.DoubleBaked
-      | Events.DoubleEndorsed,
+      | Events.DoubleEndorsed
+      | Events.DoublePreendorsed,
     level = blockLevel,
     slotCount?: number
   ): BakerEvent => {
@@ -128,7 +129,7 @@ export default async ({
       anonymousOperations
     );
     if (doubleEndorseEvent) {
-      events.push(createEvent(baker, Events.DoubleEndorsed));
+      events.push(createEvent(baker, doubleEndorseEvent));
     }
   }
   return events;
@@ -300,11 +301,15 @@ const isEndorsementByDelegate = (
 export const checkBlockAccusationsForDoubleEndorsement = async (
   baker: string,
   operations: OperationI[]
-): Promise<boolean> => {
+): Promise<Events.DoubleEndorsed | Events.DoublePreendorsed | null> => {
   const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
-      if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
+      if (
+        contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE ||
+        contentsItem.kind === OpKind.DOUBLE_PREENDORSEMENT_EVIDENCE
+      ) {
+        const { kind } = contentsItem;
         const { level, round } = contentsItem.op1.operations;
         if ("metadata" in contentsItem) {
           for (const balanceUpdate of contentsItem.metadata.balance_updates) {
@@ -313,10 +318,10 @@ export const checkBlockAccusationsForDoubleEndorsement = async (
               balanceUpdate.category === "deposits" &&
               balanceUpdate.delegate === baker
             ) {
-              log.info(
-                `${baker} double endorsed block at level ${level} round ${round}`
-              );
-              return true;
+              log.info(`${baker} ${kind} at level ${level} round ${round}`);
+              return kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE
+                ? Events.DoubleEndorsed
+                : Events.DoublePreendorsed;
             }
           }
           log.warn(
@@ -332,7 +337,7 @@ export const checkBlockAccusationsForDoubleEndorsement = async (
     }
   }
 
-  return false;
+  return null;
 };
 
 export const checkBlockAccusationsForDoubleBake = async (

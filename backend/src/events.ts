@@ -6,6 +6,7 @@ export enum Events {
   Endorsed = "endorsed",
   MissedEndorsement = "missed_endorsement",
   DoubleEndorsed = "double_endorsed",
+  DoublePreendorsed = "double_preendorsed",
   Deactivated = "deactivated",
   DeactivationRisk = "deactivation_risk",
   NodeBehind = "node_behind",
@@ -55,6 +56,8 @@ export type MissedEndorsement = BlockEvent & {
 
 export type DoubleEndorsed = BlockEvent & { kind: Events.DoubleEndorsed };
 
+export type DoublePreendorsed = BlockEvent & { kind: Events.DoublePreendorsed };
+
 export type Deactivated = CycleEvent & { kind: Events.Deactivated };
 
 export type DeactivationRisk = CycleEvent & { kind: Events.DeactivationRisk };
@@ -66,7 +69,8 @@ export type BakerBlockEvent =
   | DoubleBaked
   | Endorsed
   | MissedEndorsement
-  | DoubleEndorsed;
+  | DoubleEndorsed
+  | DoublePreendorsed;
 
 export type BakerCycleEvent = Deactivated | DeactivationRisk;
 

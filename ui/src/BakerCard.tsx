@@ -31,6 +31,7 @@ const emoji: { [key: string]: string } = {
   missed_endorsement: '😕',
   endorsed: '👍',
   double_endorsed: '‼️️️',
+  double_preendorsed: '‼️️️',
 };
 
 const eventLabels: { [key: string]: string } = {
@@ -41,6 +42,7 @@ const eventLabels: { [key: string]: string } = {
   missed_endorsement: 'Missed endorsement',
   endorsed: 'Endorsed',
   double_endorsed: 'Double endorsed️',
+  double_preendorsed: 'Double preendorsed️',
 };
 
 const defaultEmoji = '👽'; //should never show up
