@@ -196,7 +196,6 @@ export const create = async (
               bakers,
               block,
               rpc: rpc,
-              lastCycle: lastBlockCycle,
             });
             break;
           case "Psithaca2MLRFYargivpo7YvUr7wUDqyxrdhC5CQq78mRvimz6A":
@@ -204,12 +203,26 @@ export const create = async (
               bakers,
               block,
               rpc: rpc,
-              lastCycle: lastBlockCycle,
             });
             break;
           default:
             console.warn(`Unknown protocol at level ${blockLevel}`);
             events = [];
+        }
+
+        if (!lastBlockCycle || blockCycle > lastBlockCycle) {
+          for (const baker of bakers) {
+            const deactivationEvent = await getDeactivationEvent({
+              baker,
+              rpc,
+              cycle: blockCycle,
+            });
+            if (deactivationEvent) events.push(deactivationEvent);
+          }
+        } else {
+          log.debug(
+            `Not checking deactivations as this cycle (${blockCycle}) was already checked`
+          );
         }
 
         log.debug(
@@ -285,4 +298,70 @@ export const create = async (
     stop: srv.stop,
     info,
   };
+};
+
+import { Deactivated, DeactivationRisk, Events } from "./events";
+
+import { RpcClient as TRpcClient } from "./rpc/client";
+
+import { Delegate } from "./rpc/types";
+
+import now from "./now";
+
+type GetDeactivationEventsArgs = {
+  baker: string;
+  cycle: number;
+  rpc: TRpcClient;
+};
+
+const getDeactivationEvent = async ({
+  baker,
+  cycle,
+  rpc,
+}: GetDeactivationEventsArgs): Promise<
+  Deactivated | DeactivationRisk | null
+> => {
+  const delegatesResponse = await rpc.getDelegate(baker);
+  return checkForDeactivations({ baker, cycle, delegatesResponse });
+};
+
+type CheckForDeactivationsArgs = {
+  baker: string;
+  cycle: number;
+  delegatesResponse: Delegate;
+};
+
+export const checkForDeactivations = async ({
+  baker,
+  cycle,
+  delegatesResponse,
+}: CheckForDeactivationsArgs): Promise<
+  Deactivated | DeactivationRisk | null
+> => {
+  const log = getLogger(name);
+  const createdAt = now();
+  if (delegatesResponse.deactivated) {
+    log.debug(`Baker ${baker} is deactivated (on or before cycle ${cycle})`);
+    return {
+      kind: Events.Deactivated,
+      baker,
+      cycle,
+      createdAt,
+    };
+  } else if (delegatesResponse.grace_period - cycle <= 1) {
+    log.debug(
+      `Baker ${baker} is scheduled for deactivation in cycle ${delegatesResponse.grace_period}`
+    );
+    return {
+      kind: Events.DeactivationRisk,
+      baker,
+      cycle: delegatesResponse.grace_period,
+      createdAt,
+    };
+  } else {
+    const message = `Baker ${baker} is not at risk of deactivation`;
+    log.debug(message);
+  }
+
+  return null;
 };

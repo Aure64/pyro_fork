@@ -1,6 +1,6 @@
 import { getLogger } from "loglevel";
 
-import { BakerEvent, Deactivated, DeactivationRisk, Events } from "./events";
+import { BakerEvent, Events } from "./events";
 
 import now from "./now";
 
@@ -10,7 +10,6 @@ import {
   EndorsingRightsI,
   BakingRightsI,
   OpKind,
-  Delegate,
   OperationI,
 } from "./rpc/types";
 
@@ -20,7 +19,6 @@ export type CheckBlockArgs = {
   bakers: string[];
   block: BlockI;
   rpc: RpcClient;
-  lastCycle: number | undefined;
 };
 
 /**
@@ -30,10 +28,7 @@ export default async ({
   bakers,
   block,
   rpc,
-  lastCycle,
 }: CheckBlockArgs): Promise<BakerEvent[]> => {
-  const log = getLogger(name);
-
   const metadata = block.metadata!;
   const blockLevel = metadata.level_info.level;
   const blockCycle = metadata.level_info.cycle;
@@ -104,18 +99,6 @@ export default async ({
     if (endorsingEvent) {
       const [kind, slotCount] = endorsingEvent;
       events.push(createEvent(baker, kind, blockLevel - 1, slotCount));
-    }
-    if (!lastCycle || blockCycle > lastCycle) {
-      const deactivationEvent = await getDeactivationEvent({
-        baker,
-        rpc,
-        cycle: blockCycle,
-      });
-      if (deactivationEvent) events.push(deactivationEvent);
-    } else {
-      log.debug(
-        `Not checking deactivations as this cycle (${blockCycle}) was already checked`
-      );
     }
     const doubleBakeEvent = await checkBlockAccusationsForDoubleBake(
       baker,
@@ -376,62 +359,4 @@ export const checkBlockAccusationsForDoubleBake = async (
   }
 
   return false;
-};
-
-type GetDeactivationEventsArgs = {
-  baker: string;
-  cycle: number;
-  rpc: RpcClient;
-};
-
-const getDeactivationEvent = async ({
-  baker,
-  cycle,
-  rpc,
-}: GetDeactivationEventsArgs): Promise<
-  Deactivated | DeactivationRisk | null
-> => {
-  const delegatesResponse = await rpc.getDelegate(baker);
-  return checkForDeactivations({ baker, cycle, delegatesResponse });
-};
-
-type CheckForDeactivationsArgs = {
-  baker: string;
-  cycle: number;
-  delegatesResponse: Delegate;
-};
-
-export const checkForDeactivations = async ({
-  baker,
-  cycle,
-  delegatesResponse,
-}: CheckForDeactivationsArgs): Promise<
-  Deactivated | DeactivationRisk | null
-> => {
-  const log = getLogger(name);
-  const createdAt = now();
-  if (delegatesResponse.deactivated) {
-    log.debug(`Baker ${baker} is deactivated (on or before cycle ${cycle})`);
-    return {
-      kind: Events.Deactivated,
-      baker,
-      cycle,
-      createdAt,
-    };
-  } else if (delegatesResponse.grace_period - cycle <= 1) {
-    log.debug(
-      `Baker ${baker} is scheduled for deactivation in cycle ${delegatesResponse.grace_period}`
-    );
-    return {
-      kind: Events.DeactivationRisk,
-      baker,
-      cycle: delegatesResponse.grace_period,
-      createdAt,
-    };
-  } else {
-    const message = `Baker ${baker} is not at risk of deactivation`;
-    log.debug(message);
-  }
-
-  return null;
 };
