@@ -305,8 +305,8 @@ export const checkBlockAccusationsForDoubleEndorsement = async (
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
+        const { level, round } = contentsItem.op1.operations;
         if ("metadata" in contentsItem) {
-          const { level, round } = contentsItem.op1.operations;
           for (const balanceUpdate of contentsItem.metadata.balance_updates) {
             if (
               balanceUpdate.kind === "freezer" &&
@@ -320,12 +320,12 @@ export const checkBlockAccusationsForDoubleEndorsement = async (
             }
           }
           log.warn(
-            "Found double endorsement evidence for level ${level} with metadata, but no freezer balance update, unable to process"
+            `Found ${kind} for level ${level} with metadata, but no freezer balance update, unable to process`
           );
         } else {
           //perhaps the block is too old for node's history mode
           log.warn(
-            "Found double baking evidence without metadata for level ${level}, unable to process"
+            `Found ${kind} without metadata for level ${level}, unable to process`
           );
         }
       }
@@ -358,12 +358,12 @@ export const checkBlockAccusationsForDoubleBake = async (
             }
           }
           log.warn(
-            "Found double baking evidence for level ${level} with metadata, but no freezer balance update, unable to precess"
+            `Found double baking evidence for level ${level} with metadata, but no freezer balance update, unable to precess`
           );
         } else {
           //perhaps the block is too old for node's history mode
           log.warn(
-            "Found double baking evidence without metadata for level ${level}, unable to process"
+            `Found double baking evidence without metadata for level ${level}, unable to process`
           );
         }
       }
