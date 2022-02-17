@@ -11,7 +11,7 @@ import {
   BakingRightsI,
   OpKind,
   Delegate,
-  OperationI as OperationEntry,
+  OperationI,
 } from "./rpc/types";
 
 const name = "bm-proto-i";
@@ -116,36 +116,23 @@ export default async ({
         `Not checking deactivations as this cycle (${blockCycle}) was already checked`
       );
     }
-    const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
+    const doubleBakeEvent = await checkBlockAccusationsForDoubleBake(
       baker,
-      operations: anonymousOperations,
-      rpc,
-    });
+      anonymousOperations
+    );
     if (doubleBakeEvent) {
       events.push(createEvent(baker, Events.DoubleBaked));
     }
-    const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement({
+    const doubleEndorseEvent = await checkBlockAccusationsForDoubleEndorsement(
       baker,
-      operations: anonymousOperations,
-      rpc,
-    });
+      anonymousOperations
+    );
     if (doubleEndorseEvent) {
       events.push(createEvent(baker, Events.DoubleEndorsed));
     }
   }
   return events;
 };
-
-// type LoadBlockDataArgs = {
-//   blockId: string;
-//   rpc: RpcClient;
-// };
-
-// type BlockData = {
-//   bakingRights: BakingRightsResponse;
-//   endorsingRights: EndorsingRightsResponse;
-//   block: BlockResponse;
-// };
 
 type BlockData = {
   bakingRights: BakingRightsI;
@@ -246,7 +233,7 @@ export const checkBlockBakingRights = ({
 
 type CheckBlockEndorsingRightsArgs = {
   baker: string;
-  endorsementOperations: OperationEntry[];
+  endorsementOperations: OperationI[];
   level: number;
   endorsingRights: EndorsingRightsI;
 };
@@ -293,7 +280,7 @@ export const checkBlockEndorsingRights = ({
 };
 
 const isEndorsementByDelegate = (
-  operation: OperationEntry,
+  operation: OperationI,
   delegate: string
 ): boolean => {
   for (const contentsItem of operation.contents) {
@@ -310,56 +297,35 @@ const isEndorsementByDelegate = (
   return false;
 };
 
-type CheckBlockAccusationsForDoubleEndorsementArgs = {
-  baker: string;
-  operations: OperationEntry[];
-  rpc: RpcClient;
-};
-
-export const checkBlockAccusationsForDoubleEndorsement = async ({
-  baker,
-  operations,
-  rpc,
-}: CheckBlockAccusationsForDoubleEndorsementArgs): Promise<boolean> => {
+export const checkBlockAccusationsForDoubleEndorsement = async (
+  baker: string,
+  operations: OperationI[]
+): Promise<boolean> => {
   const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_ENDORSEMENT_EVIDENCE) {
-        const accusedLevel = contentsItem.op1.operations.level;
-        const accusedRound = contentsItem.op1.operations.round;
-        const accusedSignature = contentsItem.op1.signature;
-        try {
-          const block = (await rpc.getBlock(`${accusedLevel}`)) as BlockI;
-          const endorsementOperations = block.operations[0];
-          const operation = endorsementOperations.find((operation) => {
-            for (const c of operation.contents) {
-              if (c.kind === OpKind.ENDORSEMENT) {
-                if (
-                  c.round === accusedRound &&
-                  operation.signature === accusedSignature
-                ) {
-                  return true;
-                }
-              }
-            }
-          });
-          const endorser = operation && findEndorserForOperation(operation);
-          if (endorser) {
-            if (endorser === baker) {
+        if ("metadata" in contentsItem) {
+          const { level, round } = contentsItem.op1.operations;
+          for (const balanceUpdate of contentsItem.metadata.balance_updates) {
+            if (
+              balanceUpdate.kind === "freezer" &&
+              balanceUpdate.category === "deposits" &&
+              balanceUpdate.delegate === baker
+            ) {
               log.info(
-                `Double endorsement for baker ${baker} at block ${block.hash}`
+                `${baker} double endorsed block at level ${level} round ${round}`
               );
               return true;
             }
-          } else {
-            log.warn(
-              `Unable to find endorser for double endorsed block ${block.hash}`
-            );
           }
-        } catch (err) {
           log.warn(
-            `Error fetching block info to determine double endorsement violator because of `,
-            err
+            "Found double endorsement evidence for level ${level} with metadata, but no freezer balance update, unable to process"
+          );
+        } else {
+          //perhaps the block is too old for node's history mode
+          log.warn(
+            "Found double baking evidence without metadata for level ${level}, unable to process"
           );
         }
       }
@@ -369,58 +335,35 @@ export const checkBlockAccusationsForDoubleEndorsement = async ({
   return false;
 };
 
-/**
- * Searches through the contents of an operation to find the delegate who performed the endorsement.
- */
-const findEndorserForOperation = (operation: OperationEntry) => {
-  for (const contentsItem of operation.contents) {
-    if (contentsItem.kind === OpKind.ENDORSEMENT && "metadata" in contentsItem)
-      return contentsItem.metadata.delegate;
-  }
-
-  return null;
-};
-
-type CheckBlockAccusationsForDoubleBakeArgs = {
-  baker: string;
-  operations: OperationEntry[];
-  rpc: RpcClient;
-};
-
-export const checkBlockAccusationsForDoubleBake = async ({
-  baker,
-  operations,
-  rpc,
-}: CheckBlockAccusationsForDoubleBakeArgs): Promise<boolean> => {
+export const checkBlockAccusationsForDoubleBake = async (
+  baker: string,
+  operations: OperationI[]
+): Promise<boolean> => {
   const log = getLogger(name);
   for (const operation of operations) {
     for (const contentsItem of operation.contents) {
       if (contentsItem.kind === OpKind.DOUBLE_BAKING_EVIDENCE) {
-        const accusedHash = operation.hash;
-        const accusedLevel = contentsItem.bh1.level;
-        const accusedPriority = contentsItem.bh1.payload_round;
-        try {
-          const bakingRights = (await rpc.getBakingRights(
-            `${accusedLevel}`,
-            accusedLevel,
-            undefined,
-            baker
-          )) as BakingRightsI;
-          const hadBakingRights =
-            bakingRights.find(
-              (right) =>
-                right.round === accusedPriority && right.delegate === baker
-            ) !== undefined;
-          if (hadBakingRights) {
-            log.info(
-              `Double bake for baker ${baker} at level ${accusedLevel} with hash ${accusedHash}`
-            );
-            return true;
+        const { level, payload_round } = contentsItem.bh1;
+        if ("metadata" in contentsItem) {
+          for (const balanceUpdate of contentsItem.metadata.balance_updates) {
+            if (
+              balanceUpdate.kind === "freezer" &&
+              balanceUpdate.category === "deposits" &&
+              balanceUpdate.delegate === baker
+            ) {
+              log.info(
+                `${baker} double baked level ${level}, round ${payload_round}`
+              );
+              return true;
+            }
           }
-        } catch (err) {
           log.warn(
-            `Error fetching baking rights to determine double bake violator because of `,
-            err
+            "Found double baking evidence for level ${level} with metadata, but no freezer balance update, unable to precess"
+          );
+        } else {
+          //perhaps the block is too old for node's history mode
+          log.warn(
+            "Found double baking evidence without metadata for level ${level}, unable to process"
           );
         }
       }

@@ -2,9 +2,14 @@ import {
   checkBlockBakingRights,
   checkBlockEndorsingRights,
   checkBlockAccusationsForDoubleBake,
+  checkBlockAccusationsForDoubleEndorsement,
 } from "./bm-proto-i";
 
-import { RpcClient } from "rpc/client";
+import {
+  DoubleBakingEvidenceI,
+  DoubleEndorsementEvidenceI,
+  OperationI,
+} from "./rpc/types";
 
 import block93416 from "./testFixtures/i/block93416";
 import block93416rights from "./testFixtures/i/block93416rights";
@@ -196,56 +201,186 @@ describe("checkBlockEndorsingRights", () => {
 });
 
 describe("checkBlockAccusationsForDoubleBake", () => {
-  it("returns double bake when baker is accused", async () => {
-    const getBakingRights = jest.fn().mockResolvedValue([
-      {
-        level: 96848,
-        delegate: "tz3Q67aMz7gSMiQRcW729sXSfuMtkyAHYfqc",
-        round: 0,
-      },
-      {
-        level: 96848,
-        delegate: "tz1evTDcDb1Da5z9reoNRjx5ZXoPXS3D1K1A",
-        round: 1,
-      },
-      {
-        level: 96848,
-        delegate: "tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP",
-        round: 2,
-      },
-      {
-        level: 96848,
-        delegate: "tz1aWXP237BLwNHJcCD4b3DutCevhqq2T1Z9",
-        round: 3,
-      },
-    ]);
-    const rpc = {
-      getBakingRights,
-    } as unknown as RpcClient;
-
+  it("returns true when block contains baker accusation", async () => {
     const block = block96849;
 
-    const result = await checkBlockAccusationsForDoubleBake({
-      baker: "tz3Q67aMz7gSMiQRcW729sXSfuMtkyAHYfqc",
-      rpc,
-      operations: block.operations[2],
-    });
+    const result = await checkBlockAccusationsForDoubleBake(
+      "tz3Q67aMz7gSMiQRcW729sXSfuMtkyAHYfqc",
+      block.operations[2]
+    );
     expect(result).toEqual(true);
   });
 
-  it("Does not fetch baking rights when there are no accusations", async () => {
-    const block = block93416;
-    const getBakingRights = jest.fn();
-    const rpc = {
-      getBakingRights,
-    } as unknown as RpcClient;
+  it("returns false when a different baker is accused", async () => {
+    const block = block96849;
 
-    const result = await checkBlockAccusationsForDoubleBake({
-      baker: block.metadata!.baker,
-      rpc,
-      operations: block.operations[2],
-    });
+    const result = await checkBlockAccusationsForDoubleBake(
+      "some other baker",
+      block.operations[2]
+    );
     expect(result).toEqual(false);
-    expect(getBakingRights.mock.calls.length).toEqual(0);
+  });
+
+  it("returns false when block contains accusation without metadata", async () => {
+    const block = block96849;
+    const evidence = block.operations[2][0];
+    const contents0 = evidence.contents[0] as DoubleBakingEvidenceI;
+    expect(contents0.kind).toEqual("double_baking_evidence");
+
+    const evidenceNoMetadata = {
+      ...evidence,
+      contents: [
+        { kind: contents0.kind, bh1: contents0.bh1, bh2: contents0.bh2 },
+      ],
+    };
+
+    const result = await checkBlockAccusationsForDoubleBake(
+      "tz3Q67aMz7gSMiQRcW729sXSfuMtkyAHYfqc",
+      [evidenceNoMetadata]
+    );
+    expect(result).toEqual(false);
+  });
+
+  it("returns false when block contains no accusation", async () => {
+    const block = block93416;
+    expect(block.operations[2].length).toEqual(0);
+
+    const result = await checkBlockAccusationsForDoubleBake(
+      block.metadata!.baker,
+      block.operations[2]
+    );
+    expect(result).toEqual(false);
+  });
+});
+
+describe("checkBlockAccusationsForDoubleEndorsement", () => {
+  it("returns true if baker is accused", async () => {
+    const operations: OperationI[] = [
+      {
+        protocol: "Psithaca2MLRFYargivpo7YvUr7wUDqyxrdhC5CQq78mRvimz6A",
+        chain_id: "NetXKMbjQL2SBox",
+        hash: "ooDS6XHoTYeK9U7QnmueJQgpCvbwueBKoBBGNNHDr6pkhUMznKe",
+        branch: "BLw6hXMmr3MGhWGhRymixheA6hr9MEV25raYxtFCZuH3fFEPwFH",
+        contents: [
+          {
+            kind: "double_endorsement_evidence",
+            op1: {
+              branch: "BLp4CJWDknMh3wusD5DyGTqmkXCenbe1NREH1icBXVh15CuNn8Z",
+              operations: {
+                kind: "endorsement",
+                level: 51,
+                slot: 1,
+                round: 1,
+                block_payload_hash: "5ca1ab1e",
+              },
+              signature:
+                "sigkmyPhgZ2aMXDXcxycQN6CXmYG7ECgoDxbYAT1sfmJEqYSkvwf97ox8PzedJy6kRU5CvBdCzQGQgjp4N3y3MwqtAWgPAir",
+            },
+            op2: {
+              branch: "BLw6hXMmr3MGhWGhRymixheA6hr9MEV25raYxtFCZuH3fFEPwFH",
+              operations: {
+                kind: "endorsement",
+                level: 51,
+                slot: 1,
+                round: 1,
+                block_payload_hash: "ca11ab1e",
+              },
+              signature:
+                "sigcpANnqCCwyW3DdmGTF1ZN4ihCx66yUrUiaEyuSPS9MMt1xGApwSpJQas7VNMQq1j7ZXZNF1bbWRB2y3okxaFHR4pX16ir",
+            },
+            slot: 1,
+            metadata: {
+              balance_updates: [
+                {
+                  kind: "freezer",
+                  category: "deposits",
+                  delegate: "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU",
+                  cycle: 6,
+                  change: "-1920000000",
+                  origin: "block",
+                },
+                {
+                  kind: "freezer",
+                  category: "rewards",
+                  delegate: "tz1hUXU4DPHPyrEEekqhmEEJvdCpB2gP4qtp",
+                  cycle: 6,
+                  change: "960000000",
+                  origin: "block",
+                },
+              ],
+            },
+          } as DoubleEndorsementEvidenceI,
+        ],
+        signature:
+          "sigW9mQYjwV3S38PzP1nTwDjRRUGj9857yoh5QRJwHWGyNR6CcS2jAaEXFHUg3UHr2idZ8Ywxddy2iZEva4Dztgo9GnPcCgA",
+      },
+    ];
+    const result = await checkBlockAccusationsForDoubleEndorsement(
+      "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU",
+      operations
+    );
+    expect(result).toEqual(true);
+
+    const result2 = await checkBlockAccusationsForDoubleEndorsement(
+      "some other baker",
+      operations
+    );
+    expect(result2).toEqual(false);
+  });
+
+  it("returns false if no metadata is included in accusation", async () => {
+    const operations: OperationI[] = [
+      {
+        protocol: "Psithaca2MLRFYargivpo7YvUr7wUDqyxrdhC5CQq78mRvimz6A",
+        chain_id: "NetXKMbjQL2SBox",
+        hash: "ooDS6XHoTYeK9U7QnmueJQgpCvbwueBKoBBGNNHDr6pkhUMznKe",
+        branch: "BLw6hXMmr3MGhWGhRymixheA6hr9MEV25raYxtFCZuH3fFEPwFH",
+        contents: [
+          {
+            kind: "double_endorsement_evidence",
+            op1: {
+              branch: "BLp4CJWDknMh3wusD5DyGTqmkXCenbe1NREH1icBXVh15CuNn8Z",
+              operations: {
+                kind: "endorsement",
+                level: 51,
+                slot: 1,
+                round: 1,
+                block_payload_hash: "5ca1ab1e",
+              },
+              signature:
+                "sigkmyPhgZ2aMXDXcxycQN6CXmYG7ECgoDxbYAT1sfmJEqYSkvwf97ox8PzedJy6kRU5CvBdCzQGQgjp4N3y3MwqtAWgPAir",
+            },
+            op2: {
+              branch: "BLw6hXMmr3MGhWGhRymixheA6hr9MEV25raYxtFCZuH3fFEPwFH",
+              operations: {
+                kind: "endorsement",
+                level: 51,
+                slot: 1,
+                round: 1,
+                block_payload_hash: "ca11ab1e",
+              },
+              signature:
+                "sigcpANnqCCwyW3DdmGTF1ZN4ihCx66yUrUiaEyuSPS9MMt1xGApwSpJQas7VNMQq1j7ZXZNF1bbWRB2y3okxaFHR4pX16ir",
+            },
+            slot: 1,
+          } as DoubleEndorsementEvidenceI,
+        ],
+        signature:
+          "sigW9mQYjwV3S38PzP1nTwDjRRUGj9857yoh5QRJwHWGyNR6CcS2jAaEXFHUg3UHr2idZ8Ywxddy2iZEva4Dztgo9GnPcCgA",
+      },
+    ];
+    const result = await checkBlockAccusationsForDoubleEndorsement(
+      "tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU",
+      operations
+    );
+    expect(result).toEqual(false);
+  });
+
+  it("returns false when there are no accusations", async () => {
+    const result = await checkBlockAccusationsForDoubleEndorsement(
+      "some baker",
+      []
+    );
+    expect(result).toEqual(false);
   });
 });

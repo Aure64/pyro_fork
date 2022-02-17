@@ -56,9 +56,14 @@ export type DoubleBakingEvidence =
   | DoubleBakingEvidenceH
   | DoubleBakingEvidenceI;
 
+export type { DoubleBakingEvidenceH };
+export type { DoubleBakingEvidenceI };
+
 export type DoubleEndorsementEvidence =
   | DoubleEndorsementEvidenceH
   | DoubleEndorsementEvidenceI;
+
+export { DoubleEndorsementEvidenceH, DoubleEndorsementEvidenceI };
 
 export type EndorsementWithSlot = EndorsementWithSlotH | EndorsementWithSlotI;
 export { EndorsementWithSlotH, EndorsementWithSlotI };
