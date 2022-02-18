@@ -108,13 +108,15 @@ export default ({
     cycleProgress = 100 * (1 - cyclePosition / blocksPerCycle);
   }
 
-  const participationReserve = participation
-    ? 100 *
-      (1 -
-        participation.missed_slots /
-          (participation.missed_slots +
-            participation.remaining_allowed_missed_slots))
-    : 0;
+  let participationReserve = 0;
+  if (participation) {
+    const totalAllowedMissedSlots =
+      participation.missed_slots + participation.remaining_allowed_missed_slots;
+    participationReserve =
+      totalAllowedMissedSlots > 0
+        ? 100 * (1 - participation.missed_slots / totalAllowedMissedSlots)
+        : 0;
+  }
 
   const marginOfWarningL = Math.min(8, cycleProgress);
   const marginOfWarningH = Math.min(8, 100 - cycleProgress);
