@@ -16,6 +16,10 @@ import * as EventLog from "./eventlog";
 import RpcClient from "./rpc/client";
 
 import { URL } from "./rpc/types";
+import { Deactivated, DeactivationRisk, Events } from "./events";
+import { RpcClient as TRpcClient } from "./rpc/client";
+import { Delegate } from "./rpc/types";
+import now from "./now";
 
 import protocolH from "./bm-proto-h";
 import protocolI from "./bm-proto-i";
@@ -132,15 +136,11 @@ export const create = async (
       const lastBlockLevel = chainPosition.blockLevel;
       let lastBlockCycle = chainPosition.blockCycle;
       log.debug(`Getting block header for head~${headDistance}`);
-      // const headMinusXHeader = await rpc.getBlockHeader({
-      //   block: `head~${headDistance}`,
-      // });
 
       const headMinusXHeader = await rpc.getBlockHeader(`head~${headDistance}`);
 
       const { level, hash } = headMinusXHeader;
       if (log.getLevel() <= 1) {
-        // const headHeader = await rpc.getBlockHeader();
         const headHeader = await rpc.getBlockHeader("head");
         const { level: headLevel } = headHeader;
         log.debug(
@@ -299,14 +299,6 @@ export const create = async (
     info,
   };
 };
-
-import { Deactivated, DeactivationRisk, Events } from "./events";
-
-import { RpcClient as TRpcClient } from "./rpc/client";
-
-import { Delegate } from "./rpc/types";
-
-import now from "./now";
 
 type GetDeactivationEventsArgs = {
   baker: string;

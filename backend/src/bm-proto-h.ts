@@ -22,7 +22,7 @@ export type CheckBlockArgs = {
 };
 
 /**
- * Fetch block data and analyze it for any baking/endorsing related events.
+ * Analyze block data for baking and endorsing related events.
  */
 export default async ({
   bakers,
@@ -38,11 +38,8 @@ export default async ({
   const priority = header.priority;
   const blockTimestamp = new Date(header.timestamp);
 
-  const { bakingRights, endorsingRights } = await loadBlockRights(
-    blockId,
-    blockLevel,
-    priority,
-    rpc
+  const [bakingRights, endorsingRights] = <[BakingRightsH, EndorsingRightsH]>(
+    await rpc.getRights(blockLevel, priority)
   );
 
   const events: BakerEvent[] = [];
@@ -97,18 +94,6 @@ export default async ({
       const [kind, slotCount] = endorsingEvent;
       events.push(createEvent(baker, kind, blockLevel - 1, slotCount));
     }
-    // if (!lastCycle || blockCycle > lastCycle) {
-    //   const deactivationEvent = await getDeactivationEvent({
-    //     baker,
-    //     rpc,
-    //     cycle: blockCycle,
-    //   });
-    //   if (deactivationEvent) events.push(deactivationEvent);
-    // } else {
-    //   log.debug(
-    //     `Not checking deactivations as this cycle (${blockCycle}) was already checked`
-    //   );
-    // }
     const doubleBakeEvent = await checkBlockAccusationsForDoubleBake({
       baker,
       operations: anonymousOperations,

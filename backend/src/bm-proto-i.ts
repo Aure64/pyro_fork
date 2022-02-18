@@ -22,7 +22,7 @@ export type CheckBlockArgs = {
 };
 
 /**
- * Fetch block data and analyze it for any baking/endorsing related events.
+ * Analyze block data for baking and endorsing related events.
  */
 export default async ({
   bakers,
@@ -38,11 +38,8 @@ export default async ({
   const priority = header.payload_round;
   const blockTimestamp = new Date(header.timestamp);
 
-  const { bakingRights, endorsingRights } = await loadBlockRights(
-    blockId,
-    blockLevel,
-    priority,
-    rpc
+  const [bakingRights, endorsingRights] = <[BakingRightsI, EndorsingRightsI]>(
+    await rpc.getRights(blockLevel, priority)
   );
 
   const events: BakerEvent[] = [];
@@ -116,30 +113,6 @@ export default async ({
     }
   }
   return events;
-};
-
-type BlockData = {
-  bakingRights: BakingRightsI;
-  endorsingRights: EndorsingRightsI;
-};
-
-export const loadBlockRights = async (
-  blockId: string,
-  level: number,
-  priority: number,
-  rpc: RpcClient
-): Promise<BlockData> => {
-  const bakingRightsPromise = rpc.getBakingRights(blockId, level, priority);
-  const endorsingRightsPromise = rpc.getEndorsingRights(blockId, level - 1);
-  const [bakingRights, endorsingRights] = await Promise.all([
-    bakingRightsPromise,
-    endorsingRightsPromise,
-  ]);
-
-  return {
-    bakingRights: bakingRights as BakingRightsI,
-    endorsingRights: endorsingRights as EndorsingRightsI,
-  };
 };
 
 /**

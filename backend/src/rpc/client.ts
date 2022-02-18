@@ -174,6 +174,10 @@ export type RpcClient = {
   getChainId: () => Promise<string>;
   getDelegate: (pkh: TzAddress, block?: string) => Promise<Delegate>;
   getParticipation: (pkh: TzAddress, block?: string) => Promise<Participation>;
+  getRights: (
+    level: number,
+    maxRoundOrPriority: number
+  ) => Promise<[BakingRights, EndorsingRights]>;
 };
 
 export default (nodeRpcUrl: URL): RpcClient => {
@@ -355,5 +359,29 @@ export default (nodeRpcUrl: URL): RpcClient => {
     },
 
     getChainId: () => getChainId(nodeRpcUrl),
+
+    getRights: async (
+      level: number,
+      maxRoundOrPriority: number
+    ): Promise<[BakingRights, EndorsingRights]> => {
+      const blockId = `${level}`;
+      const bakingRightsPromise = getBakingRights(
+        nodeRpcUrl,
+        blockId,
+        level,
+        maxRoundOrPriority
+      );
+      const endorsingRightsPromise = getEndorsingRights(
+        nodeRpcUrl,
+        blockId,
+        level - 1
+      );
+      const [bakingRights, endorsingRights] = await Promise.all([
+        bakingRightsPromise,
+        endorsingRightsPromise,
+      ]);
+
+      return [bakingRights, endorsingRights];
+    },
   };
 };
