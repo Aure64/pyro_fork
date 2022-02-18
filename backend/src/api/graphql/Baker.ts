@@ -94,6 +94,7 @@ export const Baker = objectType({
     t.field("lastProcessed", { type: LastProcessed });
     t.nonNull.int("headDistance");
     t.nonNull.int("blocksPerCycle");
+    t.nonNull.int("atRiskThreshold");
     t.nonNull.list.field("recentEvents", { type: nonNull(LevelEvents) });
     t.field("balance", {
       type: "String",
@@ -151,7 +152,7 @@ export const Baker = objectType({
           level,
           address
         );
-        return gracePeriod - cycle <= 1;
+        return gracePeriod - cycle <= parent.atRiskThreshold;
       },
     });
 
@@ -261,6 +262,7 @@ export const BakerQuery = extendType({
             return {
               address: bakerInfo.address,
               blocksPerCycle: bakerMonitorInfo.blocksPerCycle,
+              atRiskThreshold: bakerMonitorInfo.atRiskThreshold,
               explorerUrl: ctx.explorerUrl
                 ? `${ctx.explorerUrl}/${bakerInfo.address}`
                 : null,

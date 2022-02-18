@@ -12,7 +12,7 @@ Date.now = jest.fn(() => 1624758855227);
 const createdAt = new Date(Date.now());
 
 describe("checkForDeactivations", () => {
-  const baseDelegatesResponse: Delegate = {
+  const baseDelegateInfo: Delegate = {
     voting_power: 1,
     balance: "1000",
     frozen_balance: "0",
@@ -24,16 +24,19 @@ describe("checkForDeactivations", () => {
     delegated_contracts: [],
   };
 
+  const threshold = 1;
+
   it("returns null for bakers in good standing", async () => {
     const cycle = 1000;
     const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
-    const delegatesResponse = {
-      ...baseDelegatesResponse,
+    const delegateInfo = {
+      ...baseDelegateInfo,
     };
-    const result = await checkForDeactivations({
+    const result = checkForDeactivations({
       baker,
       cycle,
-      delegatesResponse,
+      delegateInfo,
+      threshold,
     });
     expect(result).toEqual(null);
   });
@@ -41,14 +44,15 @@ describe("checkForDeactivations", () => {
   it("returns an event for deactivated bakers", async () => {
     const cycle = 1000;
     const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
-    const delegatesResponse = {
-      ...baseDelegatesResponse,
+    const delegateInfo = {
+      ...baseDelegateInfo,
       deactivated: true,
     };
-    const result = await checkForDeactivations({
+    const result = checkForDeactivations({
       baker,
       cycle,
-      delegatesResponse,
+      delegateInfo,
+      threshold,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",
@@ -61,14 +65,15 @@ describe("checkForDeactivations", () => {
   it("returns an event for bakers pending deactivation", async () => {
     const cycle = 1000;
     const baker = "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1";
-    const delegatesResponse = {
-      ...baseDelegatesResponse,
+    const delegateInfo = {
+      ...baseDelegateInfo,
       grace_period: 1001,
     };
-    const result = await checkForDeactivations({
+    const result = checkForDeactivations({
       baker,
       cycle,
-      delegatesResponse,
+      delegateInfo,
+      threshold,
     });
     expect(result).toEqual({
       baker: "tz1VHFxUuBhwopxC9YC9gm5s2MHBHLyCtvN1",

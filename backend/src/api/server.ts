@@ -67,7 +67,12 @@ export const start = (
         nodeMonitor || { info: async () => [] },
         bakerMonitor || {
           info: async () => {
-            return { bakerInfo: [], headDistance: 0, blocksPerCycle: 0 };
+            return {
+              bakerInfo: [],
+              headDistance: 0,
+              blocksPerCycle: 0,
+              atRiskThreshold: 1,
+            };
           },
         },
         rpc,

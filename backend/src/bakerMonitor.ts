@@ -17,7 +17,6 @@ import RpcClient from "./rpc/client";
 
 import { URL } from "./rpc/types";
 import { Deactivated, DeactivationRisk, Events } from "./events";
-import { RpcClient as TRpcClient } from "./rpc/client";
 import { Delegate } from "./rpc/types";
 import now from "./now";
 
@@ -55,6 +54,7 @@ export type BakerMonitorInfo = {
   lastProcessed?: LastProcessed;
   headDistance: number;
   blocksPerCycle: number;
+  atRiskThreshold: number;
 };
 
 export type BakerInfoCollection = { info: () => Promise<BakerMonitorInfo> };
@@ -129,6 +129,8 @@ export const create = async (
 
   const setPosition = async (value: ChainPositionInfo) =>
     await store.put(CHAIN_POSITION_KEY, value);
+
+  const atRiskThreshold = constants.preserved_cycles;
 
   const task = async (isInterrupted: () => boolean) => {
     try {
@@ -212,10 +214,12 @@ export const create = async (
 
         if (!lastBlockCycle || blockCycle > lastBlockCycle) {
           for (const baker of bakers) {
-            const deactivationEvent = await getDeactivationEvent({
+            const delegateInfo = await rpc.getDelegate(baker);
+            const deactivationEvent = checkForDeactivations({
               baker,
-              rpc,
               cycle: blockCycle,
+              delegateInfo,
+              threshold: atRiskThreshold,
             });
             if (deactivationEvent) events.push(deactivationEvent);
           }
@@ -289,6 +293,7 @@ export const create = async (
           : undefined,
       headDistance,
       blocksPerCycle: constants.blocks_per_cycle,
+      atRiskThreshold,
     };
   };
 
@@ -300,39 +305,22 @@ export const create = async (
   };
 };
 
-type GetDeactivationEventsArgs = {
-  baker: string;
-  cycle: number;
-  rpc: TRpcClient;
-};
-
-const getDeactivationEvent = async ({
-  baker,
-  cycle,
-  rpc,
-}: GetDeactivationEventsArgs): Promise<
-  Deactivated | DeactivationRisk | null
-> => {
-  const delegatesResponse = await rpc.getDelegate(baker);
-  return checkForDeactivations({ baker, cycle, delegatesResponse });
-};
-
 type CheckForDeactivationsArgs = {
   baker: string;
   cycle: number;
-  delegatesResponse: Delegate;
+  delegateInfo: Delegate;
+  threshold: number;
 };
 
-export const checkForDeactivations = async ({
+export const checkForDeactivations = ({
   baker,
   cycle,
-  delegatesResponse,
-}: CheckForDeactivationsArgs): Promise<
-  Deactivated | DeactivationRisk | null
-> => {
+  delegateInfo,
+  threshold,
+}: CheckForDeactivationsArgs): Deactivated | DeactivationRisk | null => {
   const log = getLogger(name);
   const createdAt = now();
-  if (delegatesResponse.deactivated) {
+  if (delegateInfo.deactivated) {
     log.debug(`Baker ${baker} is deactivated (on or before cycle ${cycle})`);
     return {
       kind: Events.Deactivated,
@@ -340,14 +328,14 @@ export const checkForDeactivations = async ({
       cycle,
       createdAt,
     };
-  } else if (delegatesResponse.grace_period - cycle <= 1) {
+  } else if (delegateInfo.grace_period - cycle <= threshold) {
     log.debug(
-      `Baker ${baker} is scheduled for deactivation in cycle ${delegatesResponse.grace_period}`
+      `Baker ${baker} is scheduled for deactivation in cycle ${delegateInfo.grace_period}`
     );
     return {
       kind: Events.DeactivationRisk,
       baker,
-      cycle: delegatesResponse.grace_period,
+      cycle: delegateInfo.grace_period,
       createdAt,
     };
   } else {

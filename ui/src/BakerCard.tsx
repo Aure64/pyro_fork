@@ -83,7 +83,7 @@ export default ({
   const deactivationStatusText = deactivated
     ? 'deactivated'
     : atRisk
-    ? 'will be deactivated soon'
+    ? `may be deactivated at the end of cycle ${gracePeriod}`
     : healthy
     ? 'active'
     : 'active, but not healthy';
