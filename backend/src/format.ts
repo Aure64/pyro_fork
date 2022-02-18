@@ -39,13 +39,13 @@ const KindEmojiFormatters: {
   [E.DoubleEndorsed]: "‼️️",
   [E.DoublePreendorsed]: "‼️️",
   [E.NodeBehind]: "🐌",
-  [E.NodeSynced]: "✨",
+  [E.NodeSynced]: "💫",
   [E.NodeLowPeers]: "🤔",
   [E.NodeOnBranch]: "🍂",
   [E.Deactivated]: "😴",
   [E.DeactivationRisk]: "😪",
   [E.RpcError]: "⚠️",
-  [E.RpcErrorResolved]: "😺",
+  [E.RpcErrorResolved]: "✨",
   [E.Notification]: "🔔",
 };
 
