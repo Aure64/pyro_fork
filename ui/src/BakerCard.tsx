@@ -76,7 +76,7 @@ export default ({
     lastProcessed,
   },
 }: {
-  baker: Omit<Baker, 'headDistance'>;
+  baker: Omit<Baker, 'headDistance' | 'atRiskThreshold'>;
 }) => {
   const healthy = !deactivated && isHealthy(recentEvents);
 
