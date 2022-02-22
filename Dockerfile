@@ -32,7 +32,10 @@ COPY --from=backend-build /usr/src/app/dist dist
 COPY --from=backend-build /usr/src/app/package.json .
 COPY --from=ui-build /usr/src/app/build ui
 
-RUN printf "%s\n" "#!/usr/bin/env node" "require('$APP_DIR')" > $RUN_SCRIPT
+RUN printf \
+    "%s\n" "#!/usr/bin/env node" \
+    "require('process').env.npm_package_version = require('$APP_DIR/package.json').version;" \
+    "require('$APP_DIR')" > $RUN_SCRIPT
 
 RUN chmod +x $RUN_SCRIPT
 USER node
