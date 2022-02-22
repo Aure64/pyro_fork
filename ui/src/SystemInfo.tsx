@@ -51,7 +51,12 @@ const CpuInfo = ({ cores, efficiencyCores, manufacturer, brand }: CpuData) => (
   </HStack>
 );
 
-const MemInfo = ({ total, active, swaptotal, swapused }: MemData) => (
+const MemInfo = ({
+  total,
+  active,
+  swaptotal,
+  swapused,
+}: Omit<MemData, 'used'>) => (
   <HStack d="flex" wrap="wrap" spacing={5}>
     <Box>
       Mem: <Progress value={(100 * active) / total} minW="120px" />
