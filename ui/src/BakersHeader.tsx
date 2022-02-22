@@ -2,7 +2,7 @@ import { HStack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import React, { MouseEventHandler } from 'react';
 import { useGetNetworkInfoQuery } from './api';
 import { takeStart } from './format';
-import SectionHeader from './SectionHeader';
+import SectionHeader from './SectionHeaderWithSettings';
 
 const InfoItem = ({
   text,
@@ -45,7 +45,7 @@ export default ({
         text="Bakers"
         loading={loading}
         count={bakerCount}
-        onSettingsClick={onSettingsClick}
+        onIconClick={onSettingsClick}
       />
       {networkInfo && (
         <HStack flexWrap="wrap">

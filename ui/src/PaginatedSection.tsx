@@ -11,7 +11,7 @@ import {
 import React, { ReactElement } from 'react';
 import PageSizeDialog from './PageSizeDialog';
 import Pagination from './Pagination';
-import SectionHeader from './SectionHeader';
+import SectionHeader from './SectionHeaderWithSettings';
 
 const getInt = (key: string, defaultValue: string) => {
   return parseInt(localStorage.getItem(key) || defaultValue);
@@ -82,7 +82,7 @@ export default ({
           text={title}
           loading={loading}
           count={totalCount}
-          onSettingsClick={settingsOpen}
+          onIconClick={settingsOpen}
         />
       )}
       {renderSubHeader && renderSubHeader()}

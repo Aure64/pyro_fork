@@ -79,3 +79,67 @@ query getNetworkInfo {
     blocksPerCycle
   }
 }
+
+query getSystemInfo {
+  pyrometer {
+    version
+    process {
+      cpu
+      mem
+      memRss
+      memVsz
+      pid
+      started
+    }
+  }
+  sysInfo {
+    cpu {
+      cores
+      efficiencyCores
+      brand
+      model
+      family
+      manufacturer
+    }
+    currentLoad {
+      avgLoad
+    }
+    cpuTemperature {
+      cores
+      main
+      max
+      socket
+      chipset
+    }
+    fullLoad
+    mem {
+      total
+      active
+      swaptotal
+      swapused
+    }
+    osInfo {
+      arch
+      build
+      codename
+      codepage
+      distro
+      fqdn
+      hostname
+      hypervizor
+      kernel
+      platform
+      release
+      servicepack
+    }
+    fsSize {
+      available
+      used
+      use
+      fs
+      mount
+      size
+      type
+    }
+  }
+}

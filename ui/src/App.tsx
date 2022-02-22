@@ -1,5 +1,6 @@
 import { VStack } from '@chakra-ui/react';
 import React from 'react';
+import SystemInfo from './SystemInfo';
 import Bakers from './Bakers';
 import Nodes from './Nodes';
 import useInterval from './use-interval';
@@ -15,6 +16,7 @@ function App({}: AppProps) {
 
   return (
     <VStack p="20px" alignItems="flex-start" w="100%">
+      <SystemInfo />
       <Bakers />
       <Nodes />
     </VStack>

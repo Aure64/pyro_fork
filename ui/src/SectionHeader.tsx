@@ -1,18 +1,24 @@
 import { Heading, HStack, IconButton, Spinner, Text } from '@chakra-ui/react';
 import React, { MouseEventHandler } from 'react';
-import { MdOutlineSettings } from 'react-icons/md';
+import type { IconType } from 'react-icons/lib';
 import { numberFormat } from './format';
 
 export default ({
   text,
+  secondaryText,
   count,
   loading,
-  onSettingsClick,
+  Icon,
+  iconLabel,
+  onIconClick,
 }: {
   text: string;
-  count: number | null;
+  secondaryText?: string;
+  count?: number | null;
   loading: boolean;
-  onSettingsClick: MouseEventHandler;
+  Icon: IconType;
+  iconLabel: string;
+  onIconClick: MouseEventHandler;
 }) => {
   return (
     <HStack w="100%" justifyContent="space-between">
@@ -23,13 +29,18 @@ export default ({
             ({numberFormat.format(count)})
           </Text>
         )}
+        {secondaryText && (
+          <Text as="span" fontSize="x-large">
+            {secondaryText}
+          </Text>
+        )}
       </Heading>
       {loading && <Spinner size="sm" />}
       <IconButton
-        aria-label="Settings"
-        icon={<MdOutlineSettings />}
+        aria-label={iconLabel}
+        icon={<Icon />}
         isRound
-        onClick={onSettingsClick}
+        onClick={onIconClick}
       />
     </HStack>
   );

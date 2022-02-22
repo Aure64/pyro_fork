@@ -46,10 +46,33 @@ export const ellipsifyMiddle = (
   return str && `${takeStart(str, startLength)}..${str.substr(-4)}`;
 };
 
-export const numberFormat = new Intl.NumberFormat();
+export const numberFormat = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 1,
+});
 
 export const formatMutezAsTez = (mutez: string | undefined | null) => {
   if (!mutez) return '';
   const value = BigInt(mutez) / 1000000n;
   return `${numberFormat.format(value)} ꜩ`;
+};
+
+export const formatMemRss = (kbytes: number | undefined | null): string => {
+  if (!kbytes) return '';
+  return `${numberFormat.format(kbytes / 1024)}M`;
+};
+
+const Gb = 1024 * 1024 * 1024;
+
+export const formatSystemMem = (bytes: number | undefined | null): string => {
+  if (!bytes) return '';
+  return `${numberFormat.format(bytes / Gb)}G`;
+};
+
+export const formatMemVsz = (kbytes: number | undefined | null): string => {
+  if (!kbytes) return '';
+  const mbytes = kbytes / 1024;
+  if (mbytes < 1024) {
+    return `${numberFormat.format(mbytes)}M`;
+  }
+  return `${numberFormat.format(mbytes / 1024)}G`;
 };
