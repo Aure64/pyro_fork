@@ -95,7 +95,6 @@ query getSystemInfo {
   sysInfo {
     cpu {
       cores
-      efficiencyCores
       brand
       model
       family

@@ -1,11 +1,10 @@
 import si from "systeminformation";
-import { extendType, list, nonNull, objectType, intArg } from "nexus";
+import { extendType, objectType } from "nexus";
 
 export const CpuData = objectType({
   name: "CpuData",
   definition(t) {
     t.nonNull.int("cores");
-    t.nonNull.int("efficiencyCores");
     t.nonNull.string("brand");
     t.nonNull.string("model");
     t.nonNull.string("family");
@@ -65,7 +64,7 @@ export const OsData = objectType({
     t.string("distro");
     t.string("fqdn");
     t.string("hostname");
-    t.string("hypervizor");
+    t.boolean("hypervizor");
     t.string("kernel");
     t.string("platform");
     t.string("release");

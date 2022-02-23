@@ -24,7 +24,7 @@ import { Progress } from '@chakra-ui/react';
 
 import notEmpty from './not-empty';
 
-import { Heading, IconButton, Spinner } from '@chakra-ui/react';
+import { Heading } from '@chakra-ui/react';
 
 import { FaGitlab } from 'react-icons/fa';
 import {
@@ -64,7 +64,7 @@ const ProcessInfo = ({ cpu, mem, memRss, memVsz, started }: ProcessInfo) => (
 
 const OsInfo = ({ distro, hypervizor, release }: OsData) => (
   <LabeledItem label="OS">
-    {distro} {release} {hypervizor ? `${hypervizor}` : ''}
+    {distro} {release} {hypervizor ? `(virtual)` : ''}
   </LabeledItem>
 );
 
