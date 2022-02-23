@@ -142,3 +142,9 @@ query getSystemInfo {
     }
   }
 }
+
+query settings {
+  settings {
+    showPyrometerInfo
+  }
+}

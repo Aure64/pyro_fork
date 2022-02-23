@@ -45,13 +45,20 @@ export type UIConfig = {
   port: number;
   explorer_url?: string;
   webroot?: string;
+  show_pyrometer_info?: boolean;
 };
 
 export const start = (
   nodeMonitor: NodeInfoCollection | null,
   bakerMonitor: BakerInfoCollection | null,
   rpc: URL,
-  { host, port, explorer_url, webroot: configuredWebroot }: UIConfig
+  {
+    host,
+    port,
+    explorer_url,
+    webroot: configuredWebroot,
+    show_pyrometer_info,
+  }: UIConfig
 ) => {
   const webroot = configuredWebroot || join(__dirname, "../../ui");
   getLogger("api").info(`Serving web UI assets from ${webroot}`);
@@ -76,7 +83,8 @@ export const start = (
           },
         },
         rpc,
-        explorer_url
+        explorer_url,
+        show_pyrometer_info
       ),
       customFormatErrorFn: (error) => {
         const params = {

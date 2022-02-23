@@ -4,6 +4,7 @@ import SystemInfo from './SystemInfo';
 import Bakers from './Bakers';
 import Nodes from './Nodes';
 import useInterval from './use-interval';
+import { useSettingsQuery } from './api';
 
 interface AppProps {}
 
@@ -14,11 +15,13 @@ function App({}: AppProps) {
     setCount(count + 1);
   }, 1000);
 
+  const { data } = useSettingsQuery();
+
   return (
     <VStack p="20px" alignItems="flex-start" w="100%">
-      <SystemInfo />
       <Bakers />
       <Nodes />
+      {data?.settings.showPyrometerInfo && <SystemInfo />}
     </VStack>
   );
 }

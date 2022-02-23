@@ -604,6 +604,17 @@ const UI_EXPLORER_URL: UserPref = {
   validationRule: "link",
 };
 
+const UI_SHOW_PYROMETER_INFO: UserPref = {
+  key: `${UI_GROUP.key}:show_pyrometer_info`,
+  default: false,
+  description: "Show Pyrometer info section",
+  alias: undefined,
+  type: "boolean",
+  group: UI_GROUP.label,
+  isArray: false,
+  validationRule: "boolean",
+};
+
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
   BAKERS,
@@ -651,6 +662,7 @@ const userPrefs = [
   UI_PORT,
   UI_WEBROOT,
   UI_EXPLORER_URL,
+  UI_SHOW_PYROMETER_INFO,
 ];
 
 /**
