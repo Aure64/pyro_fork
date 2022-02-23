@@ -49,7 +49,10 @@ export const PyrometerInfoQuery = extendType({
   definition(t) {
     t.nonNull.field("pyrometer", {
       type: PyrometerInfo,
-      async resolve() {
+      async resolve(_, _args, ctx) {
+        if (!ctx.showPyrometerInfo) {
+          throw new Error("not enabled");
+        }
         return {};
       },
     });

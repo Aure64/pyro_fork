@@ -111,7 +111,10 @@ export const SysInfoQuery = extendType({
     t.nonNull.field("sysInfo", {
       type: SysInfo,
 
-      async resolve() {
+      async resolve(_, _args, ctx) {
+        if (!ctx.showPyrometerInfo) {
+          throw new Error("not enabled");
+        }
         const cpu = await si.cpu();
         const cpuTemperature = await si.cpuTemperature();
         const currentLoad = await si.currentLoad();
