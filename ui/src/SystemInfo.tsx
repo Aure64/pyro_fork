@@ -38,43 +38,64 @@ const onIconClick = () => {
   window.open('https://gitlab.com/tezos-kiln/pyrometer', '_blank');
 };
 
+const Label: React.FC = ({ children }) => (
+  <Text fontWeight="bold" as="span" color="#606060">
+    {children}
+  </Text>
+);
+
+const LabeledItem: React.FC<{ label: string }> = ({ label, children }) => (
+  <Box>
+    <Label>{label}:</Label> {children}
+  </Box>
+);
+
 const ProcessInfo = ({ cpu, mem, memRss, memVsz, started }: ProcessInfo) => (
   <HStack d="flex" wrap="wrap">
-    <Box>CPU: {cpu}%</Box>
-    <Box>Mem: {mem}%</Box>
-    <Box>RSS: {formatMemRss(memRss)}</Box>
-    <Box>Virtual: {formatMemVsz(memVsz)}</Box>
-    <Box>Since: {timestampFormat.format(new Date(started))}</Box>
+    <LabeledItem label="CPU">{cpu}%</LabeledItem>
+    <LabeledItem label="Mem">{mem}%</LabeledItem>
+    <LabeledItem label="RSS">{formatMemRss(memRss)}</LabeledItem>
+    <LabeledItem label="Virtual">{formatMemVsz(memVsz)}</LabeledItem>
+    <LabeledItem label="Since">
+      {timestampFormat.format(new Date(started))}
+    </LabeledItem>
   </HStack>
 );
 
-const OsInfo = ({ arch, codename, distro, hypervizor, release }: OsData) => (
-  <HStack d="flex" wrap="wrap">
-    <Box>
-      OS: {distro} {release} ({codename}) {arch} {hypervizor}
-    </Box>
-  </HStack>
+const OsInfo = ({ distro, hypervizor, release }: OsData) => (
+  <LabeledItem label="OS">
+    {distro} {release} {hypervizor ? `${hypervizor}` : ''}
+  </LabeledItem>
 );
 
-const CpuInfo = ({ cores, efficiencyCores, manufacturer, brand }: CpuData) => (
-  <HStack d="flex" wrap="wrap">
-    <Box>
-      CPU: {manufacturer} {brand} {cores}/{efficiencyCores} cores
-    </Box>
-  </HStack>
+const CpuInfo = ({ cores, manufacturer, brand }: CpuData) => (
+  <>
+    <LabeledItem label="CPU">
+      {manufacturer} {brand}
+    </LabeledItem>
+    <LabeledItem label="Cores">{cores}</LabeledItem>
+  </>
 );
 
-const FsItem = ({ use, mount, available, fs }: FsSizeData) => {
+const FsItem = ({ use, mount, available, size, used, fs }: FsSizeData) => {
   return (
     <HStack wrap="wrap">
-      <Progress value={use} minW="120px" />{' '}
+      <Tooltip
+        label={`Used ${formatSystemMem(used)} of ${formatSystemMem(size)}`}
+      >
+        <Box>
+          <Progress value={use} minW="120px" />
+        </Box>
+      </Tooltip>{' '}
       <HStack wrap="wrap">
         <Box>
-          <Text fontFamily="mono" minW="5rem" w="100%" textAlign="right">
+          <Text fontFamily="mono" minW="5.5rem" w="100%" textAlign="right">
             {formatSystemMem(available)}
           </Text>
         </Box>
-        <Text>{mount}</Text>
+        <Tooltip label={`Filesystem: ${fs}`}>
+          <Text>{mount}</Text>
+        </Tooltip>
       </HStack>
     </HStack>
   );
@@ -83,6 +104,7 @@ const FsItem = ({ use, mount, available, fs }: FsSizeData) => {
 const FsSizeInfo = ({ data }: { data: (FsSizeData | null | undefined)[] }) => (
   <HStack d="flex" wrap="wrap">
     <VStack alignItems="flex-start">
+      <Label>Disk:</Label>
       {data.filter(notEmpty).map((x) => (
         <FsItem {...x} />
       ))}
@@ -98,13 +120,15 @@ const MemInfo = ({
 }: Omit<MemData, 'used'>) => (
   <HStack d="flex" wrap="wrap" spacing={5}>
     <Box>
-      Mem: <Progress value={(100 * active) / total} minW="120px" />
+      <Label>Mem:</Label>{' '}
+      <Progress value={(100 * active) / total} minW="120px" />
       <Text fontFamily="mono">
         {formatSystemMem(active)} of {formatSystemMem(total)}
       </Text>
     </Box>
     <Box>
-      Swap: <Progress value={(100 * swapused) / swaptotal} minW="120px" />
+      <Label>Swap:</Label>{' '}
+      <Progress value={(100 * swapused) / swaptotal} minW="120px" />
       <Text fontFamily="mono">
         {formatSystemMem(swapused)} of {formatSystemMem(swaptotal)}
       </Text>
@@ -145,10 +169,12 @@ export default () => {
       <Heading size="md">Process</Heading>
       {data?.pyrometer.process && <ProcessInfo {...data?.pyrometer.process} />}
       <Heading size="md">System</Heading>
-      <Box>Avg. Load: {data?.sysInfo.currentLoad.avgLoad}</Box>
-      {data?.sysInfo.osInfo && <OsInfo {...data?.sysInfo.osInfo} />}
-      {data?.sysInfo.cpu && <CpuInfo {...data?.sysInfo.cpu} />}
+      <HStack>
+        {data?.sysInfo.osInfo && <OsInfo {...data?.sysInfo.osInfo} />}
+        {data?.sysInfo.cpu && <CpuInfo {...data?.sysInfo.cpu} />}
+      </HStack>
       {data?.sysInfo.mem && <MemInfo {...data?.sysInfo.mem} />}
+
       {data?.sysInfo.fsSize && <FsSizeInfo data={data?.sysInfo.fsSize} />}
     </VStack>
   );
