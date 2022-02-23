@@ -1,4 +1,14 @@
-import { VStack, HStack, Text, Tooltip, Box } from '@chakra-ui/react';
+import {
+  VStack,
+  HStack,
+  Text,
+  Tooltip,
+  Box,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from '@chakra-ui/react';
 import React from 'react';
 import {
   useGetSystemInfoQuery,
@@ -103,7 +113,7 @@ const MemInfo = ({
 );
 
 export default () => {
-  const { data, loading } = useGetSystemInfoQuery({
+  const { data, error, loading } = useGetSystemInfoQuery({
     pollInterval: 15e3,
   });
 
@@ -123,6 +133,15 @@ export default () => {
         Icon={FaGitlab}
         onIconClick={onIconClick}
       />
+
+      {error && (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle mr={2}>Error</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
+
       <Heading size="md">Process</Heading>
       {data?.pyrometer.process && <ProcessInfo {...data?.pyrometer.process} />}
       <Heading size="md">System</Heading>
