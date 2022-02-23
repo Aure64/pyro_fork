@@ -1,6 +1,6 @@
 import process from "process";
 import si from "systeminformation";
-import { extendType, list, nonNull, objectType, intArg } from "nexus";
+import { extendType, objectType } from "nexus";
 
 export const CpuUsage = objectType({
   name: "CpuUsage",
