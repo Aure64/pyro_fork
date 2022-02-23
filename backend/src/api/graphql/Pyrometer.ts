@@ -28,7 +28,7 @@ export const PyrometerInfo = objectType({
     t.nonNull.field("version", {
       type: "String",
       async resolve() {
-        return process.env.npm_package_version;
+        return process.env.npm_package_version || "";
       },
     });
 
@@ -37,7 +37,7 @@ export const PyrometerInfo = objectType({
       async resolve() {
         const processes = await si.processes();
         const info = processes.list.find((x) => x.pid == process.pid);
-        return info;
+        return info || null;
       },
     });
   },
