@@ -123,7 +123,8 @@ export default ({
   const b1 = cycleProgress - marginOfWarningL;
   const b2 = cycleProgress + marginOfWarningH;
 
-  let rewardsRiskColor = 'green';
+  let rewardsRiskColor =
+    participation?.expected_endorsing_rewards === '0' ? 'red' : 'green';
   if (participationReserve < b1) {
     rewardsRiskColor = 'red';
   } else if (b1 < participationReserve && participationReserve < b2) {
