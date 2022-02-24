@@ -15,7 +15,7 @@ import * as EventLog from "./eventlog";
 
 import RpcClient from "./rpc/client";
 
-import { URL } from "./rpc/types";
+import { URL, TzAddress } from "./rpc/types";
 import { Deactivated, DeactivationRisk, Events } from "./events";
 import { Delegate } from "./rpc/types";
 import now from "./now";
@@ -104,19 +104,28 @@ export const create = async (
     chainId,
   ]);
 
-  const bakerEventLogs: { [key: string]: EventLog.EventLog<BakerBlockEvent> } =
-    {};
+  const bakerEventLogs: {
+    [key: string]: EventLog.EventLog<BakerBlockEvent>;
+  } = {};
+
+  const getBakerEventLog = async (
+    baker: TzAddress
+  ): Promise<EventLog.EventLog<BakerBlockEvent>> => {
+    let bakerLog = bakerEventLogs[baker];
+    if (!bakerLog) {
+      bakerLog = await EventLog.open(historyDir, baker, MAX_HISTORY);
+      bakerEventLogs[baker] = bakerLog;
+    }
+    return bakerLog;
+  };
+
   const historyDir = joinPath(storageDirectory, "history");
   for (const baker of bakers) {
     bakerEventLogs[baker] = await EventLog.open(historyDir, baker, MAX_HISTORY);
   }
 
   const addToHistory = async (event: BakerBlockEvent) => {
-    let bakerLog = bakerEventLogs[event.baker];
-    if (!bakerLog) {
-      bakerLog = await EventLog.open(historyDir, event.baker, 5);
-      bakerEventLogs[event.baker] = bakerLog;
-    }
+    let bakerLog = await getBakerEventLog(event.baker);
     bakerLog.add(event);
   };
 
@@ -262,11 +271,8 @@ export const create = async (
   const srv = service.create(name, task, interval);
 
   const bakerInfo: BakerInfo[] = [];
-  for (const [baker, bakerEventLog] of Object.entries(bakerEventLogs)) {
-    const recentEvents: BakerBlockEvent[] = [];
-    for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
-      recentEvents.push(record.value);
-    }
+  for (const baker of bakers) {
+    const bakerEventLog = await getBakerEventLog(baker);
     bakerInfo.push({
       address: baker,
       recentEvents: async () => {
