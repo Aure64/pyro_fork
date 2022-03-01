@@ -1,5 +1,7 @@
 import { checkForDeactivations } from "./bakerMonitor";
+import { checkHealth } from "./bakerMonitor";
 import { setLevel } from "loglevel";
+import { BakerBlockEvent, BakerEvent } from "./events";
 
 setLevel("SILENT");
 
@@ -81,5 +83,94 @@ describe("checkForDeactivations", () => {
       kind: Events.DeactivationRisk,
       createdAt,
     });
+  });
+});
+
+describe("checkHealth", () => {
+  const cycle = 1;
+  const level = 1;
+  const timestamp = new Date();
+  const baker1 = "tz1AAAAAAAAAA";
+  const missedEventsThreshold = 3;
+
+  const mkEvent = (kind: Events, baker: string): BakerBlockEvent =>
+    ({
+      kind,
+      createdAt,
+      baker,
+      cycle,
+      level,
+      timestamp,
+    } as BakerBlockEvent);
+
+  it("returns baker is unhealthy when there are more missed events than threshold", async () => {
+    const missedCounts = new Map<string, number>([
+      [baker1, missedEventsThreshold - 1],
+    ]);
+
+    for (const kind of [
+      Events.MissedBake,
+      Events.MissedEndorsement,
+      Events.MissedBonus,
+    ]) {
+      const health = Array.from(
+        checkHealth(
+          [mkEvent(kind, baker1)],
+          missedEventsThreshold,
+          missedCounts
+        )
+      );
+
+      expect(health.length).toEqual(1);
+      expect(health[0].event).toEqual(Events.BakerUnhealthy);
+      expect(health[0].baker).toEqual(baker1);
+      expect(health[0].newCount).toEqual(3);
+    }
+  });
+
+  it("returns no event for more missed bakes/endorsements above the threshold", async () => {
+    const missedCounts = new Map<string, number>([
+      [baker1, missedEventsThreshold],
+    ]);
+
+    for (const kind of [
+      Events.MissedBake,
+      Events.MissedEndorsement,
+      Events.MissedBonus,
+    ]) {
+      const health = Array.from(
+        checkHealth(
+          [mkEvent(kind, baker1)],
+          missedEventsThreshold,
+          missedCounts
+        )
+      );
+
+      expect(health.length).toEqual(1);
+      expect(health[0].event).toEqual(undefined);
+      expect(health[0].baker).toEqual(baker1);
+      expect(health[0].newCount).toEqual(missedEventsThreshold + 1);
+    }
+  });
+
+  it("returns baker recovered when there is a successfull bake or endorsement", async () => {
+    const missedCounts = new Map<string, number>([
+      [baker1, missedEventsThreshold + 1],
+    ]);
+
+    for (const kind of [Events.Baked, Events.Endorsed]) {
+      const health = Array.from(
+        checkHealth(
+          [mkEvent(kind, baker1)],
+          missedEventsThreshold,
+          missedCounts
+        )
+      );
+
+      expect(health.length).toEqual(1);
+      expect(health[0].event).toEqual(Events.BakerRecovered);
+      expect(health[0].baker).toEqual(baker1);
+      expect(health[0].newCount).toEqual(0);
+    }
   });
 });

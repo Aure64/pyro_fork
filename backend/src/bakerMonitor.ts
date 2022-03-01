@@ -16,7 +16,12 @@ import * as EventLog from "./eventlog";
 import RpcClient from "./rpc/client";
 
 import { URL, TzAddress } from "./rpc/types";
-import { Deactivated, DeactivationRisk, Events } from "./events";
+import {
+  Deactivated,
+  DeactivationRisk,
+  Events,
+  BakerHealthEvent,
+} from "./events";
 import { Delegate } from "./rpc/types";
 import now from "./now";
 
@@ -30,6 +35,7 @@ export type BakerMonitorConfig = {
   rpc: URL;
   max_catchup_blocks: number;
   head_distance: number;
+  missed_threshold: number;
 };
 
 type ChainPositionInfo = {
@@ -63,6 +69,14 @@ export type BakerMonitor = service.Service & BakerInfoCollection;
 
 const MAX_HISTORY = 7;
 
+const missedKinds = new Set<Events>([
+  Events.MissedBake,
+  Events.MissedBonus,
+  Events.MissedEndorsement,
+]);
+
+const successKinds = new Set<Events>([Events.Baked, Events.Endorsed]);
+
 export const create = async (
   storageDirectory: string,
   {
@@ -70,6 +84,7 @@ export const create = async (
     rpc: rpcUrl,
     max_catchup_blocks: catchupLimit,
     head_distance: headDistance,
+    missed_threshold: missedEventsThreshold,
   }: BakerMonitorConfig,
   enableHistory: boolean,
   onEvent: (event: Event) => Promise<void>
@@ -140,6 +155,8 @@ export const create = async (
     await store.put(CHAIN_POSITION_KEY, value);
 
   const atRiskThreshold = constants.preserved_cycles;
+
+  const missedCounts = new Map<TzAddress, number>();
 
   const task = async (isInterrupted: () => boolean) => {
     try {
@@ -221,6 +238,26 @@ export const create = async (
             events = [];
         }
 
+        const bakerHealthEvents: BakerHealthEvent[] = [];
+
+        for (const { event, baker, newCount } of checkHealth(
+          events,
+          missedEventsThreshold,
+          missedCounts
+        )) {
+          if (event) {
+            bakerHealthEvents.push({
+              kind: event,
+              baker,
+              createdAt: new Date(),
+              level: blockLevel,
+              cycle: blockCycle,
+              timestamp: new Date(block.header.timestamp),
+            });
+          }
+          missedCounts.set(baker, newCount);
+        }
+
         if (!lastBlockCycle || blockCycle > lastBlockCycle) {
           for (const baker of bakers) {
             const delegateInfo = await rpc.getDelegate(baker);
@@ -244,10 +281,23 @@ export const create = async (
         );
         for (const event of events) {
           await onEvent(event);
-          if ("level" in event && enableHistory) {
+          if (
+            "level" in event &&
+            enableHistory &&
+            event.kind !== Events.BakerRecovered &&
+            event.kind !== Events.BakerUnhealthy
+          ) {
             await addToHistory(event);
           }
         }
+        log.debug(
+          `About to post ${bakerHealthEvents.length} baker health events`,
+          format.aggregateByBaker(bakerHealthEvents)
+        );
+        for (const event of bakerHealthEvents) {
+          await onEvent(event);
+        }
+
         await setPosition({
           blockLevel: currentLevel,
           blockCycle,
@@ -351,3 +401,37 @@ export const checkForDeactivations = ({
 
   return null;
 };
+
+export type CheckHealthResult = {
+  event: Events.BakerUnhealthy | Events.BakerRecovered | undefined;
+  baker: TzAddress;
+  newCount: number;
+};
+
+export function* checkHealth(
+  events: BakerEvent[],
+  missedEventsThreshold: number,
+  missedCounts: Map<TzAddress, number>
+): Generator<CheckHealthResult> {
+  for (const { baker, kind } of events) {
+    const count = missedCounts.get(baker) || 0;
+    if (missedKinds.has(kind)) {
+      const newCount = count + 1;
+      yield {
+        event:
+          newCount === missedEventsThreshold
+            ? Events.BakerUnhealthy
+            : undefined,
+        baker,
+        newCount,
+      };
+    } else if (successKinds.has(kind) && count > 0) {
+      yield {
+        event:
+          count >= missedEventsThreshold ? Events.BakerRecovered : undefined,
+        baker,
+        newCount: 0,
+      };
+    }
+  }
+}

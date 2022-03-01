@@ -81,6 +81,18 @@ const BAKER_HEAD_DISTANCE: UserPref = {
   validationRule: ["numeric", "min:0"],
 };
 
+const BAKER_MISSED_THRESHOLD: UserPref = {
+  key: `${BAKER_GROUP.key}:missed_threshold`,
+  default: 5,
+  description:
+    "Consider baker unhealthy after this many missed bakes or endorsements",
+  alias: undefined,
+  type: "number",
+  group: BAKER_GROUP.label,
+  isArray: false,
+  validationRule: ["numeric", "min:1"],
+};
+
 const RPC: UserPref = {
   key: `${BAKER_GROUP.key}:rpc`,
   default: "https://mainnet-tezos.giganode.io/",
@@ -620,6 +632,7 @@ const userPrefs = [
   BAKERS,
   BAKER_CATCHUP_LIMIT,
   BAKER_HEAD_DISTANCE,
+  BAKER_MISSED_THRESHOLD,
   DATA_DIR,
   LOG_LEVEL,
   LOG_TIMESTAMP,

@@ -47,6 +47,8 @@ const KindEmojiFormatters: {
   [E.RpcError]: "⚠️",
   [E.RpcErrorResolved]: "✨",
   [E.Notification]: "🔔",
+  [E.BakerUnhealthy]: "🤒",
+  [E.BakerRecovered]: "💪",
 };
 
 const formatKindEmoji = (kind: E) => KindEmojiFormatters[kind];
@@ -78,6 +80,8 @@ const Formatters: {
   [E.RpcError]: (e) => `Unable to reach ${e.node}: ${e.message}`,
   [E.RpcErrorResolved]: (e) => `Resolved: ${e.node} is reachable again`,
   [E.Notification]: (e) => `${e.message}`,
+  [E.BakerUnhealthy]: (e) => `${e.baker} is unhealthy`,
+  [E.BakerRecovered]: (e) => `${e.baker} is healthy again`,
 };
 
 export const abbreviateBakerAddress = (addr: string) =>

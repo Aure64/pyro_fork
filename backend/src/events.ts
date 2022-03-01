@@ -16,6 +16,8 @@ export enum Events {
   RpcError = "rpc_error",
   RpcErrorResolved = "rpc_error_resolved",
   Notification = "notification",
+  BakerUnhealthy = "baker_unhealthy",
+  BakerRecovered = "baker_recovered",
 }
 
 export type BasicEvent = {
@@ -35,6 +37,16 @@ export type BlockEvent = BasicBakerEvent &
     level: number;
     timestamp: Date;
   };
+
+export type BakerUnhealthy = BlockEvent & {
+  kind: Events.BakerUnhealthy;
+};
+
+export type BakerRecovered = BlockEvent & {
+  kind: Events.BakerRecovered;
+};
+
+export type BakerHealthEvent = BakerUnhealthy | BakerRecovered;
 
 export type Baked = BlockEvent & { kind: Events.Baked; priority: number };
 
@@ -74,7 +86,7 @@ export type BakerBlockEvent =
 
 export type BakerCycleEvent = Deactivated | DeactivationRisk;
 
-export type BakerEvent = BakerBlockEvent | BakerCycleEvent;
+export type BakerEvent = BakerBlockEvent | BakerCycleEvent | BakerHealthEvent;
 
 export type BasicNodeEvent = BasicEvent & { node: string };
 
