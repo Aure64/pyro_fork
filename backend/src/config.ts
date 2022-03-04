@@ -196,6 +196,18 @@ const TEZTNETS_CONFIG: UserPref = {
   ],
 };
 
+const LOW_PEER_COUNT: UserPref = {
+  key: `${NODE_MONITOR_GROUP.key}:low_peer_count`,
+  default: undefined,
+  sampleValue: 5,
+  description: "Low peer count thrashold",
+  alias: undefined,
+  type: "number",
+  group: NODE_MONITOR_GROUP.label,
+  isArray: false,
+  validationRule: ["numeric", "min:1"],
+};
+
 const EXCLUDED_EVENTS: UserPref = {
   key: "exclude",
   default: [Events.Baked, Events.Endorsed],
@@ -641,6 +653,7 @@ const userPrefs = [
   REFERENCE_NODE,
   WITH_TEZTNETS,
   TEZTNETS_CONFIG,
+  LOW_PEER_COUNT,
   EXCLUDED_EVENTS,
   SLACK_ENABLED,
   SLACK_URL,

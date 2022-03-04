@@ -21,6 +21,7 @@ export type NodeMonitorConfig = {
   reference_node?: URL;
   teztnets?: boolean;
   teztnets_config: string;
+  low_peer_count: number;
 };
 
 export type NodeCommunicationError = {
@@ -71,6 +72,7 @@ export const create = async (
     reference_node: referenceNode,
     teztnets,
     teztnets_config: teztnetsConfig,
+    low_peer_count: lowPeerCount,
   }: NodeMonitorConfig
 ): Promise<NodeMonitor> => {
   const teztnetsNodes: string[] = [];
@@ -108,11 +110,11 @@ export const create = async (
   nodes = [...nodeSet];
 
   const referenceSubscription = referenceNode
-    ? subscribeToNode(referenceNode, onEvent, () => undefined)
+    ? subscribeToNode(referenceNode, onEvent, () => undefined, lowPeerCount)
     : NoSub;
 
   const subscriptions = nodes.map((node) =>
-    subscribeToNode(node, onEvent, referenceSubscription.nodeInfo)
+    subscribeToNode(node, onEvent, referenceSubscription.nodeInfo, lowPeerCount)
   );
 
   const allSubs = [...subscriptions, referenceSubscription];
@@ -150,7 +152,8 @@ const initialEndpointAvailability = {
 const subscribeToNode = (
   node: string,
   onEvent: (event: Event) => Promise<void>,
-  getReference: () => NodeInfo | undefined
+  getReference: () => NodeInfo | undefined,
+  lowPeerCount: number
 ): Sub => {
   const rpc = client(node);
 
@@ -199,6 +202,7 @@ const subscribeToNode = (
           nodeInfo,
           previousNodeInfo,
           referenceNodeBlockHistory: getReference()?.history,
+          lowPeerCount,
           log,
         });
       }
@@ -352,12 +356,11 @@ const updateNodeInfo = async ({
   };
 };
 
-const minimumPeers = 10;
-
 type CheckBlockInfoArgs = {
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
   referenceNodeBlockHistory: BlockHeader[] | undefined;
+  lowPeerCount: number;
   log?: Logger;
 };
 
@@ -368,6 +371,7 @@ export const checkBlockInfo = ({
   nodeInfo,
   previousNodeInfo,
   referenceNodeBlockHistory,
+  lowPeerCount,
   log,
 }: CheckBlockInfoArgs): NodeEvent[] => {
   if (!log) log = getLogger(__filename);
@@ -418,14 +422,14 @@ export const checkBlockInfo = ({
   } else {
     log.warn(`Unable to check bootstrapped status`);
   }
-  if (nodeInfo.peerCount !== undefined && nodeInfo.peerCount < minimumPeers) {
+  if (nodeInfo.peerCount !== undefined && nodeInfo.peerCount <= lowPeerCount) {
     if (
       previousNodeInfo?.peerCount !== undefined &&
-      previousNodeInfo.peerCount < minimumPeers
+      previousNodeInfo.peerCount <= lowPeerCount
     ) {
       log.debug("Node previously had too few peers, not generating event");
     } else {
-      const message = `Node ${nodeInfo.url} has too few peers: ${nodeInfo.peerCount}/${minimumPeers}`;
+      const message = `${nodeInfo.url} has low peer count: ${nodeInfo.peerCount}/${lowPeerCount}`;
       log.debug(message);
       events.push(newEvent(Events.NodeLowPeers));
     }

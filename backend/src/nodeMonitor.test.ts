@@ -40,6 +40,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 10,
     });
     expect(events).toEqual([
       {
@@ -69,6 +70,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([]);
   });
@@ -88,6 +90,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([]);
   });
@@ -104,6 +107,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([]);
   });
@@ -135,6 +139,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([
       {
@@ -161,6 +166,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([
       {
@@ -187,6 +193,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([]);
   });
@@ -211,16 +218,17 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 5,
     });
     expect(events).toEqual([]);
   });
 
-  test("returns low peer event when node has less than 10 peers", async () => {
+  test("returns low peer event when node has low peer count", async () => {
     const bootstrappedStatus: BootstrappedStatus = {
       bootstrapped: true,
       sync_state: "synced",
     };
-    const peerCount = 9;
+    const peerCount = 7;
 
     const nodeInfo = {
       ...createNodeInfo(),
@@ -234,6 +242,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 7,
     });
     expect(events).toEqual([
       {
@@ -244,7 +253,7 @@ describe("checkBlockInfo", () => {
     ]);
   });
 
-  test("returns no events when node has less than 10 peers but previously had low peers", async () => {
+  test("returns no events when node has low peer count and had low peer count previously", async () => {
     const bootstrappedStatus: BootstrappedStatus = {
       bootstrapped: true,
       sync_state: "synced",
@@ -262,6 +271,7 @@ describe("checkBlockInfo", () => {
       nodeInfo,
       previousNodeInfo,
       referenceNodeBlockHistory,
+      lowPeerCount: 9,
     });
     expect(events).toEqual([]);
   });
