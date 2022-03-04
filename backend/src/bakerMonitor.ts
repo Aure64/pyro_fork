@@ -140,7 +140,7 @@ export const create = async (
   }
 
   const addToHistory = async (event: BakerBlockEvent) => {
-    let bakerLog = await getBakerEventLog(event.baker);
+    const bakerLog = await getBakerEventLog(event.baker);
     bakerLog.add(event);
   };
 
