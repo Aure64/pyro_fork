@@ -41,6 +41,7 @@ const KindEmojiFormatters: {
   [E.NodeBehind]: "🐌",
   [E.NodeSynced]: "💫",
   [E.NodeLowPeers]: "🤔",
+  [E.NodeLowPeersResolved]: "🤝",
   [E.NodeOnBranch]: "🍂",
   [E.Deactivated]: "😴",
   [E.DeactivationRisk]: "😪",
@@ -72,7 +73,8 @@ const Formatters: {
     `${e.baker} double preendorsed block ${e.level}`,
   [E.NodeBehind]: (e) => `Node ${e.node} is behind`,
   [E.NodeSynced]: (e) => `Node ${e.node} has caught up`,
-  [E.NodeLowPeers]: (e) => `Node ${e.node} has a low peer count`,
+  [E.NodeLowPeers]: (e) => `${e.node}: low peer count`,
+  [E.NodeLowPeersResolved]: (e) => `${e.node}: low peer count resolved`,
   [E.NodeOnBranch]: (e) => `Node ${e.node} is on a branch`,
   [E.Deactivated]: (e) => `${e.baker} has been deactivated`,
   [E.DeactivationRisk]: (e) =>

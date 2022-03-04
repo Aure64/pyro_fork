@@ -422,16 +422,33 @@ export const checkBlockInfo = ({
   } else {
     log.warn(`Unable to check bootstrapped status`);
   }
-  if (nodeInfo.peerCount !== undefined && nodeInfo.peerCount <= lowPeerCount) {
-    if (
-      previousNodeInfo?.peerCount !== undefined &&
-      previousNodeInfo.peerCount <= lowPeerCount
-    ) {
-      log.debug("Node previously had too few peers, not generating event");
-    } else {
-      const message = `${nodeInfo.url} has low peer count: ${nodeInfo.peerCount}/${lowPeerCount}`;
-      log.debug(message);
-      events.push(newEvent(Events.NodeLowPeers));
+  if (nodeInfo.peerCount !== undefined) {
+    if (nodeInfo.peerCount <= lowPeerCount) {
+      if (
+        previousNodeInfo?.peerCount !== undefined &&
+        previousNodeInfo.peerCount <= lowPeerCount
+      ) {
+        log.debug("Node previously had too few peers, not generating event");
+      } else {
+        log.debug(
+          `${nodeInfo.url} has low peer count: ${nodeInfo.peerCount}/${lowPeerCount}`
+        );
+        events.push(newEvent(Events.NodeLowPeers));
+      }
+    }
+
+    if (nodeInfo.peerCount > lowPeerCount) {
+      if (
+        previousNodeInfo?.peerCount !== undefined &&
+        previousNodeInfo.peerCount <= lowPeerCount
+      ) {
+        log.debug(
+          `${nodeInfo.url} low peer count resolved: ${nodeInfo.peerCount}/${lowPeerCount}`
+        );
+        events.push(newEvent(Events.NodeLowPeersResolved));
+      } else {
+        log.debug("Node previously had enough peers, not generating event");
+      }
     }
   }
 

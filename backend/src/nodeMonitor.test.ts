@@ -62,7 +62,6 @@ describe("checkBlockInfo", () => {
       ...createNodeInfo(),
       head: "some other block",
       bootstrappedStatus,
-      peerCount: 3,
       url: nodeInfo.url,
     };
     const referenceNodeBlockHistory = undefined;
@@ -274,5 +273,36 @@ describe("checkBlockInfo", () => {
       lowPeerCount: 9,
     });
     expect(events).toEqual([]);
+  });
+
+  test("returns low peer count resolved when node has good peer count after low peer count", async () => {
+    const bootstrappedStatus: BootstrappedStatus = {
+      bootstrapped: true,
+      sync_state: "synced",
+    };
+
+    const lowPeerCount = 8;
+
+    const previousNodeInfo = {
+      ...createNodeInfo(),
+      bootstrappedStatus,
+      peerCount: lowPeerCount,
+    };
+
+    const nodeInfo = { ...previousNodeInfo, peerCount: lowPeerCount + 1 };
+    const referenceNodeBlockHistory = undefined;
+    const events = checkBlockInfo({
+      nodeInfo,
+      previousNodeInfo,
+      referenceNodeBlockHistory,
+      lowPeerCount,
+    });
+    expect(events).toEqual([
+      {
+        kind: Events.NodeLowPeersResolved,
+        node: "http://somenode",
+        createdAt,
+      },
+    ]);
   });
 });

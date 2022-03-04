@@ -12,7 +12,8 @@ export enum Events {
   NodeBehind = "node_behind",
   NodeSynced = "node_synced",
   NodeOnBranch = "node_on_branch",
-  NodeLowPeers = "node_low_peers",
+  NodeLowPeers = "low_peer_count",
+  NodeLowPeersResolved = "low_peer_count_resolved",
   RpcError = "rpc_error",
   RpcErrorResolved = "rpc_error_resolved",
   Notification = "notification",
@@ -98,7 +99,16 @@ export type NodeOnBranch = BasicNodeEvent & { kind: Events.NodeOnBranch };
 
 export type NodeLowPeers = BasicNodeEvent & { kind: Events.NodeLowPeers };
 
-export type NodeEvent = NodeBehind | NodeSynced | NodeOnBranch | NodeLowPeers;
+export type NodeLowPeersResolved = BasicNodeEvent & {
+  kind: Events.NodeLowPeersResolved;
+};
+
+export type NodeEvent =
+  | NodeBehind
+  | NodeSynced
+  | NodeOnBranch
+  | NodeLowPeers
+  | NodeLowPeersResolved;
 
 export type RpcError = BasicNodeEvent & {
   kind: Events.RpcError;
