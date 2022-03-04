@@ -1,6 +1,7 @@
 import * as eventTypes from "./events";
 import { Events as E } from "./events";
 import { groupBy, sortBy, countBy, first, last } from "lodash";
+import { format as dtformat } from "date-fns";
 
 const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
   "baker" in e;
@@ -8,6 +9,10 @@ const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
 const isBlockEvent = (e: any): e is eventTypes.BlockEvent => "level" in e;
 
 const nonBakerEvent = (e: eventTypes.Event) => !isBakerEvent(e);
+
+const formatTime = (t: Date): string => {
+  return dtformat(t, "H:mm");
+};
 
 const format = (
   events: eventTypes.Event[],
@@ -71,19 +76,26 @@ const Formatters: {
   [E.DoubleEndorsed]: (e) => `${e.baker} double endorsed block ${e.level}`,
   [E.DoublePreendorsed]: (e) =>
     `${e.baker} double preendorsed block ${e.level}`,
-  [E.NodeBehind]: (e) => `Node ${e.node} is behind`,
-  [E.NodeSynced]: (e) => `Node ${e.node} has caught up`,
-  [E.NodeLowPeers]: (e) => `${e.node}: low peer count`,
-  [E.NodeLowPeersResolved]: (e) => `${e.node}: low peer count resolved`,
-  [E.NodeOnBranch]: (e) => `Node ${e.node} is on a branch`,
+  [E.NodeBehind]: (e) =>
+    `[${formatTime(e.createdAt)}] Node ${e.node} is behind`,
+  [E.NodeSynced]: (e) =>
+    `[${formatTime(e.createdAt)}] Node ${e.node} has caught up`,
+  [E.NodeLowPeers]: (e) =>
+    `[${formatTime(e.createdAt)}] ${e.node}: low peer count`,
+  [E.NodeLowPeersResolved]: (e) =>
+    `[${formatTime(e.createdAt)}] ${e.node}: low peer count resolved`,
+  [E.NodeOnBranch]: (e) =>
+    `[${formatTime(e.createdAt)}] Node ${e.node} is on a branch`,
   [E.Deactivated]: (e) => `${e.baker} has been deactivated`,
   [E.DeactivationRisk]: (e) =>
     `${e.baker} is at risk of deactivation in cycle ${e.cycle}`,
-  [E.RpcError]: (e) => `Unable to reach ${e.node}: ${e.message}`,
-  [E.RpcErrorResolved]: (e) => `Resolved: ${e.node} is reachable again`,
+  [E.RpcError]: (e) =>
+    `[${formatTime(e.createdAt)}]  Unable to reach ${e.node}: ${e.message}`,
+  [E.RpcErrorResolved]: (e) =>
+    `[${formatTime(e.createdAt)}] Resolved: ${e.node} is reachable again`,
   [E.Notification]: (e) => `${e.message}`,
-  [E.BakerUnhealthy]: (e) => `${e.baker} is unhealthy`,
-  [E.BakerRecovered]: (e) => `${e.baker} is healthy again`,
+  [E.BakerUnhealthy]: (e) => `${e.baker} is unhealthy at level ${e.level}`,
+  [E.BakerRecovered]: (e) => `${e.baker} is healthy again at level ${e.level}`,
 };
 
 export const abbreviateBakerAddress = (addr: string) =>
