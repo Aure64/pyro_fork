@@ -17,7 +17,7 @@ Pyrometer is a tool for monitoring events on
 
 - Install:
 
-```
+``` shell
 sudo dpkg -i pyrometer_0.2.0_all.deb
 ```
 
@@ -26,13 +26,13 @@ sudo dpkg -i pyrometer_0.2.0_all.deb
 
 - Restart pyrometer service:
 
-```
+``` shell
 sudo systemctl restart pyrometer
 ```
 
 - Check log output, e.g.:
 
-```
+``` shell
 journalctl -u pyrometer -f
 ```
 
@@ -41,21 +41,21 @@ journalctl -u pyrometer -f
 Lets define shell alias so that following example commands are concise
 and clear:
 
-```
+``` shell
 docker network create pyrometer
 alias pyrometer="docker run --network pyrometer --rm -v $PWD:$PWD registry.gitlab.com/tezos-kiln/pyrometer"
 ```
 
 Lets also create a directory for pyrometer configuration and data:
 
-```
+``` shell
 mkdir -p ./pyrometer/data
 cd pyrometer
 ```
 
 Generate sample Pyrometer configuration and save it as `pyrometer.toml`:
 
-```
+``` shell
 pyrometer config sample > pyrometer.toml
 ```
 
@@ -71,7 +71,7 @@ For illustration purposes we will use
 [MailHog](https://github.com/mailhog/MailHog) as our SMTP
 server. Start MailHog:
 
-```
+``` shell
 docker run --rm --name mailhog --network pyrometer -d -p 8025:8025 mailhog/mailhog
 ```
 
@@ -110,7 +110,7 @@ short_address = true
 
 Now start Pyrometer:
 
-```bash
+```shell
 pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 ```
 
@@ -125,26 +125,28 @@ Install NodeJS 14 or later. For Linux, follow instructions at
 <https://github.com/nodesource/distributions>. For other operating
 systems, download from <https://nodejs.org>. Configure NPM registry:
 
-```bash
+```shell
 npm config set @tezos-kiln:registry https://gitlab.com/api/v4/packages/npm/
 ```
 
 Assuming we have `./pyrometer.toml` config file and `./data`
 directory, install Pyrometer:
 
-```bash
+```shell
 npm install -g @tezos-kiln/pyrometer
 ```
 
 Create a config file
 
-```bash
+```shell
 pyrometer config sample > pyrometer.toml
 ```
+
 and edit as necessary.
 
 Start Pyrometer:
-```bash
+
+```shell
 pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 ```
 
@@ -152,7 +154,7 @@ pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 
 To build the Docker image from scratch, clone this repo and run:
 
-```bash
+```shell
 docker build -t tezos-kiln/Pyrometer .
 ```
 
@@ -161,7 +163,7 @@ docker build -t tezos-kiln/Pyrometer .
 Pyrometer provides node and baker status web user interface. To
 enable, add or edit `ui` section in the config file:
 
-```
+```toml
 [ui]
 enabled = true
 # port = 2020
@@ -176,7 +178,7 @@ If running with Docker, be sure to set host to `0.0.0.0` and [publish
 port](https://docs.docker.com/config/containers/container-networking/#published-ports)
 where web UI is served.
 
-[![](doc/pyrometer-0.2.0-ui-thumb.jpg)](doc/pyrometer-0.2.0-ui.png)
+[![Pyrometer UI screenshot](doc/pyrometer-0.2.0-ui-thumb.jpg)](doc/pyrometer-0.2.0-ui.png)
 
 ### Teztnets
 
@@ -185,8 +187,9 @@ monitoring for test network nodes described at
 <https://teztnets.xyz/>. For example, to run Pyrometer as a visual
 status monitor for testnet nodes using Docker:
 
-```
-docker run -p 2020:2020 registry.gitlab.com/tezos-kiln/pyrometer run --ui:enabled --ui:host 0.0.0.0 --teztnets
+``` shell
+docker run -p 2020:2020 registry.gitlab.com/tezos-kiln/pyrometer \
+    run --ui:enabled --ui:host 0.0.0.0 --teztnets
 ```
 
 ### Notification Channels
@@ -217,7 +220,7 @@ Sends notifications via Telegram. To enable:
    after 24 hours and the chatId cannot be found, simply send another
    message to your bot and try again.
 
-![](doc/telegram-screenshot.png)
+![Screenshot of Pyrometer messages in Telegram](doc/telegram-screenshot.png)
 
 #### Email
 
@@ -234,7 +237,7 @@ This channel will post your notifications to a Slack webhook. Follow
 [the instructions here](https://api.slack.com/messaging/webhooks) to
 configure your webhook, and provide the URL to Pyrometer.
 
-![](doc/slack-screenshot.png)
+![Screenshot of Pyrometer messages in Slack](doc/slack-screenshot.png)
 
 #### Webhook
 
