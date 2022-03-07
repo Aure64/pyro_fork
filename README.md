@@ -65,7 +65,7 @@ Edit `pyrometer.toml` as necessary.
 
 For example, lets say we would like to monitor some of the Foundation
 Bakers and receive email notifications for all the events except
-future bakes and endorsements.
+successful bakes and endorsements.
 
 For illustration purposes we will use
 [MailHog](https://github.com/mailhog/MailHog) as our SMTP
@@ -117,7 +117,20 @@ pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 All configuration parameters can be specified or overriden from the
 command line. Run `pyrometer --help` to see available commands and
 global options, `pyrometer <command> --help` to see command-specific
-parameters.
+parameters. Most users will be interested in parameters for `run`:
+
+```shell
+pyrometer run --help
+```
+
+> ℹ️ Starting with Ithaca protocol, bakers are not punished for missing
+> inidividual endorsements. Users may want to turn off notifications
+> for missed endorsements (and missed bakes and bonus) and instead rely on
+> `baker_unhealthy`/`baker_recovered` pair of
+> events. `baker_unhealthy` notification is generated when baker
+> misses several endorsements/bakes/bonuses in a row (5 by default), configured via
+> `--baker_monitor:missed_threshold`
+>
 
 ### Run Natively
 
@@ -152,9 +165,11 @@ pyrometer run -c $PWD/pyrometer.toml -d $PWD/data
 
 ## Docker Build
 
-To build the Docker image from scratch, clone this repo and run:
+To build the Docker image from scratch, install
+[yarn](https://yarnpkg.com/), clone this repo and run:
 
 ```shell
+githooks/pre-push
 docker build -t tezos-kiln/Pyrometer .
 ```
 
@@ -170,6 +185,7 @@ enabled = true
 # host = "0.0.0.0"
 # explorer_url = "https://hangzhou.tzstats.com"
 explorer_url = "https://tzstats.com"
+show_pyrometer_info = false
 ```
 
 By default status web page is served on port `2020` at `localhost`.
@@ -179,6 +195,12 @@ port](https://docs.docker.com/config/containers/container-networking/#published-
 where web UI is served.
 
 [![Pyrometer UI screenshot](doc/pyrometer-0.2.0-ui-thumb.jpg)](doc/pyrometer-0.2.0-ui.png)
+
+Pyrometer UI can be configured to display system resources and
+Pyrometer process information by setting `show_pyrometer_info` to
+`true`. This is useful when Pyrometer runs on the same machine as
+Tezos baker as it allows to quickly asses basic system health
+indicators such as availabel memory and disk space.
 
 ### Teztnets
 
