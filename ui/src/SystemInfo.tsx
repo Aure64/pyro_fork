@@ -32,6 +32,7 @@ import {
   formatMemRss,
   formatMemVsz,
   formatSystemMem,
+  numberFormat,
 } from './format';
 
 const onIconClick = () => {
@@ -52,8 +53,8 @@ const LabeledItem: React.FC<{ label: string }> = ({ label, children }) => (
 
 const ProcessInfo = ({ cpu, mem, memRss, memVsz, started }: ProcessInfo) => (
   <HStack d="flex" wrap="wrap">
-    <LabeledItem label="CPU">{cpu}%</LabeledItem>
-    <LabeledItem label="Mem">{mem}%</LabeledItem>
+    <LabeledItem label="CPU">{numberFormat.format(cpu)}%</LabeledItem>
+    <LabeledItem label="Mem">{numberFormat.format(mem)}%</LabeledItem>
     <LabeledItem label="RSS">{formatMemRss(memRss)}</LabeledItem>
     <LabeledItem label="Virtual">{formatMemVsz(memVsz)}</LabeledItem>
     <LabeledItem label="Since">
