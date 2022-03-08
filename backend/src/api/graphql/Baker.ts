@@ -74,13 +74,20 @@ const getGracePeriod = async (
   rpc: RpcClient,
   cycle: number,
   level: number,
-  address: string
+  address: string,
+  atRiskThreshold: number
 ): Promise<number> => {
   const cacheKey = `${cycle}:${address}:gracePeriod`;
   let value = bakerCache.get(cacheKey);
   if (!value) {
     value = await rpc.getGracePeriod(address, `${level}`);
-    bakerCache.set(cacheKey, value);
+    const atRisk = value - cycle <= atRiskThreshold;
+    //baker's grace period end is updated at first endorsement
+    //so "at risk" bakers may stop being at risk during the cycle
+    //so shouldn't be cached
+    if (!atRisk) {
+      bakerCache.set(cacheKey, value);
+    }
   }
   return value;
 };
@@ -135,7 +142,13 @@ export const Baker = objectType({
         // return 0;
         const { cycle, level } = parent.lastProcessed;
         const { address } = parent;
-        return await getGracePeriod(ctx.rpc, cycle, level, address);
+        return await getGracePeriod(
+          ctx.rpc,
+          cycle,
+          level,
+          address,
+          parent.atRiskThreshold
+        );
       },
     });
 
@@ -150,7 +163,8 @@ export const Baker = objectType({
           ctx.rpc,
           cycle,
           level,
-          address
+          address,
+          parent.atRiskThreshold
         );
         return gracePeriod - cycle <= parent.atRiskThreshold;
       },
