@@ -154,7 +154,7 @@ export const create = async (
   const setPosition = async (value: ChainPositionInfo) =>
     await store.put(CHAIN_POSITION_KEY, value);
 
-  const atRiskThreshold = constants.preserved_cycles;
+  const atRiskThreshold = constants.preserved_cycles - 1;
 
   const missedCounts = new Map<TzAddress, number>();
 
