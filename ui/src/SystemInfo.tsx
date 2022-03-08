@@ -89,11 +89,13 @@ const FsItem = ({ use, mount, available, size, used, fs }: FsSizeData) => {
         </Box>
       </Tooltip>{' '}
       <HStack wrap="wrap">
-        <Box>
-          <Text fontFamily="mono" minW="5.5rem" w="100%" textAlign="right">
-            {formatSystemMem(available)}
-          </Text>
-        </Box>
+        <Tooltip label={`Available: ${formatSystemMem(available)}`}>
+          <Box>
+            <Text fontFamily="mono" minW="5.5rem" w="100%" textAlign="right">
+              {formatSystemMem(available)}
+            </Text>
+          </Box>
+        </Tooltip>
         <Tooltip label={`Filesystem: ${fs}`}>
           <Text>{mount}</Text>
         </Tooltip>
