@@ -37,7 +37,10 @@ export const PyrometerInfo = objectType({
       async resolve() {
         const processes = await si.processes();
         const info = processes.list.find((x) => x.pid == process.pid);
-        return info || null;
+        if (info) {
+          return { ...info, started: info.started.replace(" ", "T") };
+        }
+        return null;
       },
     });
   },
