@@ -108,8 +108,8 @@ const FsSizeInfo = ({ data }: { data: (FsSizeData | null | undefined)[] }) => (
   <HStack d="flex" wrap="wrap">
     <VStack alignItems="flex-start">
       <Label>Disk:</Label>
-      {data.filter(notEmpty).map((x) => (
-        <FsItem {...x} />
+      {data.filter(notEmpty).map((x, index) => (
+        <FsItem key={index} {...x} />
       ))}
     </VStack>
   </HStack>
