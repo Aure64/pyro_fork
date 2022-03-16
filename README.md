@@ -9,7 +9,7 @@ Pyrometer is a tool for monitoring events on
 
 ## Run on Ubuntu/Debian
 
-- Install NodeJS 14 or later following instructions at
+- Install NodeJS 16 or later following instructions at
   <https://github.com/nodesource/distributions>.
 
 - Download latest .deb from
@@ -134,7 +134,7 @@ pyrometer run --help
 
 ### Run Natively
 
-Install NodeJS 14 or later. For Linux, follow instructions at
+Install NodeJS 16 or later. For Linux, follow instructions at
 <https://github.com/nodesource/distributions>. For other operating
 systems, download from <https://nodejs.org>. Configure NPM registry:
 
