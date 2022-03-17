@@ -2,6 +2,8 @@ import process from "process";
 import si from "systeminformation";
 import { extendType, objectType } from "nexus";
 
+const started = new Date();
+
 export const CpuUsage = objectType({
   name: "CpuUsage",
   definition(t) {
@@ -38,7 +40,7 @@ export const PyrometerInfo = objectType({
         const processes = await si.processes();
         const info = processes.list.find((x) => x.pid == process.pid);
         if (info) {
-          return { ...info, started: info.started.replace(" ", "T") };
+          return { ...info, started: started.toISOString() };
         }
         return null;
       },
