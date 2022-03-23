@@ -75,7 +75,7 @@ server. Start MailHog:
 docker run --rm --name mailhog --network pyrometer -d -p 8025:8025 mailhog/mailhog
 ```
 
-WebHog's web interface should now be available at <http://localhost:8025/>
+MailHog's web interface should now be available at <http://localhost:8025/>
 
 Edit `pyrometer.toml` to look like this:
 
