@@ -92,15 +92,11 @@ export const create = async (
   }
 
   //dedup
-  const nodeSet = new Set([...nodes, ...teztnetsNodes]);
-  //dedup
-  nodes = [...nodeSet];
+  const nodeSet = [...new Set([...nodes, ...teztnetsNodes])];
 
-  const subscriptions = nodes.map((node) =>
+  const allSubs = nodeSet.map((node) =>
     subscribeToNode(node, onEvent, lowPeerCount)
   );
-
-  const allSubs = [...subscriptions];
 
   const start = async () => {
     await Promise.all(allSubs.map((s) => s.start()));
