@@ -1,6 +1,5 @@
 import { Event, Events, RpcEvent, NodeEvent } from "./events";
 import { getLogger, Logger } from "loglevel";
-//import { BlockHeaderResponse } from "@taquito/rpc";
 import { BlockHeader } from "./rpc/types";
 import { readJson } from "./fs-utils";
 
@@ -18,7 +17,6 @@ type URL = string;
 
 export type NodeMonitorConfig = {
   nodes: URL[];
-  reference_node?: URL;
   teztnets?: boolean;
   teztnets_config: string;
   low_peer_count: number;
@@ -57,19 +55,10 @@ export type NodeInfoCollection = { info: () => Promise<NodeInfo[]> };
 
 export type NodeMonitor = service.Service & NodeInfoCollection;
 
-const NoSub: Sub = {
-  name: "no-sub",
-  start: () => Promise.resolve(),
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  stop: () => {},
-  nodeInfo: () => undefined,
-};
-
 export const create = async (
   onEvent: (event: Event) => Promise<void>,
   {
     nodes,
-    reference_node: referenceNode,
     teztnets,
     teztnets_config: teztnetsConfig,
     low_peer_count: lowPeerCount,
@@ -102,22 +91,16 @@ export const create = async (
     }
   }
 
+  //dedup
   const nodeSet = new Set([...nodes, ...teztnetsNodes]);
-  if (referenceNode) {
-    nodeSet.delete(referenceNode);
-  }
   //dedup
   nodes = [...nodeSet];
 
-  const referenceSubscription = referenceNode
-    ? subscribeToNode(referenceNode, onEvent, () => undefined, lowPeerCount)
-    : NoSub;
-
   const subscriptions = nodes.map((node) =>
-    subscribeToNode(node, onEvent, referenceSubscription.nodeInfo, lowPeerCount)
+    subscribeToNode(node, onEvent, lowPeerCount)
   );
 
-  const allSubs = [...subscriptions, referenceSubscription];
+  const allSubs = [...subscriptions];
 
   const start = async () => {
     await Promise.all(allSubs.map((s) => s.start()));
@@ -152,7 +135,6 @@ const initialEndpointAvailability = {
 const subscribeToNode = (
   node: string,
   onEvent: (event: Event) => Promise<void>,
-  getReference: () => NodeInfo | undefined,
   lowPeerCount: number
 ): Sub => {
   const rpc = client(node);
@@ -201,7 +183,6 @@ const subscribeToNode = (
         events = checkBlockInfo({
           nodeInfo,
           previousNodeInfo,
-          referenceNodeBlockHistory: getReference()?.history,
           lowPeerCount,
           log,
         });
@@ -359,7 +340,6 @@ const updateNodeInfo = async ({
 type CheckBlockInfoArgs = {
   nodeInfo: NodeInfo;
   previousNodeInfo: NodeInfo | undefined;
-  referenceNodeBlockHistory: BlockHeader[] | undefined;
   lowPeerCount: number;
   log?: Logger;
 };
@@ -370,7 +350,6 @@ type CheckBlockInfoArgs = {
 export const checkBlockInfo = ({
   nodeInfo,
   previousNodeInfo,
-  referenceNodeBlockHistory,
   lowPeerCount,
   log,
 }: CheckBlockInfoArgs): NodeEvent[] => {
@@ -403,21 +382,6 @@ export const checkBlockInfo = ({
     ) {
       log.debug(`Node caught up`);
       events.push(newEvent(Events.NodeSynced));
-    }
-    if (
-      referenceNodeBlockHistory &&
-      nodeInfo.bootstrappedStatus.sync_state === "synced"
-    ) {
-      const ancestorDistance = findSharedAncestor(
-        nodeInfo.history,
-        referenceNodeBlockHistory
-      );
-      if (ancestorDistance === NO_ANCESTOR) {
-        log.debug(`Node has no shared blocks with reference node`);
-        events.push(newEvent(Events.NodeOnBranch));
-      } else {
-        log.debug(`${ancestorDistance} blocks away from reference node`);
-      }
     }
   } else {
     log.warn(`Unable to check bootstrapped status`);
@@ -453,26 +417,6 @@ export const checkBlockInfo = ({
   }
 
   return events;
-};
-
-const NO_ANCESTOR = -1;
-
-const findSharedAncestor = (
-  nodeHistory: BlockHeader[],
-  referenceNodeHistory: BlockHeader[]
-): number => {
-  // walk back through a node's blocks
-  for (let i = 0; i < nodeHistory.length; i++) {
-    const nodeHeader = nodeHistory[i];
-    // look for the same block in our reference node
-    const referenceIndex = referenceNodeHistory.findIndex(
-      (header) => header.hash === nodeHeader.hash
-    );
-    // if one was found, that index is the distance our node is from the assumed main branch
-    if (referenceIndex !== -1) return referenceIndex;
-  }
-
-  return NO_ANCESTOR;
 };
 
 const catchUpOccurred = (

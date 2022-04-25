@@ -47,7 +47,6 @@ const KindEmojiFormatters: {
   [E.NodeSynced]: "💫",
   [E.NodeLowPeers]: "🤔",
   [E.NodeLowPeersResolved]: "🤝",
-  [E.NodeOnBranch]: "🍂",
   [E.Deactivated]: "😴",
   [E.DeactivationRisk]: "😪",
   [E.RpcError]: "⚠️",
@@ -84,8 +83,6 @@ const Formatters: {
     `[${formatTime(e.createdAt)}] ${e.node}: low peer count`,
   [E.NodeLowPeersResolved]: (e) =>
     `[${formatTime(e.createdAt)}] ${e.node}: low peer count resolved`,
-  [E.NodeOnBranch]: (e) =>
-    `[${formatTime(e.createdAt)}] Node ${e.node} is on a branch`,
   [E.Deactivated]: (e) => `${e.baker} has been deactivated`,
   [E.DeactivationRisk]: (e) =>
     `${e.baker} is at risk of deactivation in cycle ${e.cycle}`,

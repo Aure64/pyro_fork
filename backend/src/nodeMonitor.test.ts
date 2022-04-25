@@ -1,7 +1,6 @@
 import { Events } from "./events";
 import { checkBlockInfo } from "./nodeMonitor";
 import { BootstrappedStatus } from "./rpc/types";
-import { history } from "./testFixtures/nodeMonitoring";
 
 Date.now = jest.fn(() => 1624758855227);
 
@@ -35,11 +34,9 @@ describe("checkBlockInfo", () => {
   test("returns event when node is behind", async () => {
     const nodeInfo = createNodeInfo();
     const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 10,
     });
     expect(events).toEqual([
@@ -64,11 +61,9 @@ describe("checkBlockInfo", () => {
       bootstrappedStatus,
       url: nodeInfo.url,
     };
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 5,
     });
     expect(events).toEqual([]);
@@ -84,11 +79,9 @@ describe("checkBlockInfo", () => {
       bootstrappedStatus,
     };
     const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 5,
     });
     expect(events).toEqual([]);
@@ -101,11 +94,9 @@ describe("checkBlockInfo", () => {
     };
     const nodeInfo = { ...createNodeInfo(), bootstrappedStatus };
     const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 5,
     });
     expect(events).toEqual([]);
@@ -133,11 +124,9 @@ describe("checkBlockInfo", () => {
       bootstrappedStatus: oldBootstrappedStatus,
     };
 
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 5,
     });
     expect(events).toEqual([
@@ -147,79 +136,6 @@ describe("checkBlockInfo", () => {
         createdAt,
       },
     ]);
-  });
-
-  test("returns branch warning when no shared ancestors with reference node", () => {
-    const bootstrappedStatus: BootstrappedStatus = {
-      bootstrapped: true,
-      sync_state: "synced",
-    };
-    const nodeInfo = {
-      ...createNodeInfo(),
-      bootstrappedStatus,
-    };
-
-    const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = history;
-    const events = checkBlockInfo({
-      nodeInfo,
-      previousNodeInfo,
-      referenceNodeBlockHistory,
-      lowPeerCount: 5,
-    });
-    expect(events).toEqual([
-      {
-        kind: Events.NodeOnBranch,
-        node: "http://somenode",
-        createdAt,
-      },
-    ]);
-  });
-
-  test("returns no events when no shared ancestors with reference node but still syncing", () => {
-    const bootstrappedStatus: BootstrappedStatus = {
-      bootstrapped: false,
-      sync_state: "unsynced",
-    };
-
-    const nodeInfo = {
-      ...createNodeInfo(),
-      bootstrappedStatus,
-    };
-    const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = history;
-    const events = checkBlockInfo({
-      nodeInfo,
-      previousNodeInfo,
-      referenceNodeBlockHistory,
-      lowPeerCount: 5,
-    });
-    expect(events).toEqual([]);
-  });
-
-  test("returns no events when shared ancestors with reference node is one block away", () => {
-    // history minus last item
-    const partialHistory = history.slice(0, -1);
-    const bootstrappedStatus: BootstrappedStatus = {
-      bootstrapped: true,
-      sync_state: "synced",
-    };
-
-    const nodeInfo = {
-      ...createNodeInfo(),
-      bootstrappedStatus,
-      history: partialHistory,
-    };
-
-    const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = history;
-    const events = checkBlockInfo({
-      nodeInfo,
-      previousNodeInfo,
-      referenceNodeBlockHistory,
-      lowPeerCount: 5,
-    });
-    expect(events).toEqual([]);
   });
 
   test("returns low peer event when node has low peer count", async () => {
@@ -236,11 +152,9 @@ describe("checkBlockInfo", () => {
     };
 
     const previousNodeInfo = undefined;
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 7,
     });
     expect(events).toEqual([
@@ -265,11 +179,9 @@ describe("checkBlockInfo", () => {
     };
 
     const previousNodeInfo = nodeInfo;
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount: 9,
     });
     expect(events).toEqual([]);
@@ -290,11 +202,9 @@ describe("checkBlockInfo", () => {
     };
 
     const nodeInfo = { ...previousNodeInfo, peerCount: lowPeerCount + 1 };
-    const referenceNodeBlockHistory = undefined;
     const events = checkBlockInfo({
       nodeInfo,
       previousNodeInfo,
-      referenceNodeBlockHistory,
       lowPeerCount,
     });
     expect(events).toEqual([

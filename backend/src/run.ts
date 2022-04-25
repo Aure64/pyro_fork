@@ -101,11 +101,7 @@ const run = async (config: Config.Config) => {
   };
 
   const nodeMonitorConfig = config.nodeMonitor;
-  const { reference_node: referenceNode, teztnets } = nodeMonitorConfig;
-
-  if (!referenceNode) {
-    warn("Reference node is not set, node-on-a-branch detection is off");
-  }
+  const { teztnets } = nodeMonitorConfig;
 
   const bakerMonitorConfig = config.bakerMonitor;
   const { bakers } = bakerMonitorConfig;

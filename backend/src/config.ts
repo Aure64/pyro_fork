@@ -158,19 +158,6 @@ const NODES: UserPref = {
   validationRule: "link",
 };
 
-const REFERENCE_NODE: UserPref = {
-  key: `${NODE_MONITOR_GROUP.key}:reference_node`,
-  default: undefined,
-  sampleValue: "https://mainnet-tezos.giganode.io/",
-  description:
-    "Node to compare to when detecting if monitored node is on a branch",
-  alias: ["R", "reference-node"],
-  type: "string",
-  group: NODE_MONITOR_GROUP.label,
-  isArray: false,
-  validationRule: "link",
-};
-
 const WITH_TEZTNETS: UserPref = {
   key: `${NODE_MONITOR_GROUP.key}:teztnets`,
   default: false,
@@ -650,7 +637,6 @@ const userPrefs = [
   LOG_TIMESTAMP,
   NODES,
   RPC,
-  REFERENCE_NODE,
   WITH_TEZTNETS,
   TEZTNETS_CONFIG,
   LOW_PEER_COUNT,
