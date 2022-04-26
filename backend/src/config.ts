@@ -561,7 +561,7 @@ const UI_GROUP: Group = { key: "ui", label: "User Interface:" };
 
 const UI_ENABLED: UserPref = {
   key: `${UI_GROUP.key}:enabled`,
-  default: false,
+  default: true,
   description: "Whether web UI is enabled",
   alias: undefined,
   type: "boolean",
