@@ -10,13 +10,17 @@ import { create as SlackSender } from "./senders/slack";
 import * as EventLog from "./eventlog";
 import { debug, info, warn, error } from "loglevel";
 import * as Config from "./config";
-import { writeJson, ensureExists } from "./fs-utils";
+import { writeJson, ensureExists, readJson } from "./fs-utils";
 import { lock } from "proper-lockfile";
 import { join as joinPath, normalize as normalizePath } from "path";
 
 import { setup as setupLogging } from "./logging";
 
 import { start as startAPIServer } from "./api/server";
+
+type TzClientPkhListItem = { name: string; value: string };
+
+type TzClientConfig = { endpoint: string };
 
 const run = async (config: Config.Config) => {
   // Makes the script crash on unhandled rejections instead of silently ignoring them.
@@ -104,13 +108,76 @@ const run = async (config: Config.Config) => {
   const { teztnets } = nodeMonitorConfig;
 
   const bakerMonitorConfig = config.bakerMonitor;
-  const { bakers } = bakerMonitorConfig;
+
+  const userHome = process.env.HOME;
+  const tezosClientBaseDir = [
+    "/var/lib/tezos/.tezos-client",
+    `${userHome}/.tezos-client`,
+    process.env.TEZOS_CLIENT_DIR,
+  ];
+
+  const tezosClientBakers = [];
+  const tezosClientEndpoints = [];
+
+  for (const dir of tezosClientBaseDir) {
+    if (!dir) continue;
+    const pkhFile = joinPath(dir, "public_key_hashs");
+    try {
+      info(`Reading tezos client pkh list from ${pkhFile}...`);
+      const pkhList = (await readJson(pkhFile)) as TzClientPkhListItem[];
+      for (const { name, value } of pkhList) {
+        if (value) {
+          info(`Found pkh ${name} ${value}`);
+          if (name == "baker") {
+            tezosClientBakers.push(value);
+            break;
+          }
+        }
+      }
+    } catch (err) {
+      info(`Could not read ${pkhFile}`);
+      debug(err);
+    }
+  }
+
+  if (tezosClientBakers.length > 0) {
+    for (const dir of tezosClientBaseDir) {
+      if (!dir) continue;
+      const tzClientConfigFile = joinPath(dir, "config");
+      try {
+        info(`Reading tezos client config from ${tzClientConfigFile}...`);
+        const tzClientConfig = (await readJson(
+          tzClientConfigFile
+        )) as TzClientConfig;
+        if (tzClientConfig.endpoint) {
+          info(`Found tezos client endpoint ${tzClientConfig.endpoint}`);
+          tezosClientEndpoints.push(tzClientConfig.endpoint);
+        }
+      } catch (err) {
+        info(`Could not read ${tzClientConfigFile}`);
+        debug(err);
+      }
+    }
+  }
+
+  if (tezosClientEndpoints.length > 0) {
+    bakerMonitorConfig.rpc =
+      tezosClientEndpoints[tezosClientEndpoints.length - 1];
+    info(`Using tezos client endpoint ${bakerMonitorConfig.rpc} for baker rpc`);
+  }
+
+  const bakers = [...tezosClientBakers, ...bakerMonitorConfig.bakers];
+  bakerMonitorConfig.bakers = bakers;
 
   //if there are bakers to monitor also monitor rpc node
   const nodes =
     bakers.length === 0
       ? nodeMonitorConfig.nodes
-      : [bakerMonitorConfig.rpc, ...nodeMonitorConfig.nodes];
+      : [
+          bakerMonitorConfig.rpc,
+          ...tezosClientEndpoints,
+          ...nodeMonitorConfig.nodes,
+        ];
 
   if (bakers.length === 0 && nodes.length === 0 && !teztnets) {
     console.error("You must specify nodes or bakers to watch.");
