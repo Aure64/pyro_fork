@@ -1,6 +1,6 @@
 import process from "process";
 import si from "systeminformation";
-import { extendType, objectType } from "nexus";
+import { extendType, objectType, list, nonNull } from "nexus";
 
 const started = new Date();
 
@@ -21,8 +21,18 @@ export const ProcessData = objectType({
     t.nonNull.float("memVsz");
     t.nonNull.int("pid");
     t.nonNull.string("started");
+    t.nonNull.string("command");
+    t.nonNull.string("name");
+    t.nonNull.string("user");
+    t.nonNull.string("params");
+    t.nonNull.string("path");
   },
 });
+
+type WithCommand = { command: string };
+
+const processDisplayCmp = (x: WithCommand, y: WithCommand) =>
+  x.command.localeCompare(y.command);
 
 export const PyrometerInfo = objectType({
   name: "PyrometerInfo",
@@ -34,15 +44,17 @@ export const PyrometerInfo = objectType({
       },
     });
 
-    t.field("process", {
-      type: ProcessData,
+    t.nonNull.field("processes", {
+      type: list(nonNull(ProcessData)),
       async resolve() {
         const processes = await si.processes();
-        const info = processes.list.find((x) => x.pid == process.pid);
-        if (info) {
-          return { ...info, started: started.toISOString() };
-        }
-        return null;
+        return processes.list
+          .filter((x) => x.pid === process.pid || x.command.includes("tezos"))
+          .map((x) => {
+            const started = new Date(x.started);
+            return { ...x, started: started.toISOString() };
+          })
+          .sort(processDisplayCmp);
       },
     });
   },

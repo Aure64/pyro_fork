@@ -83,13 +83,18 @@ query getNetworkInfo {
 query getSystemInfo {
   pyrometer {
     version
-    process {
+    processes {
       cpu
       mem
       memRss
       memVsz
       pid
       started
+      command
+      name
+      params
+      user
+      path
     }
   }
   sysInfo {
