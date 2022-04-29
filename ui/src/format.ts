@@ -50,6 +50,11 @@ export const numberFormat = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 });
 
+export const numberFormat0 = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+});
+
 export const formatMutezAsTez = (mutez: string | undefined | null) => {
   if (!mutez) return '';
   const value = BigInt(mutez) / 1000000n;
@@ -58,21 +63,27 @@ export const formatMutezAsTez = (mutez: string | undefined | null) => {
 
 export const formatMemRss = (kbytes: number | undefined | null): string => {
   if (!kbytes) return '';
-  return `${numberFormat.format(kbytes / 1024)}M`;
+  return `${numberFormat0.format(kbytes / 1024)}M`;
 };
 
-const Gb = 1024 * 1024 * 1024;
+const Kb = 1024;
+const Mb = 1024 * Kb;
+const Gb = 1024 * Mb;
 
 export const formatSystemMem = (bytes: number | undefined | null): string => {
   if (!bytes) return '';
-  return `${numberFormat.format(bytes / Gb)}G`;
+  const mbytes = bytes / Mb;
+  if (mbytes < 1024) {
+    return `${numberFormat0.format(mbytes)}M`;
+  }
+  return `${numberFormat0.format(bytes / Gb)}G`;
 };
 
 export const formatMemVsz = (kbytes: number | undefined | null): string => {
   if (!kbytes) return '';
-  const mbytes = kbytes / 1024;
+  const mbytes = kbytes / Kb;
   if (mbytes < 1024) {
-    return `${numberFormat.format(mbytes)}M`;
+    return `${numberFormat0.format(mbytes)}M`;
   }
-  return `${numberFormat.format(mbytes / 1024)}G`;
+  return `${numberFormat0.format(mbytes / 1024)}G`;
 };
