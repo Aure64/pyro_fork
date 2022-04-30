@@ -3,7 +3,7 @@ import { extendType, objectType } from "nexus";
 export const Settings = objectType({
   name: "Settings",
   definition(t) {
-    t.nonNull.boolean("showPyrometerInfo");
+    t.nonNull.boolean("showSystemInfo");
   },
 });
 
@@ -16,7 +16,7 @@ export const SettingsQuery = extendType({
 
       async resolve(_, _args, ctx) {
         return {
-          showPyrometerInfo: ctx.showPyrometerInfo || false,
+          showSystemInfo: ctx.showSystemInfo || false,
         };
       },
     });

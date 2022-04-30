@@ -46,7 +46,10 @@ export const PyrometerInfo = objectType({
 
     t.nonNull.field("processes", {
       type: list(nonNull(ProcessData)),
-      async resolve() {
+      async resolve(_, _args, ctx) {
+        if (!ctx.showSystemInfo) {
+          throw new Error("not enabled");
+        }
         const processes = await si.processes();
         return processes.list
           .filter((x) => x.pid === process.pid || x.command.includes("tezos"))
@@ -67,7 +70,7 @@ export const PyrometerInfoQuery = extendType({
     t.nonNull.field("pyrometer", {
       type: PyrometerInfo,
       async resolve(_, _args, ctx) {
-        if (!ctx.showPyrometerInfo) {
+        if (!ctx.showSystemInfo) {
           throw new Error("not enabled");
         }
         return {};

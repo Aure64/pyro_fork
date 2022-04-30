@@ -615,10 +615,10 @@ const UI_EXPLORER_URL: UserPref = {
   validationRule: "link",
 };
 
-const UI_SHOW_PYROMETER_INFO: UserPref = {
-  key: `${UI_GROUP.key}:show_pyrometer_info`,
-  default: false,
-  description: "Show Pyrometer info section",
+const UI_SHOW_SYSTEM_INFO: UserPref = {
+  key: `${UI_GROUP.key}:show_system_info`,
+  default: undefined,
+  description: "Show system info section",
   alias: undefined,
   type: "boolean",
   group: UI_GROUP.label,
@@ -674,7 +674,7 @@ const userPrefs = [
   UI_PORT,
   UI_WEBROOT,
   UI_EXPLORER_URL,
-  UI_SHOW_PYROMETER_INFO,
+  UI_SHOW_SYSTEM_INFO,
 ];
 
 /**

@@ -169,6 +169,8 @@ const run = async (config: Config.Config) => {
   const bakers = [...tezosClientBakers, ...bakerMonitorConfig.bakers];
   bakerMonitorConfig.bakers = bakers;
 
+  console.error(config.ui);
+
   //if there are bakers to monitor also monitor rpc node
   const nodes =
     bakers.length === 0
@@ -184,7 +186,14 @@ const run = async (config: Config.Config) => {
     process.exit(1);
   }
 
-  const uiConfig = config.ui;
+  let uiConfig = config.ui;
+  if (
+    (tezosClientEndpoints.length > 0 || tezosClientBakers.length > 0) &&
+    config.ui.show_system_info === undefined
+  ) {
+    info("Found local tezos setup, enabling system info ui");
+    uiConfig = { ...config.ui, show_system_info: true };
+  }
 
   const bakerMonitor =
     bakers.length > 0

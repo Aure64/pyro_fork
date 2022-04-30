@@ -21,7 +21,7 @@ function App({}: AppProps) {
     <VStack p="20px" alignItems="flex-start" w="100%">
       <Bakers />
       <Nodes />
-      {data?.settings.showPyrometerInfo && <SystemInfo />}
+      {data?.settings.showSystemInfo && <SystemInfo />}
     </VStack>
   );
 }

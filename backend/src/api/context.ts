@@ -7,7 +7,7 @@ export interface Context {
   bakerInfoCollection: BakerInfoCollection;
   rpc: RpcClient;
   explorerUrl: string | undefined;
-  showPyrometerInfo: boolean | undefined;
+  showSystemInfo: boolean | undefined;
 }
 
 export const createContext = (
@@ -15,13 +15,13 @@ export const createContext = (
   bakerInfoCollection: BakerInfoCollection,
   rpcUrl: string,
   explorerUrl: string | undefined,
-  showPyrometerInfo: boolean | undefined
+  showSystemInfo: boolean | undefined
 ) => {
   return {
     nodeInfoCollection,
     bakerInfoCollection,
     rpc: client(rpcUrl),
     explorerUrl,
-    showPyrometerInfo,
+    showSystemInfo,
   };
 };

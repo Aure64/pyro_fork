@@ -45,7 +45,7 @@ export type UIConfig = {
   port: number;
   explorer_url?: string;
   webroot?: string;
-  show_pyrometer_info?: boolean;
+  show_system_info?: boolean;
 };
 
 export const start = (
@@ -57,9 +57,11 @@ export const start = (
     port,
     explorer_url,
     webroot: configuredWebroot,
-    show_pyrometer_info,
+    show_system_info,
   }: UIConfig
 ) => {
+  console.error("show_system_info", show_system_info);
+
   const webroot = configuredWebroot || join(__dirname, "../../ui");
   getLogger("api").info(`Serving web UI assets from ${webroot}`);
   app.use(express.static(webroot));
@@ -84,7 +86,7 @@ export const start = (
         },
         rpc,
         explorer_url,
-        show_pyrometer_info
+        show_system_info
       ),
       customFormatErrorFn: (error) => {
         const params = {

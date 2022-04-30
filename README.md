@@ -185,7 +185,7 @@ enabled = true
 # host = "0.0.0.0"
 # explorer_url = "https://hangzhou.tzstats.com"
 explorer_url = "https://tzstats.com"
-show_pyrometer_info = false
+show_system_info = true
 ```
 
 By default status web page is served on port `2020` at `localhost`.
@@ -197,10 +197,10 @@ where web UI is served.
 [![Pyrometer UI screenshot](doc/pyrometer-0.2.0-ui-thumb.jpg)](doc/pyrometer-0.2.0-ui.png)
 
 Pyrometer UI can be configured to display system resources and
-Pyrometer process information by setting `show_pyrometer_info` to
+Pyrometer process information by setting `show_system_info` to
 `true`. This is useful when Pyrometer runs on the same machine as
 Tezos baker as it allows to quickly asses basic system health
-indicators such as availabel memory and disk space.
+indicators such as available memory and disk space.
 
 ### Teztnets
 
