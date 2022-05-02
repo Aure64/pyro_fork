@@ -3,7 +3,7 @@ import { getLogger } from "loglevel";
 
 import { BakerBlockEvent, Event, BakerEvent } from "./events";
 
-import { tryForever } from "./rpc/util";
+import { tryForever, HttpResponseError, TezosNodeError } from "./rpc/util";
 
 import { delay } from "./delay";
 
@@ -268,14 +268,28 @@ export const create = async (
 
         if (!lastBlockCycle || blockCycle > lastBlockCycle) {
           for (const baker of bakers) {
-            const delegateInfo = await rpc.getDelegate(baker);
-            const deactivationEvent = checkForDeactivations({
-              baker,
-              cycle: blockCycle,
-              delegateInfo,
-              threshold: atRiskThreshold,
-            });
-            if (deactivationEvent) events.push(deactivationEvent);
+            try {
+              const delegateInfo = await rpc.getDelegate(baker);
+              const deactivationEvent = checkForDeactivations({
+                baker,
+                cycle: blockCycle,
+                delegateInfo,
+                threshold: atRiskThreshold,
+              });
+              if (deactivationEvent) events.push(deactivationEvent);
+            } catch (err) {
+              if (err instanceof HttpResponseError) {
+                if (
+                  err.nodeErrors.some((x) =>
+                    x.id.endsWith("delegate.not_registered")
+                  )
+                ) {
+                  log.error(`Delegate ${baker} is not registered`);
+                }
+              } else {
+                log.error(err);
+              }
+            }
           }
         } else {
           log.debug(

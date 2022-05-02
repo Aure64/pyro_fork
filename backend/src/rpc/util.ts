@@ -1,6 +1,7 @@
 import { delay } from "../delay";
 import { getLogger } from "loglevel";
 import fetch from "cross-fetch";
+import { TzAddress } from "./types";
 /**
  * Wraps provided API function so that it is retried on 404.
  * These are common on server clusters where a node may slightly lag
@@ -55,15 +56,23 @@ export const tryForever: TryForever = async (call, interval, label = "") => {
   }
 };
 
+export type TezosNodeError = {
+  id: string;
+  kind: string;
+  pkh?: TzAddress;
+};
+
 export class HttpResponseError extends Error {
   status: number;
   statusText: string;
   url: string;
+  nodeErrors: TezosNodeError[];
   constructor(
     message: string,
     status: number,
     statusText: string,
-    url: string
+    url: string,
+    nodeErrors: TezosNodeError[]
   ) {
     super(message);
     this.message = message;
@@ -71,6 +80,7 @@ export class HttpResponseError extends Error {
     this.statusText = statusText;
     this.url = url;
     this.name = "HttpResponseError";
+    this.nodeErrors = nodeErrors;
   }
 }
 
@@ -91,10 +101,21 @@ export const get = async (url: string) => {
   if (response.ok) {
     return response.json();
   }
+  let nodeErrors: TezosNodeError[] = [];
+  if (response.status === 500) {
+    try {
+      nodeErrors = (await response.json()) || [];
+    } catch (err) {
+      getLogger("rpc").error(
+        `|> 500 ${url} could not get error response content`
+      );
+    }
+  }
   throw new HttpResponseError(
-    `HTTP error: (${response.status})`,
+    `${response.status} ${url}`,
     response.status,
     response.statusText,
-    url
+    url,
+    nodeErrors
   );
 };
