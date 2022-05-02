@@ -6,5 +6,5 @@ Build-Depends: dh-systemd
 
 Package: pyrometer
 Architecture: all
-Depends: nodejs (>= 14)
+Depends: nodejs (>= 16)
 Description: Tezos node and baker monitoring tool
