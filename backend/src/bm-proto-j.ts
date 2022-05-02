@@ -13,7 +13,7 @@ import {
   OperationJ,
 } from "./rpc/types";
 
-const name = "bm-proto-i";
+const name = "bm-proto-j";
 
 export type CheckBlockArgs = {
   bakers: string[];
