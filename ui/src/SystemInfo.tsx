@@ -215,30 +215,32 @@ export default () => {
                 <Th>Started</Th>
               </Tr>
             </Thead>
-            {data.pyrometer.processes.map((x) => (
-              <Tr>
-                <Tooltip
-                  label={`${x.path ? x.path + '/' : ''}${x.command} ${
-                    x.params
-                  }`}
-                >
-                  <Td>{x.command}</Td>
-                </Tooltip>
-                <Td isNumeric>{x.pid}</Td>
-                <Td isNumeric>{numberFormat.format(x.cpu)}</Td>
-                <Td isNumeric>{numberFormat.format(x.mem)}</Td>
-                <Td isNumeric>{formatMemVsz(x.memVsz)}</Td>
-                <Td isNumeric>{formatMemRss(x.memRss)}</Td>
-                <Tooltip
-                  label={`${timestampFormat.format(new Date(x.started))}`}
-                >
-                  <Td isNumeric>
-                    {formatRelativeTime(new Date(x.started).getTime())}
-                  </Td>
-                </Tooltip>
-              </Tr>
-              //<ProcessInfo key={x.pid.toString()} {...x} />
-            ))}
+            <Tbody>
+              {data.pyrometer.processes.map((x) => (
+                <Tr key={x.pid}>
+                  <Tooltip
+                    label={`${x.path ? x.path + '/' : ''}${x.command} ${
+                      x.params
+                    }`}
+                  >
+                    <Td>{x.command}</Td>
+                  </Tooltip>
+                  <Td isNumeric>{x.pid}</Td>
+                  <Td isNumeric>{numberFormat.format(x.cpu)}</Td>
+                  <Td isNumeric>{numberFormat.format(x.mem)}</Td>
+                  <Td isNumeric>{formatMemVsz(x.memVsz)}</Td>
+                  <Td isNumeric>{formatMemRss(x.memRss)}</Td>
+                  <Tooltip
+                    label={`${timestampFormat.format(new Date(x.started))}`}
+                  >
+                    <Td isNumeric>
+                      {formatRelativeTime(new Date(x.started).getTime())}
+                    </Td>
+                  </Tooltip>
+                </Tr>
+                //<ProcessInfo key={x.pid.toString()} {...x} />
+              ))}
+            </Tbody>
           </Table>
         </TableContainer>
       )}
