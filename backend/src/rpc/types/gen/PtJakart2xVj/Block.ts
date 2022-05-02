@@ -145,7 +145,12 @@ export type _013_PtJakart$Operation$Alpha$SuccessfulManagerOperationResult =
  * Decimal representation of a big number
  */
 export type BigNumber = string;
-export type Micheline$013_PtJakart$MichelsonV1$Expression = Int1 | String1 | Bytes1 | Sequence1 | Prim_Generic;
+export type Micheline$013_PtJakart$MichelsonV1$Expression =
+  | Int1
+  | String1
+  | Bytes1
+  | Sequence1
+  | Prim_Generic;
 export type Sequence1 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type _013_PtJakart$Michelson$V1$Primitives =
   | "ABS"
@@ -379,7 +384,13 @@ export type _013_PtJakart$Operation$Alpha$Contents =
   | ScRollupPublish;
 export type _013_PtJakart$Inlined$EndorsementMempool$Contents = Endorsement1;
 export type _013_PtJakart$Inlined$Preendorsement$Contents = Preendorsement1;
-export type _013_PtJakart$Entrypoint = Default | Root | Do | SetDelegate | RemoveDelegate | Named;
+export type _013_PtJakart$Entrypoint =
+  | Default
+  | Root
+  | Do
+  | SetDelegate
+  | RemoveDelegate
+  | Named;
 export type Default = "default";
 export type Root = "root";
 export type Do = "do";
@@ -429,8 +440,15 @@ export type _013_PtJakart$Operation$Alpha$OperationContentsAndResult =
   | ScRollupAddMessages1
   | ScRollupCement1
   | ScRollupPublish1;
-export type _013_PtJakart$Operation$Alpha$OperationResult$Reveal = Applied | Failed | Skipped | Backtracked;
-export type _013_PtJakart$ApplyResults$Alpha$OperationResult = Transaction1 | Origination2 | Delegation2;
+export type _013_PtJakart$Operation$Alpha$OperationResult$Reveal =
+  | Applied
+  | Failed
+  | Skipped
+  | Backtracked;
+export type _013_PtJakart$ApplyResults$Alpha$OperationResult =
+  | Transaction1
+  | Origination2
+  | Delegation2;
 export type Sequence18 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type _013_PtJakart$Operation$Alpha$OperationResult$Transaction =
   | (ToContract1 | ToTxRollup1)
@@ -439,15 +457,20 @@ export type _013_PtJakart$Operation$Alpha$OperationResult$Transaction =
   | (ToContract2 | ToTxRollup2);
 export type Sequence19 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type Sequence20 = Micheline$013_PtJakart$MichelsonV1$Expression[];
-export type _013_PtJakart$Operation$Alpha$OperationResult$Origination = Applied1 | Failed2 | Skipped2 | Backtracked1;
-export type _013_PtJakart$Operation$Alpha$OperationResult$Delegation = Applied2 | Failed3 | Skipped3 | Backtracked2;
+export type _013_PtJakart$Operation$Alpha$OperationResult$Origination =
+  | Applied1
+  | Failed2
+  | Skipped2
+  | Backtracked1;
+export type _013_PtJakart$Operation$Alpha$OperationResult$Delegation =
+  | Applied2
+  | Failed3
+  | Skipped3
+  | Backtracked2;
 export type Sequence21 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type Sequence22 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type _013_PtJakart$Operation$Alpha$OperationResult$RegisterGlobalConstant =
-  | Applied3
-  | Failed4
-  | Skipped4
-  | Backtracked3;
+  Applied3 | Failed4 | Skipped4 | Backtracked3;
 export type _013_PtJakart$Operation$Alpha$OperationResult$SetDepositsLimit =
   | Applied4
   | Failed5
@@ -464,22 +487,20 @@ export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupSubmitBatch =
   | Skipped7
   | Backtracked6;
 export type None4 = null;
-export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupCommit = Applied7 | Failed8 | Skipped8 | Backtracked7;
+export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupCommit =
+  | Applied7
+  | Failed8
+  | Skipped8
+  | Backtracked7;
 export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupReturnBond =
   | Applied8
   | Failed9
   | Skipped9
   | Backtracked8;
 export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupFinalizeCommitment =
-  | Applied9
-  | Failed10
-  | Skipped10
-  | Backtracked9;
+  Applied9 | Failed10 | Skipped10 | Backtracked9;
 export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupRemoveCommitment =
-  | Applied10
-  | Failed11
-  | Skipped11
-  | Backtracked10;
+  Applied10 | Failed11 | Skipped11 | Backtracked10;
 export type None5 = null;
 export type None6 = null;
 export type ShortBytes1 = string;
@@ -500,10 +521,7 @@ export type _013_PtJakart$Operation$Alpha$OperationResult$TransferTicket =
 export type Sequence25 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type Sequence26 = Micheline$013_PtJakart$MichelsonV1$Expression[];
 export type _013_PtJakart$Operation$Alpha$OperationResult$TxRollupDispatchTickets =
-  | Applied13
-  | Failed14
-  | Skipped14
-  | Backtracked13;
+  Applied13 | Failed14 | Skipped14 | Backtracked13;
 export type _013_PtJakart$Operation$Alpha$OperationResult$ScRollupOriginate =
   | Applied14
   | Failed15
