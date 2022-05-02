@@ -27,6 +27,8 @@ import { Events } from "./events";
 
 import setPath from "./setPath";
 
+export type AutodetectConfig = { enabled: boolean };
+
 type UserPref = {
   key: string;
   default: unknown;
@@ -626,6 +628,19 @@ const UI_SHOW_SYSTEM_INFO: UserPref = {
   validationRule: "boolean",
 };
 
+const AUTODETECT_GROUP: Group = { key: "autodetect", label: "Auto-detect:" };
+
+const AUTODETECT_ENABLED: UserPref = {
+  key: `${AUTODETECT_GROUP.key}:enabled`,
+  default: true,
+  description: "Whether auto-detection of baker and node to monitor is on",
+  alias: undefined,
+  type: "boolean",
+  group: AUTODETECT_GROUP.label,
+  isArray: false,
+  validationRule: "boolean",
+};
+
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
   BAKERS,
@@ -675,6 +690,7 @@ const userPrefs = [
   UI_WEBROOT,
   UI_EXPLORER_URL,
   UI_SHOW_SYSTEM_INFO,
+  AUTODETECT_ENABLED,
 ];
 
 /**
@@ -811,6 +827,7 @@ export type Config = {
   storageDirectory: string;
   notifications: NotificationsConfig;
   ui: UIConfig;
+  autodetect: AutodetectConfig;
   asObject: () => any;
 };
 
@@ -912,6 +929,9 @@ export const load = async (
     },
     get ui() {
       return nconf.get(UI_GROUP.key) as UIConfig;
+    },
+    get autodetect() {
+      return nconf.get(AUTODETECT_GROUP.key) as AutodetectConfig;
     },
     asObject,
   };

@@ -119,43 +119,45 @@ const run = async (config: Config.Config) => {
   const tezosClientBakers = [];
   const tezosClientEndpoints = [];
 
-  for (const dir of tezosClientBaseDir) {
-    if (!dir) continue;
-    const pkhFile = joinPath(dir, "public_key_hashs");
-    try {
-      info(`Reading tezos client pkh list from ${pkhFile}...`);
-      const pkhList = (await readJson(pkhFile)) as TzClientPkhListItem[];
-      for (const { name, value } of pkhList) {
-        if (value) {
-          info(`Found pkh ${name} ${value}`);
-          if (name == "baker") {
-            tezosClientBakers.push(value);
-            break;
-          }
-        }
-      }
-    } catch (err) {
-      info(`Could not read ${pkhFile}`);
-      debug(err);
-    }
-  }
-
-  if (tezosClientBakers.length > 0) {
+  if (config.autodetect.enabled) {
     for (const dir of tezosClientBaseDir) {
       if (!dir) continue;
-      const tzClientConfigFile = joinPath(dir, "config");
+      const pkhFile = joinPath(dir, "public_key_hashs");
       try {
-        info(`Reading tezos client config from ${tzClientConfigFile}...`);
-        const tzClientConfig = (await readJson(
-          tzClientConfigFile
-        )) as TzClientConfig;
-        if (tzClientConfig.endpoint) {
-          info(`Found tezos client endpoint ${tzClientConfig.endpoint}`);
-          tezosClientEndpoints.push(tzClientConfig.endpoint);
+        info(`Reading tezos client pkh list from ${pkhFile}...`);
+        const pkhList = (await readJson(pkhFile)) as TzClientPkhListItem[];
+        for (const { name, value } of pkhList) {
+          if (value) {
+            info(`Found pkh ${name} ${value}`);
+            if (name == "baker") {
+              tezosClientBakers.push(value);
+              break;
+            }
+          }
         }
       } catch (err) {
-        info(`Could not read ${tzClientConfigFile}`);
+        info(`Could not read ${pkhFile}`);
         debug(err);
+      }
+    }
+
+    if (tezosClientBakers.length > 0) {
+      for (const dir of tezosClientBaseDir) {
+        if (!dir) continue;
+        const tzClientConfigFile = joinPath(dir, "config");
+        try {
+          info(`Reading tezos client config from ${tzClientConfigFile}...`);
+          const tzClientConfig = (await readJson(
+            tzClientConfigFile
+          )) as TzClientConfig;
+          if (tzClientConfig.endpoint) {
+            info(`Found tezos client endpoint ${tzClientConfig.endpoint}`);
+            tezosClientEndpoints.push(tzClientConfig.endpoint);
+          }
+        } catch (err) {
+          info(`Could not read ${tzClientConfigFile}`);
+          debug(err);
+        }
       }
     }
   }
