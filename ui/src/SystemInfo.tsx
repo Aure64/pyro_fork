@@ -218,25 +218,29 @@ export default () => {
             <Tbody>
               {data.pyrometer.processes.map((x) => (
                 <Tr key={x.pid}>
-                  <Tooltip
-                    label={`${x.path ? x.path + '/' : ''}${x.command} ${
-                      x.params
-                    }`}
-                  >
-                    <Td>{x.command}</Td>
-                  </Tooltip>
+                  <Td>
+                    {' '}
+                    <Tooltip
+                      label={`${x.path ? x.path + '/' : ''}${x.command} ${
+                        x.params
+                      }`}
+                    >
+                      {x.command}
+                    </Tooltip>
+                  </Td>
+
                   <Td isNumeric>{x.pid}</Td>
                   <Td isNumeric>{numberFormat.format(x.cpu)}</Td>
                   <Td isNumeric>{numberFormat.format(x.mem)}</Td>
                   <Td isNumeric>{formatMemVsz(x.memVsz)}</Td>
                   <Td isNumeric>{formatMemRss(x.memRss)}</Td>
-                  <Tooltip
-                    label={`${timestampFormat.format(new Date(x.started))}`}
-                  >
-                    <Td isNumeric>
+                  <Td isNumeric>
+                    <Tooltip
+                      label={`${timestampFormat.format(new Date(x.started))}`}
+                    >
                       {formatRelativeTime(new Date(x.started).getTime())}
-                    </Td>
-                  </Tooltip>
+                    </Tooltip>
+                  </Td>
                 </Tr>
                 //<ProcessInfo key={x.pid.toString()} {...x} />
               ))}
