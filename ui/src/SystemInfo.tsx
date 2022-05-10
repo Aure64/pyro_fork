@@ -216,34 +216,42 @@ export default () => {
               </Tr>
             </Thead>
             <Tbody>
-              {data.pyrometer.processes.map((x) => (
-                <Tr key={x.pid}>
-                  <Td>
-                    {' '}
-                    <Tooltip
-                      label={`${x.path ? x.path + '/' : ''}${x.command} ${
-                        x.params
-                      }`}
-                    >
-                      {x.command}
-                    </Tooltip>
-                  </Td>
+              {data.pyrometer.processes.map((x) => {
+                const started = new Date(x.started);
+                let fmtStarted = '?';
+                try {
+                  fmtStarted = timestampFormat.format(started);
+                } catch (err) {
+                  console.warn('Failed to format start time', x.started, err);
+                }
 
-                  <Td isNumeric>{x.pid}</Td>
-                  <Td isNumeric>{numberFormat.format(x.cpu)}</Td>
-                  <Td isNumeric>{numberFormat.format(x.mem)}</Td>
-                  <Td isNumeric>{formatMemVsz(x.memVsz)}</Td>
-                  <Td isNumeric>{formatMemRss(x.memRss)}</Td>
-                  <Td isNumeric>
-                    <Tooltip
-                      label={`${timestampFormat.format(new Date(x.started))}`}
-                    >
-                      {formatRelativeTime(new Date(x.started).getTime())}
-                    </Tooltip>
-                  </Td>
-                </Tr>
+                return (
+                  <Tr key={x.pid}>
+                    <Td>
+                      {' '}
+                      <Tooltip
+                        label={`${x.path ? x.path + '/' : ''}${x.command} ${
+                          x.params
+                        }`}
+                      >
+                        {x.command}
+                      </Tooltip>
+                    </Td>
+
+                    <Td isNumeric>{x.pid}</Td>
+                    <Td isNumeric>{numberFormat.format(x.cpu)}</Td>
+                    <Td isNumeric>{numberFormat.format(x.mem)}</Td>
+                    <Td isNumeric>{formatMemVsz(x.memVsz)}</Td>
+                    <Td isNumeric>{formatMemRss(x.memRss)}</Td>
+                    <Td isNumeric>
+                      <Tooltip label={`${fmtStarted}`}>
+                        {formatRelativeTime(started.getTime())}
+                      </Tooltip>
+                    </Td>
+                  </Tr>
+                );
                 //<ProcessInfo key={x.pid.toString()} {...x} />
-              ))}
+              })}
             </Tbody>
           </Table>
         </TableContainer>

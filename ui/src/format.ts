@@ -16,6 +16,9 @@ export const formatRelativeTime = (
   t: number,
   now: number = Date.now(),
 ): string => {
+  if (isNaN(t)) {
+    return '?';
+  }
   const dtMillis = t - now;
   const dtMillisAbs = Math.abs(dtMillis);
   let dt, unit;

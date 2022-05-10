@@ -55,7 +55,13 @@ export const PyrometerInfo = objectType({
           .filter((x) => x.pid === process.pid || x.command.includes("tezos"))
           .map((x) => {
             const started = new Date(x.started);
-            return { ...x, started: started.toISOString() };
+            let startedISO = "";
+            try {
+              startedISO = started.toISOString();
+            } catch (err) {
+              console.error(`Failed to parse timestamp ${x.started}`, err);
+            }
+            return { ...x, started: startedISO };
           })
           .sort(processDisplayCmp);
       },
