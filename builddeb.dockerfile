@@ -1,7 +1,10 @@
 ARG VERSION
 FROM pyrometer:$VERSION as pyrometer
 
-FROM ubuntu
+#22.04 (jammy) produces .deb compressed with Zstd
+#that can't be installed in RaspberryPi Debian
+#and dpkg-buildpackage appears to ignore -Z option
+FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt update -y
 RUN apt install -y dpkg-dev debhelper
