@@ -2,7 +2,7 @@ Source: pyrometer
 Section: net
 Priority: optional
 Maintainer: maintainer@tezos-kiln.org
-Build-Depends: dh-systemd
+Build-Depends: debhelper (>= 9.20160709)
 
 Package: pyrometer
 Architecture: all

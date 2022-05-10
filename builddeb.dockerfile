@@ -4,7 +4,7 @@ FROM pyrometer:$VERSION as pyrometer
 FROM ubuntu
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt update -y
-RUN apt install -y dpkg-dev dh-systemd
+RUN apt install -y dpkg-dev debhelper
 ARG VERSION
 ENV BUILDDIR /build/pyrometer-$VERSION
 ENV APPDIR /opt/pyrometer
