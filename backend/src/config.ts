@@ -33,6 +33,7 @@ type UserPref = {
   key: string;
   default: unknown;
   description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sampleValue?: any;
   type: yargs.PositionalOptionsType | undefined;
   alias: string | string[] | undefined;
@@ -828,6 +829,7 @@ export type Config = {
   notifications: NotificationsConfig;
   ui: UIConfig;
   autodetect: AutodetectConfig;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   asObject: () => any;
 };
 

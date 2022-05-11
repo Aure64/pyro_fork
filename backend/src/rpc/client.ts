@@ -182,7 +182,7 @@ export type RpcClient = {
 
 export default (nodeRpcUrl: URL): RpcClient => {
   const log = getLogger("rpc");
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const delegateCache = new LRU<string, any>({
     max: 5 * 25,
     maxAge: 60e3,

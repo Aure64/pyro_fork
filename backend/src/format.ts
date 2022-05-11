@@ -6,6 +6,7 @@ import { format as dtformat } from "date-fns";
 const isBakerEvent = (e: eventTypes.Event): e is eventTypes.BakerEvent =>
   "baker" in e;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isBlockEvent = (e: any): e is eventTypes.BlockEvent => "level" in e;
 
 const nonBakerEvent = (e: eventTypes.Event) => !isBakerEvent(e);

@@ -68,6 +68,7 @@ export const Participation = objectType({
   },
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bakerCache = new LRU<string, any>({ max: 100 });
 
 const getGracePeriod = async (
@@ -255,6 +256,7 @@ export const BakerQuery = extendType({
             const recentEvents = Object.entries(grouped).map(
               ([levelStr, events]) => {
                 events = orderBy(events, "kind", "desc");
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const firstEvent = first(events)!;
                 return {
                   level: parseInt(levelStr),

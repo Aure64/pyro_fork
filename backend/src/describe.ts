@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { compile } from "json-schema-to-typescript";
 
 import * as FS from "fs";
