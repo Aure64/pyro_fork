@@ -1056,10 +1056,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/nconf@0.10.1":
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/@types/nconf/-/nconf-0.10.1.tgz#f726cb43f786ec46d8362106264e49085035ce06"
-  integrity sha512-5mv1YaLBjoKEHe9uztvKNVCQMBD+IGFfUo0lzHtiyHnEMMU0eMB3ithFDzMHBvIbYvjUvD9tD7rNHLyRz2bO/g==
+"@types/nconf@0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@types/nconf/-/nconf-0.10.2.tgz#e21ada506738c5f999bf83f5e78d53a164325ced"
+  integrity sha512-qy5EPdN8hnlix/q/QYr4ZnICDgaEFh2qivsNYlg4/KlvM7Ye2CqeDo0UXxSoiWplZzyl2PzOxwx4MODaxS+KpA==
 
 "@types/node-notifier@8.0.2":
   version "8.0.2"
@@ -4066,10 +4066,10 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-nconf@0.11.3:
-  version "0.11.3"
-  resolved "https://registry.yarnpkg.com/nconf/-/nconf-0.11.3.tgz#4ee545019c53f1037ca57d696836feede3c49163"
-  integrity sha512-iYsAuDS9pzjVMGIzJrGE0Vk3Eh8r/suJanRAnWGBd29rVS2XtSgzcAo5l6asV3e4hH2idVONHirg1efoBOslBg==
+nconf@0.11.4:
+  version "0.11.4"
+  resolved "https://registry.yarnpkg.com/nconf/-/nconf-0.11.4.tgz#7f925d27569738a2a10c3ba4b56310c8821b308b"
+  integrity sha512-YaDR846q11JnG1vTrhJ0QIlhiGY6+W1bgWtReG9SS3vkTl3AoNwFvUItdhG6/ZjGCfWpUVuRTNEBTDAQ3nWhGw==
   dependencies:
     async "^1.4.0"
     ini "^2.0.0"
