@@ -20,11 +20,14 @@ export type EventLog<T> = {
 export const open = async <T>(
   storageDir: string,
   topic = "eventlog",
-  maxSize = Number.MAX_SAFE_INTEGER
+  maxSize = Number.MAX_SAFE_INTEGER,
+  logName = "eventlog"
 ): Promise<EventLog<T>> => {
   const store = await storage.open([storageDir, topic]);
 
-  const log = getLogger(topic);
+  const log = getLogger(logName);
+
+  const logPrefix = logName === topic ? "" : `<${topic}> `;
 
   const SEQ_KEY = "_sequence";
   let sequence = (await store.get(SEQ_KEY, 0)) as number;
@@ -45,7 +48,7 @@ export const open = async <T>(
 
   const read = async (position: number): Promise<LogEntry<T> | null> => {
     const value = (await store.get(position)) as T;
-    log.debug(`got event at ${position}`, value);
+    log.debug(`${logPrefix}got event at ${position}`, value);
     if (value !== null) {
       return { value, position };
     }
@@ -69,7 +72,7 @@ export const open = async <T>(
     const keys = (await store.keys()).filter((k) => k !== SEQ_KEY);
     // const fileNames = await fs.promises.readdir(eventsDir);
     const toDelete = keys.filter((name) => parseInt(name) <= position);
-    log.debug(`About to delete ${toDelete.length} keys`, toDelete);
+    log.debug(`${logPrefix} about to delete ${toDelete.length} keys`, toDelete);
     await Promise.all(toDelete.map(store.remove));
   };
 
