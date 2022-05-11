@@ -1,7 +1,7 @@
 import { checkForDeactivations } from "./bakerMonitor";
 import { checkHealth } from "./bakerMonitor";
 import { setLevel } from "loglevel";
-import { BakerBlockEvent, BakerEvent } from "./events";
+import { BakerBlockEvent } from "./events";
 
 setLevel("SILENT");
 

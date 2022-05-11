@@ -8,7 +8,7 @@ import { create as HttpSender } from "./senders/http";
 import { create as TelegramSender } from "./senders/telegram";
 import { create as SlackSender } from "./senders/slack";
 import * as EventLog from "./eventlog";
-import { debug, info, warn, error } from "loglevel";
+import { debug, info, error } from "loglevel";
 import * as Config from "./config";
 import { writeJson, ensureExists, readJson } from "./fs-utils";
 import { lock } from "proper-lockfile";

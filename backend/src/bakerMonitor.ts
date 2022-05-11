@@ -3,7 +3,7 @@ import { getLogger } from "loglevel";
 
 import { BakerBlockEvent, Event, BakerEvent } from "./events";
 
-import { tryForever, HttpResponseError, TezosNodeError } from "./rpc/util";
+import { tryForever, HttpResponseError } from "./rpc/util";
 
 import { delay } from "./delay";
 

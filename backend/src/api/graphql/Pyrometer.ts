@@ -2,8 +2,6 @@ import process from "process";
 import si from "systeminformation";
 import { extendType, objectType, list, nonNull } from "nexus";
 
-const started = new Date();
-
 export const CpuUsage = objectType({
   name: "CpuUsage",
   definition(t) {
