@@ -7,9 +7,11 @@ import Chalk from "chalk";
 export type LoggingConfig = {
   level: LogLevelDesc;
   timestamp: boolean;
-};
+} & { [key: string]: { level: LogLevelDesc } };
 
 export const setup = (config: LoggingConfig) => {
+  console.log("Logging config", config);
+
   const colors: Record<string, Chalk.Chalk> = {
     TRACE: Chalk.magenta,
     DEBUG: Chalk.cyan,
@@ -38,6 +40,13 @@ export const setup = (config: LoggingConfig) => {
       }${colorizeLevel(level)} [${name}]`;
     },
   });
+
+  for (const key in config) {
+    const subLoggerConf = config[key];
+    if (subLoggerConf.level) {
+      loglevel.getLogger(key).setLevel(subLoggerConf.level);
+    }
+  }
 
   setLevel(config.level);
 };
