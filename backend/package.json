@@ -74,7 +74,7 @@
     "morgan": "^1.10.0",
     "nconf": "0.11.4",
     "nexus": "^1.1.0",
-    "node-notifier": "10.0.0",
+    "node-notifier": "10.0.1",
     "node-telegram-bot-api": "0.54.0",
     "nodemailer": "6.7.2",
     "proper-lockfile": "^4.1.2",
