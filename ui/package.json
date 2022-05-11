@@ -23,10 +23,10 @@
     "react-icons": "^4.3.1"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^2.2.2",
-    "@graphql-codegen/typescript": "^2.3.1",
-    "@graphql-codegen/typescript-operations": "^2.2.0",
-    "@graphql-codegen/typescript-react-apollo": "^3.2.1",
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/typescript": "^2.4.11",
+    "@graphql-codegen/typescript-operations": "^2.4.0",
+    "@graphql-codegen/typescript-react-apollo": "^3.2.14",
     "@snowpack/plugin-dotenv": "^2.2.0",
     "@snowpack/plugin-react-refresh": "^2.5.0",
     "@snowpack/plugin-typescript": "^1.2.1",
