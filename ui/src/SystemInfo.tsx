@@ -14,18 +14,15 @@ import {
   Table,
   Thead,
   Tbody,
-  Tfoot,
   Tr,
   Th,
   Td,
-  TableCaption,
   TableContainer,
 } from '@chakra-ui/react';
 
 import React from 'react';
 import {
   useGetSystemInfoQuery,
-  ProcessInfo,
   OsData,
   CpuData,
   MemData,
@@ -36,8 +33,6 @@ import SectionHeader from './SectionHeader';
 import { Progress } from '@chakra-ui/react';
 
 import notEmpty from './not-empty';
-
-import { Heading } from '@chakra-ui/react';
 
 import { FaGitlab } from 'react-icons/fa';
 import {
@@ -63,26 +58,6 @@ const LabeledItem: React.FC<{ label: string }> = ({ label, children }) => (
   <Box>
     <Label>{label}:</Label> {children}
   </Box>
-);
-
-const ProcessInfo = ({
-  cpu,
-  mem,
-  memRss,
-  memVsz,
-  started,
-  command,
-}: ProcessInfo) => (
-  <HStack d="flex" wrap="wrap">
-    <LabeledItem label="CPU">{numberFormat.format(cpu)}%</LabeledItem>
-    <LabeledItem label="Mem">{numberFormat.format(mem)}%</LabeledItem>
-    <LabeledItem label="RSS">{formatMemRss(memRss)}</LabeledItem>
-    <LabeledItem label="Virtual">{formatMemVsz(memVsz)}</LabeledItem>
-    <LabeledItem label="Since">
-      {timestampFormat.format(new Date(started))}
-    </LabeledItem>
-    <LabeledItem label="Cmd">{command}</LabeledItem>
-  </HStack>
 );
 
 const OsInfo = ({ distro, hypervizor, release }: OsData) => (
@@ -250,7 +225,6 @@ export default () => {
                     </Td>
                   </Tr>
                 );
-                //<ProcessInfo key={x.pid.toString()} {...x} />
               })}
             </Tbody>
           </Table>
