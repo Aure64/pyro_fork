@@ -209,7 +209,7 @@ export default () => {
                           x.params
                         }`}
                       >
-                        {x.command}
+                        {x.name || x.command}
                       </Tooltip>
                     </Td>
 

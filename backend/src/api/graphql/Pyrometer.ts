@@ -59,7 +59,8 @@ export const PyrometerInfo = objectType({
             } catch (err) {
               console.error(`Failed to parse timestamp ${x.started}`, err);
             }
-            return { ...x, started: startedISO };
+            const name = x.pid === process.pid ? "pyrometer" : x.name;
+            return { ...x, started: startedISO, name };
           })
           .sort(processDisplayCmp);
       },
