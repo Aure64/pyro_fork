@@ -18,13 +18,24 @@ Pyrometer is a tool for monitoring events on
 - Install:
 
 ``` shell
-sudo dpkg -i pyrometer_0.3.0_all.deb
+sudo dpkg -i pyrometer_0.4.0_all.deb
 ```
 
-- Edit config file at `/etc/pyrometer.toml` to specify bakers and
-  nodes to monitor, as well as configure notification channels
+- If Pyrometer is installed on a machine where Tezos baker is [set up
+with tezos-packaging](https://github.com/serokell/tezos-packaging/blob/master/docs/baking.md)
+then status UI will be automatically enabled and available at
+<http://localhost:2020>, configured to monitor local node and baker.
+Otherwise edit config file `/etc/pyrometer.toml`
+to specify bakers and nodes to monitor, for example:
 
-- Restart pyrometer service:
+``` shell
+sudo nano /etc/pyrometer.toml
+```
+
+- If desired, edit config file `/etc/pyrometer.toml` to configure notification
+  channels
+
+- If config file was edited - restart pyrometer service:
 
 ``` shell
 sudo systemctl restart pyrometer
@@ -175,8 +186,14 @@ docker build -t tezos-kiln/Pyrometer .
 
 ### Status UI
 
-Pyrometer provides node and baker status web user interface. To
-enable, add or edit `ui` section in the config file:
+Pyrometer provides node and baker status web user interface. It is
+automatically enabled if local `baker` address alias found in local
+`tezos-client` configuration (as would be the case when Pyrometer is
+running on the same machine as baker [set up with
+tezos-packaging](https://github.com/serokell/tezos-packaging/blob/master/docs/baking.md)),
+otherwise it is disabled by default.
+
+To enable, add or edit `ui` section in the config file:
 
 ```toml
 [ui]
@@ -188,19 +205,26 @@ explorer_url = "https://tzstats.com"
 show_system_info = true
 ```
 
-By default status web page is served on port `2020` at `localhost`.
-
-If running with Docker, be sure to set host to `0.0.0.0` and [publish
+By default status web page is served on port `2020` at `localhost`. Be
+sure to set host to `0.0.0.0` if you wish to access UI from another
+computer or if running with Docker (also don't forget to [publish
 port](https://docs.docker.com/config/containers/container-networking/#published-ports)
-where web UI is served.
+where web UI is served).
 
 [![Pyrometer UI screenshot](doc/pyrometer-0.2.0-ui-thumb.jpg)](doc/pyrometer-0.2.0-ui.png)
 
-Pyrometer UI can be configured to display system resources and
-Pyrometer process information by setting `show_system_info` to
-`true`. This is useful when Pyrometer runs on the same machine as
-Tezos baker as it allows to quickly asses basic system health
-indicators such as available memory and disk space.
+When local baker setup is detected Pyrometer UI also
+displays system resources and process information. This can also be
+explicitely enabled (or disabled) by setting `show_system_info` to
+`true`.
+
+If detecting local baker setup is not desired it can be turned off in
+config:
+
+```toml
+[autodetect]
+enabled = false
+```
 
 ### Teztnets
 
