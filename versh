@@ -21,9 +21,13 @@ WORK_DIR=$ROOT_DIR/__versh
 mkdir -p $WORK_DIR
 NAME=pyrometer
 WORK_DIR_REPO=$WORK_DIR/${NAME}-${VERSION}
-DOCKER_IMAGE=registry.gitlab.com/tezos-kiln/$NAME
-DOCKER_IMAGE_TAG=$DOCKER_IMAGE:$VERSION
-DOCKER_IMAGE_LATEST=$DOCKER_IMAGE:latest
+GITLAB_DOCKER_REGISTRY=registry.gitlab.com
+DOCKER_REPO=tezos-kiln
+DOCKER_REPO_NAME_VER=$DOCKER_REPO/$NAME:$VERSION
+GITLAB_DOCKER_IMAGE=$GITLAB_DOCKER_REGISTRY/$DOCKER_REPO/$NAME
+GITLAB_DOCKER_IMAGE_TAG=$GITLAB_DOCKER_IMAGE:$VERSION
+GITLAB_DOCKER_IMAGE_LATEST=$GITLAB_DOCKER_IMAGE:latest
+LOCAL_DOCKER_REGISTRY=localhost:5000
 
 mk-work-copy() {
     git clone $ROOT_DIR $WORK_DIR_REPO
@@ -51,12 +55,24 @@ checkout-version() {
     (cd $WORK_DIR_REPO && git checkout $VERSION)
 }
 
-build-docker() {
+build-docker-to-registry() {
+    docker buildx create --name pyrometer-multiarch-builder --driver-opt network=host || :
+    docker buildx use pyrometer-multiarch-builder
+    docker buildx inspect --bootstrap
     checkout-version && \
         (: \
              && cd $WORK_DIR_REPO \
-             && docker build -t $NAME:$VERSION . \
-             && docker tag $NAME:$VERSION $DOCKER_IMAGE_TAG)
+             && docker buildx build \
+                       --platform linux/amd64,linux/arm64 \
+                       -t $1/$DOCKER_REPO_NAME_VER --push .)
+
+}
+
+
+build-docker() {
+    build-docker-to-registry $LOCAL_DOCKER_REGISTRY \
+        && docker pull $LOCAL_DOCKER_REGISTRY/$DOCKER_REPO_NAME_VER \
+        && docker tag $LOCAL_DOCKER_REGISTRY/$DOCKER_REPO_NAME_VER $NAME:$VERSION
 }
 
 build() {
@@ -84,7 +100,8 @@ publish-version() {
 }
 
 publish-docker-image() {
-    docker push $DOCKER_IMAGE_TAG
+    #docker push $GITLAB_DOCKER_IMAGE_TAG
+    build-docker-to-registry $GITLAB_DOCKER_REGISTRY
 }
 
 publish-deb() {
@@ -108,12 +125,15 @@ publish() {
 }
 
 release() {
-    docker tag $DOCKER_IMAGE_TAG $DOCKER_IMAGE_LATEST
-    docker push $DOCKER_IMAGE_LATEST
+    docker buildx imagetools create $GITLAB_DOCKER_IMAGE_TAG --tag $GITLAB_DOCKER_IMAGE_LATEST
     NPM_NAME=$(cd $ROOT_DIR/backend && npm run --silent name)
     (cd $ROOT_DIR/backend \
          && npm dist-tag add $NPM_NAME@$VERSION latest \
          && npm dist-tag remove $NPM_NAME@$VERSION dev)}
+
+start-local-registry() {
+    docker run -d -p 5000:5000 --restart=always --name registry registry:2
+}
 
 main() {
     if [ -z "$CMD" ]
@@ -136,6 +156,11 @@ main() {
     fi
 
     case $CMD in
+
+        start-local-registry)
+            echo "Starting local Docker registry"
+            start-local-registry
+            ;;
 
         create)
             echo "Creating version $VERSION"
