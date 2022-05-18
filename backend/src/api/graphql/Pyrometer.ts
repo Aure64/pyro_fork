@@ -22,8 +22,8 @@ export const ProcessData = objectType({
     t.nonNull.string("command");
     t.nonNull.string("name");
     t.nonNull.string("user");
-    t.nonNull.string("params");
-    t.nonNull.string("path");
+    t.string("params");
+    t.string("path");
   },
 });
 

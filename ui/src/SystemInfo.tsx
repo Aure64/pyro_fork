@@ -206,7 +206,7 @@ export default () => {
                       {' '}
                       <Tooltip
                         label={`${x.path ? x.path + '/' : ''}${x.command} ${
-                          x.params
+                          x.params || ''
                         }`}
                       >
                         {x.name || x.command}
