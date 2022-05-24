@@ -32,7 +32,7 @@ WORKDIR $APP_DIR
 COPY --from=builder /usr/src/app/node_modules node_modules
 COPY --from=backend-build /usr/src/app/dist dist
 COPY --from=backend-build /usr/src/app/package.json .
-COPY --from=ui-build /usr/src/app/build ui
+COPY --from=ui-build /usr/src/app/dist ui
 
 RUN printf \
     "%s\n" "#!/usr/bin/env node" \
