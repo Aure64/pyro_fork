@@ -28,6 +28,7 @@ import now from "./now";
 import protocolH from "./bm-proto-h";
 import protocolI from "./bm-proto-i";
 import protocolJ from "./bm-proto-j";
+import protocolK from "./bm-proto-k";
 
 const name = "bm";
 
@@ -241,6 +242,15 @@ export const create = async (
               rpc: rpc,
             });
             break;
+
+          case "PtKathmankSpLLDALzWw7CGD2j2MtyveTwboEYokqUCP4a1LxMg":
+            events = await protocolK({
+              bakers,
+              block,
+              rpc: rpc,
+            });
+            break;
+
           default:
             console.warn(`Unknown protocol at level ${blockLevel}`);
             events = [];

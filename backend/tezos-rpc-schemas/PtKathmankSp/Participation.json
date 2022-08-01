@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "expected_cycle_activity": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    },
+    "minimal_cycle_activity": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    },
+    "missed_slots": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    },
+    "missed_levels": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    },
+    "remaining_allowed_missed_slots": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    },
+    "expected_endorsing_rewards": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    }
+  },
+  "required": [
+    "expected_endorsing_rewards",
+    "remaining_allowed_missed_slots",
+    "missed_levels",
+    "missed_slots",
+    "minimal_cycle_activity",
+    "expected_cycle_activity"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "_014_PtKathma$mutez": {
+      "$ref": "#/definitions/positive_bignum"
+    },
+    "positive_bignum": {
+      "title": "Positive big number",
+      "description": "Decimal representation of a positive big number",
+      "type": "string"
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}

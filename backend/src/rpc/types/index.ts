@@ -7,22 +7,28 @@ export { Participation } from "./gen/Psithaca2MLR/Participation";
 import { ShellHeader as BlockHeaderH } from "./gen/PtHangz2aRng/BlockHeader";
 import { ShellHeader as BlockHeaderI } from "./gen/Psithaca2MLR/BlockHeader";
 import { ShellHeader as BlockHeaderJ } from "./gen/PtJakart2xVj/BlockHeader";
+import { ShellHeader as BlockHeaderK } from "./gen/PtKathmankSp/BlockHeader";
 import { EndorsingRights as EndorsingRightsH } from "./gen/PtHangz2aRng/EndorsingRights";
 import { EndorsingRights as EndorsingRightsI } from "./gen/Psithaca2MLR/EndorsingRights";
 import { EndorsingRights as EndorsingRightsJ } from "./gen/PtJakart2xVj/EndorsingRights";
+import { EndorsingRights as EndorsingRightsK } from "./gen/PtKathmankSp/EndorsingRights";
 import { Constants as ConstantsH } from "./gen/PtHangz2aRng/Constants";
 import { Constants as ConstantsI } from "./gen/Psithaca2MLR/Constants";
 import { Constants as ConstantsJ } from "./gen/PtJakart2xVj/Constants";
+import { Constants as ConstantsK } from "./gen/PtKathmankSp/Constants";
 import { BakingRights as BakingRightsH } from "./gen/PtHangz2aRng/BakingRights";
 import { BakingRights as BakingRightsI } from "./gen/Psithaca2MLR/BakingRights";
 import { BakingRights as BakingRightsJ } from "./gen/PtJakart2xVj/BakingRights";
+import { BakingRights as BakingRightsK } from "./gen/PtKathmankSp/BakingRights";
 import { Block as BlockH } from "./gen/PtHangz2aRng/Block";
 import { Block as BlockI } from "./gen/Psithaca2MLR/Block";
 import { Block as BlockJ } from "./gen/PtJakart2xVj/Block";
+import { Block as BlockK } from "./gen/PtKathmankSp/Block";
 
 import { Operation as OperationH } from "./gen/PtHangz2aRng/Block";
 import { Operation as OperationI } from "./gen/Psithaca2MLR/Block";
 import { Operation as OperationJ } from "./gen/PtJakart2xVj/Block";
+import { Operation as OperationK } from "./gen/PtKathmankSp/Block";
 
 import {
   DoubleBakingEvidence1 as DoubleBakingEvidenceH,
@@ -42,44 +48,73 @@ import {
   Endorsement1 as EndorsementWithSlotJ,
 } from "./gen/PtJakart2xVj/Block";
 
-export { BlockH, BlockI, BlockJ };
-export type Block = BlockH | BlockI | BlockJ;
+import {
+  DoubleBakingEvidence1 as DoubleBakingEvidenceK,
+  DoubleEndorsementEvidence1 as DoubleEndorsementEvidenceK,
+  Endorsement1 as EndorsementWithSlotK,
+} from "./gen/PtKathmankSp/Block";
 
-export { BlockHeaderH, BlockHeaderI, BlockHeaderJ };
-export type BlockHeader = BlockHeaderH | BlockHeaderI | BlockHeaderJ;
+export { BlockH, BlockI, BlockJ, BlockK };
+export type Block = BlockH | BlockI | BlockJ | BlockK;
+
+export { BlockHeaderH, BlockHeaderI, BlockHeaderJ, BlockHeaderK };
+export type BlockHeader =
+  | BlockHeaderH
+  | BlockHeaderI
+  | BlockHeaderJ
+  | BlockHeaderK;
 
 export type EndorsingRightH = EndorsingRightsH[number];
 export type EndorsingRightI = EndorsingRightsI[number];
 export type EndorsingRightJ = EndorsingRightsJ[number];
-export type { EndorsingRightsH, EndorsingRightsI, EndorsingRightsJ };
+export type EndorsingRightK = EndorsingRightsK[number];
+export type {
+  EndorsingRightsH,
+  EndorsingRightsI,
+  EndorsingRightsJ,
+  EndorsingRightsK,
+};
 export type EndorsingRight =
   | EndorsingRightH
   | EndorsingRightI
-  | EndorsingRightJ;
+  | EndorsingRightJ
+  | EndorsingRightK;
 export type EndorsingRights =
   | EndorsingRightsH
   | EndorsingRightsI
-  | EndorsingRightsJ;
+  | EndorsingRightsJ
+  | EndorsingRightsK;
 
 export type BakingRightH = BakingRightsH[number];
 export type BakingRightI = BakingRightsI[number];
 export type BakingRightJ = BakingRightsI[number];
-export type { BakingRightsH, BakingRightsI, BakingRightsJ };
-export type BakingRights = BakingRightsH | BakingRightsI | BakingRightsJ;
-export type BakingRight = BakingRightH | BakingRightI | BakingRightJ;
-export type Constants = ConstantsH | ConstantsI | ConstantsJ;
+export type BakingRightK = BakingRightsK[number];
+export type { BakingRightsH, BakingRightsI, BakingRightsJ, BakingRightsK };
+export type BakingRights =
+  | BakingRightsH
+  | BakingRightsI
+  | BakingRightsJ
+  | BakingRightsK;
+export type BakingRight =
+  | BakingRightH
+  | BakingRightI
+  | BakingRightJ
+  | BakingRightK;
+export type Constants = ConstantsH | ConstantsI | ConstantsJ | ConstantsK;
 
-export type { OperationH, OperationI, OperationJ };
-export type OperationEntry = OperationH | OperationI | OperationJ;
+export type { OperationH, OperationI, OperationJ, OperationK };
+export type OperationEntry = OperationH | OperationI | OperationJ | OperationK;
 
 export type DoubleBakingEvidence =
   | DoubleBakingEvidenceH
   | DoubleBakingEvidenceI
-  | DoubleBakingEvidenceJ;
+  | DoubleBakingEvidenceJ
+  | DoubleBakingEvidenceK;
 
 export type { DoubleBakingEvidenceH };
 export type { DoubleBakingEvidenceI };
 export type { DoubleBakingEvidenceJ };
+export type { DoubleBakingEvidenceK };
 
 export type DoubleEndorsementEvidence =
   | DoubleEndorsementEvidenceH
@@ -90,13 +125,20 @@ export {
   DoubleEndorsementEvidenceH,
   DoubleEndorsementEvidenceI,
   DoubleEndorsementEvidenceJ,
+  DoubleEndorsementEvidenceK,
 };
 
 export type EndorsementWithSlot =
   | EndorsementWithSlotH
   | EndorsementWithSlotI
-  | EndorsementWithSlotJ;
-export { EndorsementWithSlotH, EndorsementWithSlotI, EndorsementWithSlotJ };
+  | EndorsementWithSlotJ
+  | EndorsementWithSlotK;
+export {
+  EndorsementWithSlotH,
+  EndorsementWithSlotI,
+  EndorsementWithSlotJ,
+  EndorsementWithSlotK,
+};
 
 export enum OpKind {
   ORIGINATION = "origination",
