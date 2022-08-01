@@ -24,7 +24,7 @@
     "tsc:lint": "tsc --noEmit -p .",
     "generate:gql": "NODE_ENV=development ts-node --transpile-only src/api/schema.ts",
     "generate:rpc": "ts-node ./src/describe.ts",
-    "prepublishOnly": "yarn build && (cd ../ui && yarn build) && cp -a ../ui/build/. ./ui"
+    "prepublishOnly": "yarn build && (cd ../ui && yarn build) && cp -a ../ui/dist/. ./ui"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
