@@ -184,7 +184,7 @@ export default ({
 
         <Button
           onClick={last}
-          disabled={loading || currentPage >= pageCount - 1}
+          disabled={loading || currentPage > pageCount - 1}
           leftIcon={<IconLast />}
         />
       </ButtonGroup>
