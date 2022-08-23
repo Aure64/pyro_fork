@@ -31,7 +31,8 @@ export const create = (config: WebhookConfig): Sender => {
     const url = config.url;
     const method = "POST";
     const body = JSON.stringify(events);
-    const result = await fetch(url, { body, method });
+    const headers = { "Content-Type": "application/json" };
+    const result = await fetch(url, { body, method, headers });
     if (!result.ok) {
       log.error(result);
       throw new Error(result.statusText);
