@@ -29,6 +29,8 @@ import setPath from "./setPath";
 
 export type AutodetectConfig = { enabled: boolean };
 
+const APP_NAME = "pyrometer";
+
 type UserPref = {
   key: string;
   default: unknown;
@@ -136,7 +138,7 @@ const LOG_TIMESTAMP: UserPref = {
 const DATA_DIR: UserPref = {
   key: "data_dir",
   default:
-    process.env.STATE_DIRECTORY || envPaths("pyrometer", { suffix: "" }).data,
+    process.env.STATE_DIRECTORY || envPaths(APP_NAME, { suffix: "" }).data,
   description: "Data directory",
   alias: ["d", "data-dir"],
   type: "string",
@@ -402,7 +404,7 @@ const EMAIL_TO: UserPref = {
 const EMAIL_FROM: UserPref = {
   key: `${EMAIL_KEY}:from`,
   default: undefined,
-  sampleValue: "Pyrometer <me@example.org>",
+  sampleValue: `${APP_NAME} <me@example.org>`,
   description:
     "Email's 'Form:' address, by default same as the first 'To:' address",
   alias: undefined,
@@ -509,11 +511,11 @@ const WEBHOOK_URL: UserPref = {
 
 const configDirectory =
   process.env.CONFIGURATION_DIRECTORY ||
-  envPaths("pyrometer", { suffix: "" }).config;
+  envPaths(APP_NAME, { suffix: "" }).config;
 
 const CONFIG_FILE: UserPref = {
   key: "config",
-  default: Path.join(configDirectory, "pyrometer.toml"),
+  default: Path.join(configDirectory, `${APP_NAME}.toml`),
   description: "Path to configuration file.",
   alias: "c",
   type: "string",
