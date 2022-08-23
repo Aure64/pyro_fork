@@ -7,6 +7,7 @@ import { Event, Sender } from "../events";
 export type WebhookConfig = {
   enabled: boolean;
   url: string;
+  user_agent: string;
 };
 
 export const startDummyHttpServer = (port = 8005): Server => {
@@ -31,7 +32,10 @@ export const create = (config: WebhookConfig): Sender => {
     const url = config.url;
     const method = "POST";
     const body = JSON.stringify(events);
-    const headers = { "Content-Type": "application/json" };
+    const headers = {
+      "Content-Type": "application/json",
+      "User-Agent": config.user_agent,
+    };
     const result = await fetch(url, { body, method, headers });
     if (!result.ok) {
       log.error(result);

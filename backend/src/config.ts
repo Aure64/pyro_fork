@@ -509,6 +509,17 @@ const WEBHOOK_URL: UserPref = {
   validationRule: ["link", { required_if: [`${WEBHOOK_KEY}.enabled`, true] }],
 };
 
+const WEBHOOK_USER_AGENT: UserPref = {
+  key: `${WEBHOOK_KEY}:user_agent`,
+  default: `${APP_NAME}/${process.env.npm_package_version}`,
+  description: "User agent string to set when for posting to webhook",
+  alias: undefined,
+  type: "string",
+  group: WEBHOOK_GROUP,
+  isArray: false,
+  validationRule: "string",
+};
+
 const configDirectory =
   process.env.CONFIGURATION_DIRECTORY ||
   envPaths(APP_NAME, { suffix: "" }).config;
@@ -683,6 +694,7 @@ const userPrefs = [
   DESKTOP_SHORT_ADDRESS,
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
+  WEBHOOK_USER_AGENT,
   CONFIG_FILE,
   NOTIFICATIONS_INTERVAL,
   NOTIFICATIONS_MAX_BATCH_SIZE,
