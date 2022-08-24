@@ -18,6 +18,7 @@ export const startDummyHttpServer = (port = 8005): Server => {
       data += chunk;
     });
     req.on("end", () => {
+      log.info(req.headers);
       log.info(JSON.parse(data));
       res.end();
     });
