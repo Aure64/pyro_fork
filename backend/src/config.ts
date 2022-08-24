@@ -520,6 +520,18 @@ const WEBHOOK_USER_AGENT: UserPref = {
   validationRule: "string",
 };
 
+const WEBHOOK_TEST_ENDPOINT_PORT: UserPref = {
+  key: `${WEBHOOK_KEY}:test_endpoint_port`,
+  default: 0,
+  description:
+    "Start web server on specified port to test webhook notifications",
+  alias: undefined,
+  type: "string",
+  group: WEBHOOK_GROUP,
+  isArray: false,
+  validationRule: ["numeric", "min:0"],
+};
+
 const configDirectory =
   process.env.CONFIGURATION_DIRECTORY ||
   envPaths(APP_NAME, { suffix: "" }).config;
@@ -695,6 +707,7 @@ const userPrefs = [
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
   WEBHOOK_USER_AGENT,
+  WEBHOOK_TEST_ENDPOINT_PORT,
   CONFIG_FILE,
   NOTIFICATIONS_INTERVAL,
   NOTIFICATIONS_MAX_BATCH_SIZE,

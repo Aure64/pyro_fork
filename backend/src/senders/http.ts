@@ -8,10 +8,11 @@ export type WebhookConfig = {
   enabled: boolean;
   url: string;
   user_agent: string;
+  test_endpoint_port: number | undefined;
 };
 
-export const startDummyHttpServer = (port = 8005): Server => {
-  const log = getLogger("dummy-http-server");
+export const startTestEndpoint = (port: number): Server => {
+  const log = getLogger("webhook-test");
   const server = createServer((req, res) => {
     let data = "";
     req.on("data", (chunk) => {
@@ -27,7 +28,9 @@ export const startDummyHttpServer = (port = 8005): Server => {
 };
 
 export const create = (config: WebhookConfig): Sender => {
-  startDummyHttpServer();
+  if (config.test_endpoint_port) {
+    startTestEndpoint(config.test_endpoint_port);
+  }
   const log = getLogger("http-sender");
   return async (events: Event[]) => {
     const url = config.url;
