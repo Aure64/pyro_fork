@@ -198,15 +198,21 @@ export const create = async (
 
         const { metadata } = block;
 
-        if (metadata === undefined)
-          throw new Error(
-            `Block ${block.hash} at level ${currentLevel} has no metadata`
+        if (metadata === undefined) {
+          log.info(
+            `Block ${block.hash} at level ${currentLevel} has no metadata, skipping`
           );
+          currentLevel++;
+          continue;
+        }
 
-        if (metadata.level_info === undefined)
-          throw new Error(
-            `Metadata for block ${block.hash} at level ${currentLevel} has no level info`
+        if (metadata.level_info === undefined) {
+          log.info(
+            `Metadata for block ${block.hash} at level ${currentLevel} has no level info, skipping`
           );
+          currentLevel++;
+          continue;
+        }
 
         const blockLevel = metadata.level_info.level;
         const blockCycle = metadata.level_info.cycle;
