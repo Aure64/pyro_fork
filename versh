@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 CMD=$1
-VERSION=$2
+VERSION="${2:-$VERSION}"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 echo "Current branch: $CURRENT_BRANCH"
