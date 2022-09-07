@@ -70,9 +70,7 @@ build-docker-to-registry() {
 
 
 build-docker() {
-    build-docker-to-registry $LOCAL_DOCKER_REGISTRY \
-        && docker pull $LOCAL_DOCKER_REGISTRY/$DOCKER_REPO_NAME_VER \
-        && docker tag $LOCAL_DOCKER_REGISTRY/$DOCKER_REPO_NAME_VER $NAME:$VERSION
+    build-docker-to-registry $LOCAL_DOCKER_REGISTRY
 }
 
 build() {
