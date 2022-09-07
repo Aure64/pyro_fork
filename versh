@@ -30,7 +30,7 @@ GITLAB_DOCKER_IMAGE_LATEST=$GITLAB_DOCKER_IMAGE:latest
 LOCAL_DOCKER_REGISTRY=localhost:5000
 
 mk-work-copy() {
-    git clone $ROOT_DIR $WORK_DIR_REPO
+    git clone -c advice.detachedHead=false $ROOT_DIR $WORK_DIR_REPO
 }
 
 create() {
