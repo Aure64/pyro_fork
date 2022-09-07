@@ -21,6 +21,7 @@ WORK_DIR=$ROOT_DIR/__versh
 mkdir -p $WORK_DIR
 NAME=pyrometer
 WORK_DIR_REPO=$WORK_DIR/${NAME}-${VERSION}
+BUILDREPO=${NAME}-${VERSION}-buildsrc
 GITLAB_DOCKER_REGISTRY=registry.gitlab.com
 DOCKER_REPO=tezos-kiln
 DOCKER_REPO_NAME_VER=$DOCKER_REPO/$NAME:$VERSION
@@ -51,39 +52,60 @@ create() {
     )
 }
 
-checkout-version() {
+checkout() {
+    mk-work-copy
     (cd $WORK_DIR_REPO && git checkout $VERSION)
 }
+
+do-in-build-repo() {
+    (: \
+         && cd $WORK_DIR \
+         && git clone -c advice.detachedHead=false \
+                --branch $VERSION $WORK_DIR_REPO $BUILDREPO \
+         && cd ./$BUILDREPO \
+         && echo "About to run in $PWD: $@" \
+         && "$@" \
+         && echo "Cleaning up $PWD" \
+         && cd $WORK_DIR \
+         && rm -rf ./$BUILDREPO
+    )
+}
+
+PLATFORM="linux/amd64,linux/arm64"
 
 build-docker-to-registry() {
     docker buildx create --name pyrometer-multiarch-builder --driver-opt network=host || :
     docker buildx use pyrometer-multiarch-builder
     docker buildx inspect --bootstrap
-    checkout-version && \
-        (: \
-             && cd $WORK_DIR_REPO \
-             && docker buildx build \
-                       --platform linux/amd64,linux/arm64 \
-                       -t $1/$DOCKER_REPO_NAME_VER --push .)
-
+    do-in-build-repo -build-docker-to-registry $1
 }
 
+-build-docker-to-registry() {
+    docker buildx build \
+           --platform $PLATFORM \
+           -t $1/$DOCKER_REPO_NAME_VER --push .
+}
 
 build-docker() {
     build-docker-to-registry $LOCAL_DOCKER_REGISTRY
 }
 
-build() {
-    build-deb-in-docker
+build-deb() {
+    do-in-build-repo -build-deb-in-docker
 }
 
-build-deb-in-docker() {
+-build-deb-in-docker() {
     (: \
-         && build-docker \
-         && cd $WORK_DIR_REPO \
+         && docker build -t $NAME:$VERSION . \
          && docker build --build-arg VERSION=$VERSION -t $NAME-builddeb:$VERSION -f builddeb.dockerfile . \
          && docker run --rm -it -v $WORK_DIR:/out $NAME-builddeb:$VERSION /bin/bash -c "cp /build/*.deb /out" \
-         && ls -lhs $WORK_DIR/*.deb)
+         && ls -lhs $WORK_DIR/*.deb
+    )
+}
+
+build() {
+    build-docker
+    buil-deb
 }
 
 publish-version() {
@@ -107,11 +129,14 @@ publish-deb() {
     glab api projects/:id/packages/generic/pyrometer/$VERSION/$debfile -X PUT --input $WORK_DIR/$debfile
 }
 
-publish-npm() {
+-publish-npm() {
     (: \
-         && checkout-version \
-         && cd $WORK_DIR_REPO/backend \
+         && cd ./backend \
          && npm publish --tag=dev)
+}
+
+publish-npm() {
+    do-in-build-repo -publish-npm
 }
 
 publish() {
@@ -163,6 +188,21 @@ main() {
         create)
             echo "Creating version $VERSION"
             create
+            ;;
+
+        checkout)
+            echo "Checkout version $VERSION"
+            checkout
+            ;;
+
+        build-docker)
+            echo "Build docker images for $VERSION"
+            build-docker
+            ;;
+
+       build-deb)
+            echo "Build .deb for $VERSION"
+            build-deb
             ;;
 
         build)
