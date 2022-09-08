@@ -5,7 +5,7 @@ import LRU from "lru-cache";
 import { makeMemoizedAsyncFunction } from "../memoization";
 
 import { get as rpcFetch } from "./util";
-import { retry404 } from "./util";
+import { retry404 as _retry404 } from "./util";
 import { HttpResponseError } from "./util";
 
 import { NetworkConnection } from "./types";
@@ -57,86 +57,6 @@ export const getBootstrappedStatus = async (
   return await rpcFetch(`${node}/${E_IS_BOOTSTRAPPED}`);
 };
 
-const getEndorsingRights = async (
-  node: string,
-  block: string,
-  level: number
-): Promise<EndorsingRights> => {
-  const params = { level: level.toString() };
-  return retry404(() =>
-    rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`)
-  );
-};
-
-const getBakingRights = async (
-  node: string,
-  block: string,
-  level: number,
-  max_priority?: number,
-  delegate?: string
-): Promise<BakingRights> => {
-  const params: Record<string, string> = { level: level.toString() };
-  if (level !== undefined) {
-    params.level = level.toString();
-  }
-  if (max_priority !== undefined) {
-    params.max_priority = max_priority.toString();
-    params.max_round = params.max_priority; //renamed in Ithaca
-  }
-  if (delegate !== undefined) {
-    params.delegate = delegate;
-  }
-  return retry404(() => rpcFetch(`${node}/${E_BAKING_RIGHTS(block, params)}`));
-};
-
-const getConstants = async (node: string): Promise<Constants> => {
-  return await rpcFetch(`${node}/${E_CONSTANTS("head")}`);
-};
-
-const getChainId = async (node: string): Promise<string> => {
-  return await rpcFetch(`${node}/${E_CHAIN_ID}`);
-};
-
-const getBlock = async (node: string, block: string): Promise<Block> => {
-  return retry404(() => rpcFetch(`${node}/${E_BLOCK(block)}`));
-};
-
-const getBlockHash = async (node: string, block: string): Promise<string> => {
-  return retry404(() => rpcFetch(`${node}/${E_BLOCK_HASH(block)}`));
-};
-
-const _getBlockHeader = async (
-  node: string,
-  block: string
-): Promise<BlockHeader> => {
-  return retry404(() => rpcFetch(`${node}/${E_BLOCK_HEADER(block)}`));
-};
-
-const getBlockHeader = makeMemoizedAsyncFunction(
-  (nodeRpcUrl: string, block: string) => {
-    return _getBlockHeader(nodeRpcUrl, block);
-  },
-  (_nodeRpcUrl: string, block: string) =>
-    block.toLowerCase().startsWith("head") ? null : block,
-  10
-);
-
-const getDelegate = async (
-  node: string,
-  pkh: string,
-  block: string
-): Promise<Delegate> => {
-  return await rpcFetch(`${node}/${E_DELEGATES_PKH(block, pkh)}`);
-};
-
-const getParticipation = async (
-  node: string,
-  pkh: string,
-  block: string
-): Promise<Participation> => {
-  return await rpcFetch(`${node}/${E_DELEGATE_PARTICIPATION(block, pkh)}`);
-};
-
 const F_FROZEN_DEPOSITS = "frozen_deposits";
 const F_FROZEN_BALANCE = "frozen_balance";
 
@@ -180,7 +100,104 @@ export type RpcClient = {
   ) => Promise<[BakingRights, EndorsingRights]>;
 };
 
-export default (nodeRpcUrl: URL): RpcClient => {
+export type RpcClientConfig = {
+  retry_interval_ms: number;
+  retry_attempts: number;
+};
+
+export default (
+  nodeRpcUrl: URL,
+  {
+    retry_interval_ms: retryIntervalMs,
+    retry_attempts: retryAttempts,
+  }: RpcClientConfig
+): RpcClient => {
+  const retry404 = <T>(apiCall: () => Promise<T>) => {
+    return _retry404(apiCall, retryIntervalMs, retryAttempts);
+  };
+
+  const getEndorsingRights = async (
+    node: string,
+    block: string,
+    level: number
+  ): Promise<EndorsingRights> => {
+    const params = { level: level.toString() };
+    return retry404(() =>
+      rpcFetch(`${node}/${E_ENDORSING_RIGHTS(block, params)}`)
+    );
+  };
+
+  const getBakingRights = async (
+    node: string,
+    block: string,
+    level: number,
+    max_priority?: number,
+    delegate?: string
+  ): Promise<BakingRights> => {
+    const params: Record<string, string> = { level: level.toString() };
+    if (level !== undefined) {
+      params.level = level.toString();
+    }
+    if (max_priority !== undefined) {
+      params.max_priority = max_priority.toString();
+      params.max_round = params.max_priority; //renamed in Ithaca
+    }
+    if (delegate !== undefined) {
+      params.delegate = delegate;
+    }
+    return retry404(() =>
+      rpcFetch(`${node}/${E_BAKING_RIGHTS(block, params)}`)
+    );
+  };
+
+  const getConstants = async (node: string): Promise<Constants> => {
+    return await rpcFetch(`${node}/${E_CONSTANTS("head")}`);
+  };
+
+  const getChainId = async (node: string): Promise<string> => {
+    return await rpcFetch(`${node}/${E_CHAIN_ID}`);
+  };
+
+  const getBlock = async (node: string, block: string): Promise<Block> => {
+    return retry404(() => rpcFetch(`${node}/${E_BLOCK(block)}`));
+  };
+
+  const getBlockHash = async (node: string, block: string): Promise<string> => {
+    return retry404(() => rpcFetch(`${node}/${E_BLOCK_HASH(block)}`));
+  };
+
+  const _getBlockHeader = async (
+    node: string,
+    block: string
+  ): Promise<BlockHeader> => {
+    return retry404(() => rpcFetch(`${node}/${E_BLOCK_HEADER(block)}`));
+  };
+
+  const getBlockHeader = makeMemoizedAsyncFunction(
+    (nodeRpcUrl: string, block: string) => {
+      return _getBlockHeader(nodeRpcUrl, block);
+    },
+    (_nodeRpcUrl: string, block: string) =>
+      block.toLowerCase().startsWith("head") ? null : block,
+    10
+  );
+
+  const getDelegate = async (
+    node: string,
+    pkh: string,
+    block: string
+  ): Promise<Delegate> => {
+    return await rpcFetch(`${node}/${E_DELEGATES_PKH(block, pkh)}`);
+  };
+
+  const getParticipation = async (
+    node: string,
+    pkh: string,
+    block: string
+  ): Promise<Participation> => {
+    return await rpcFetch(`${node}/${E_DELEGATE_PARTICIPATION(block, pkh)}`);
+  };
+
   const log = getLogger("rpc");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const delegateCache = new LRU<string, any>({

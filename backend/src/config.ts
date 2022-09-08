@@ -19,6 +19,7 @@ import { BakerMonitorConfig } from "./bakerMonitor";
 import { NodeMonitorConfig } from "./nodeMonitor";
 import { LoggingConfig } from "./logging";
 import { UIConfig } from "./api/server";
+import { RpcClientConfig } from "./rpc/client";
 import FS from "fs";
 import Path from "path";
 import yargs from "yargs";
@@ -667,6 +668,30 @@ const AUTODETECT_ENABLED: UserPref = {
   validationRule: "boolean",
 };
 
+const RPC_GROUP: Group = { key: "rpc", label: "RPC:" };
+
+const RPC_RETRY_INTERVAL_MS: UserPref = {
+  key: `${RPC_GROUP.key}:retry_interval_ms`,
+  default: 1000,
+  description: "RPC retry interval",
+  alias: undefined,
+  type: "number",
+  group: RPC_GROUP.label,
+  isArray: false,
+  validationRule: ["numeric", "min:100"],
+};
+
+const RPC_RETRY_ATTEMPTS: UserPref = {
+  key: `${RPC_GROUP.key}:retry_attempts`,
+  default: 3,
+  description: "Maximum number of RPC retries",
+  alias: undefined,
+  type: "number",
+  group: RPC_GROUP.label,
+  isArray: false,
+  validationRule: ["numeric", "min:1"],
+};
+
 // list of all prefs that should be iterated to build yargs options and nconf defaults
 const userPrefs = [
   BAKERS,
@@ -719,6 +744,8 @@ const userPrefs = [
   UI_EXPLORER_URL,
   UI_SHOW_SYSTEM_INFO,
   AUTODETECT_ENABLED,
+  RPC_RETRY_ATTEMPTS,
+  RPC_RETRY_INTERVAL_MS,
 ];
 
 /**
@@ -856,6 +883,7 @@ export type Config = {
   notifications: NotificationsConfig;
   ui: UIConfig;
   autodetect: AutodetectConfig;
+  rpc: RpcClientConfig;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   asObject: () => any;
 };
@@ -961,6 +989,9 @@ export const load = async (
     },
     get autodetect() {
       return nconf.get(AUTODETECT_GROUP.key) as AutodetectConfig;
+    },
+    get rpc() {
+      return nconf.get(RPC_GROUP.key) as RpcClientConfig;
     },
     asObject,
   };

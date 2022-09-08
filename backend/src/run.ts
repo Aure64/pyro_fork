@@ -202,6 +202,7 @@ const run = async (config: Config.Config) => {
       ? await BakerMonitor.create(
           storageDir,
           bakerMonitorConfig,
+          config.rpc,
           uiConfig.enabled,
           onEvent
         )
@@ -209,7 +210,11 @@ const run = async (config: Config.Config) => {
 
   const nodeMonitor =
     nodes.length > 0 || teztnets
-      ? await NodeMonitor.create(onEvent, { ...nodeMonitorConfig, nodes })
+      ? await NodeMonitor.create(
+          onEvent,
+          { ...nodeMonitorConfig, nodes },
+          config.rpc
+        )
       : null;
 
   const gc = EventLog.gc(eventLog, channels);
@@ -219,7 +224,8 @@ const run = async (config: Config.Config) => {
         nodeMonitor,
         bakerMonitor,
         bakerMonitorConfig.rpc,
-        uiConfig
+        uiConfig,
+        config.rpc
       )
     : null;
 

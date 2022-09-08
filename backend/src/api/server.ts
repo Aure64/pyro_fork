@@ -12,6 +12,7 @@ import { getLogger } from "loglevel";
 
 import { NodeInfoCollection } from "../nodeMonitor";
 import { BakerInfoCollection } from "bakerMonitor";
+import { RpcClientConfig } from "rpc/client";
 
 export const app = express();
 
@@ -58,7 +59,8 @@ export const start = (
     explorer_url,
     webroot: configuredWebroot,
     show_system_info,
-  }: UIConfig
+  }: UIConfig,
+  rpcConfig: RpcClientConfig
 ) => {
   console.error("show_system_info", show_system_info);
 
@@ -85,6 +87,7 @@ export const start = (
           },
         },
         rpc,
+        rpcConfig,
         explorer_url,
         show_system_info
       ),

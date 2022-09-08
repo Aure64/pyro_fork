@@ -6,7 +6,7 @@ import { readJson } from "./fs-utils";
 import { BootstrappedStatus } from "./rpc/types";
 import { TezosVersion } from "./rpc/types";
 
-import client, { RpcClient } from "./rpc/client";
+import client, { RpcClient, RpcClientConfig } from "./rpc/client";
 
 import { get as rpcFetch } from "./rpc/util";
 
@@ -62,7 +62,8 @@ export const create = async (
     teztnets,
     teztnets_config: teztnetsConfig,
     low_peer_count: lowPeerCount,
-  }: NodeMonitorConfig
+  }: NodeMonitorConfig,
+  rpcConfig: RpcClientConfig
 ): Promise<NodeMonitor> => {
   const teztnetsNodes: string[] = [];
   if (teztnets) {
@@ -95,7 +96,7 @@ export const create = async (
   const nodeSet = [...new Set([...nodes, ...teztnetsNodes])];
 
   const allSubs = nodeSet.map((node) =>
-    subscribeToNode(node, onEvent, lowPeerCount)
+    subscribeToNode(node, rpcConfig, onEvent, lowPeerCount)
   );
 
   const start = async () => {
@@ -130,10 +131,11 @@ const initialEndpointAvailability = {
 
 const subscribeToNode = (
   node: string,
+  rpcConfig: RpcClientConfig,
   onEvent: (event: Event) => Promise<void>,
   lowPeerCount: number
 ): Sub => {
-  const rpc = client(node);
+  const rpc = client(node, rpcConfig);
 
   const log = getLogger(`nm|${node}`);
   let nodeData: NodeInfo = {

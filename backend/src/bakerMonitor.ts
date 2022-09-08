@@ -13,7 +13,7 @@ import * as storage from "./storage";
 import * as format from "./format";
 import * as EventLog from "./eventlog";
 
-import RpcClient from "./rpc/client";
+import RpcClient, { RpcClientConfig } from "./rpc/client";
 
 import { URL, TzAddress } from "./rpc/types";
 import {
@@ -88,6 +88,7 @@ export const create = async (
     head_distance: headDistance,
     missed_threshold: missedEventsThreshold,
   }: BakerMonitorConfig,
+  rpcConfig: RpcClientConfig,
   enableHistory: boolean,
   onEvent: (event: Event) => Promise<void>
 ): Promise<BakerMonitor> => {
@@ -96,7 +97,7 @@ export const create = async (
 
   const log = getLogger(name);
   // const rpc = new RpcClient(rpcUrl);
-  const rpc = RpcClient(rpcUrl);
+  const rpc = RpcClient(rpcUrl, rpcConfig);
 
   const chainId = await tryForever(
     () => rpc.getChainId(),

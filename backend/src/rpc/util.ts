@@ -8,9 +8,15 @@ import { TzAddress } from "./types";
  * behind another and not know about a block or delegate yet.
  */
 
-type RpcRetry = <T>(apiCall: () => Promise<T>) => Promise<T>;
+type Millisecond = number;
 
-export const retry404: RpcRetry = async (apiCall) => {
+type RpcRetry = <T>(
+  apiCall: () => Promise<T>,
+  interval: Millisecond,
+  maxAttempts: number
+) => Promise<T>;
+
+export const retry404: RpcRetry = async (apiCall, interval, maxAttempts) => {
   let attempts = 0;
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -18,22 +24,20 @@ export const retry404: RpcRetry = async (apiCall) => {
     try {
       return await apiCall();
     } catch (err) {
-      if (attempts > 2) {
+      if (attempts > maxAttempts) {
         throw err;
       }
       if (err instanceof HttpResponseError && err.status === 404) {
-        getLogger("rpc").debug(
-          `Got ${err.status} from ${err.url}, retrying [${attempts}]`
+        getLogger("rpc").warn(
+          `Got ${err.status} from ${err.url}, retrying in ${interval}ms [attempt ${attempts} of ${maxAttempts}]`
         );
-        await delay(1000);
+        await delay(interval);
       } else {
         throw err;
       }
     }
   }
 };
-
-type Millisecond = number;
 
 type TryForever = <T>(
   call: () => Promise<T>,
