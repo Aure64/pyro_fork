@@ -1,6 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
 import { getLogger } from "loglevel";
-import { Event, Sender } from "../events";
+import { Events, Event, Sender, FilteredSender } from "../events";
 import format from "../format";
 import { delay } from "../delay";
 
@@ -13,6 +13,7 @@ export type TelegramConfig = {
   token: string;
   emoji: boolean;
   short_address: boolean;
+  exclude: Events[];
 };
 
 const MAX_MESSAGE_LENGTH = 4096;
@@ -74,7 +75,7 @@ export const create = async (
     }
   }
 
-  return async (events: Event[]) => {
+  return FilteredSender(async (events: Event[]) => {
     if (!chatId) {
       throw new Error("Telegram notification channel is missing chatId");
     }
@@ -103,5 +104,5 @@ export const create = async (
       );
       await bot.sendMessage(chatId, message);
     }
-  };
+  }, config);
 };

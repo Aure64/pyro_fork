@@ -2,13 +2,14 @@ import { Server } from "net";
 import fetch from "cross-fetch";
 import { createServer } from "http";
 import { getLogger } from "loglevel";
-import { Event, Sender } from "../events";
+import { Events, Event, Sender } from "../events";
 
 export type WebhookConfig = {
   enabled: boolean;
   url: string;
   user_agent: string;
   test_endpoint_port: number | undefined;
+  exclude: Events[];
 };
 
 export const startTestEndpoint = (port: number): Server => {

@@ -201,18 +201,28 @@ const LOW_PEER_COUNT: UserPref = {
   validationRule: ["numeric", "min:1"],
 };
 
-const EXCLUDED_EVENTS: UserPref = {
-  key: "exclude",
-  default: [Events.Baked, Events.Endorsed],
-  description: `Events to omit from notifications\nAvailable options: ${Object.values(
-    Events
-  ).join(", ")}`,
-  alias: undefined,
-  type: "string",
-  group: undefined,
-  isArray: true,
-  validationRule: "string",
+const mkExcludeEventsPref = (
+  key: string,
+  defaultValue: Events[] = []
+): UserPref => {
+  return {
+    key,
+    default: defaultValue,
+    description: `Events to omit from notifications\nAvailable options: ${Object.values(
+      Events
+    ).join(", ")}`,
+    alias: undefined,
+    type: "string",
+    group: undefined,
+    isArray: true,
+    validationRule: "string",
+  };
 };
+
+const EXCLUDED_EVENTS: UserPref = mkExcludeEventsPref("exclude", [
+  Events.Baked,
+  Events.Endorsed,
+]);
 
 const SLACK_GROUP = "Slack Notifications:";
 const SLACK_KEY = "slack";
@@ -262,6 +272,8 @@ const SLACK_SHORT_ADDRESS: UserPref = {
   isArray: false,
   validationRule: ["boolean"],
 };
+
+const SLACK_EXCLUDED_EVENTS = mkExcludeEventsPref(`${SLACK_KEY}:exclude`);
 
 const TELEGRAM_GROUP = "Telegram Notifications:";
 const TELEGRAM_KEY = "telegram";
@@ -313,6 +325,8 @@ const TELEGRAM_SHORT_ADDRESS: UserPref = {
   isArray: false,
   validationRule: ["boolean"],
 };
+
+const TELEGRAM_EXCLUDED_EVENTS = mkExcludeEventsPref(`${TELEGRAM_KEY}:exclude`);
 
 const EMAIL_GROUP = "Email Notifications:";
 const EMAIL_KEY = "email";
@@ -437,6 +451,8 @@ const EMAIL_SHORT_ADDRESS: UserPref = {
   validationRule: ["boolean"],
 };
 
+const EMAIL_EXCLUDED_EVENTS = mkExcludeEventsPref(`${EMAIL_KEY}:exclude`);
+
 const DESKTOP_GROUP = "Desktop Notifications:";
 const DESKTOP_KEY = "desktop";
 
@@ -483,6 +499,8 @@ const DESKTOP_SHORT_ADDRESS: UserPref = {
   isArray: false,
   validationRule: ["boolean"],
 };
+
+const DESKTOP_EXCLUDED_EVENTS = mkExcludeEventsPref(`${DESKTOP_KEY}:exclude`);
 
 const WEBHOOK_GROUP = "Webhook Notifications:";
 const WEBHOOK_KEY = "webhook";
@@ -532,6 +550,8 @@ const WEBHOOK_TEST_ENDPOINT_PORT: UserPref = {
   isArray: false,
   validationRule: ["numeric", "min:0"],
 };
+
+const WEBHOOK_EXCLUDED_EVENTS = mkExcludeEventsPref(`${WEBHOOK_KEY}:exclude`);
 
 const configDirectory =
   process.env.CONFIGURATION_DIRECTORY ||
@@ -711,10 +731,12 @@ const userPrefs = [
   SLACK_URL,
   SLACK_EMOJI,
   SLACK_SHORT_ADDRESS,
+  SLACK_EXCLUDED_EVENTS,
   TELEGRAM_ENABLED,
   TELEGRAM_TOKEN,
   TELEGRAM_EMOJI,
   TELEGRAM_SHORT_ADDRESS,
+  TELEGRAM_EXCLUDED_EVENTS,
   EMAIL_ENABLED,
   EMAIL_HOST,
   EMAIL_PORT,
@@ -725,14 +747,17 @@ const userPrefs = [
   EMAIL_PASSWORD,
   EMAIL_EMOJI,
   EMAIL_SHORT_ADDRESS,
+  EMAIL_EXCLUDED_EVENTS,
   DESKTOP_ENABLED,
   DESKTOP_SOUND,
   DESKTOP_EMOJI,
   DESKTOP_SHORT_ADDRESS,
+  DESKTOP_EXCLUDED_EVENTS,
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
   WEBHOOK_USER_AGENT,
   WEBHOOK_TEST_ENDPOINT_PORT,
+  WEBHOOK_EXCLUDED_EVENTS,
   CONFIG_FILE,
   NOTIFICATIONS_INTERVAL,
   NOTIFICATIONS_MAX_BATCH_SIZE,

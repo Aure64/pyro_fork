@@ -1,3 +1,5 @@
+import { getLogger } from "loglevel";
+
 export enum Events {
   Baked = "baked",
   MissedBake = "missed_bake",
@@ -125,3 +127,22 @@ export type Notification = BasicEvent & {
 export type Event = RpcEvent | NodeEvent | BakerEvent | Notification;
 
 export type Sender = (events: Event[]) => Promise<void>;
+
+export const excludeEvents = (inEvents: Event[], exclude: Events[]) => {
+  return inEvents.filter((e) => !exclude.includes(e.kind));
+};
+
+export const FilteredSender = (
+  sender: Sender,
+  config: { exclude: Events[] }
+): Sender => {
+  return async (inEvents: Event[]) => {
+    const events = excludeEvents(inEvents, config.exclude);
+    if (events.length !== inEvents.length) {
+      getLogger("events").debug(
+        `Filtered out ${inEvents.length - events.length}`
+      );
+    }
+    await sender(events);
+  };
+};

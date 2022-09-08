@@ -1,5 +1,5 @@
 import { IncomingWebhook } from "@slack/webhook";
-import { Event, Sender } from "../events";
+import { Events, Event, Sender, FilteredSender } from "../events";
 import format from "../format";
 
 export type SlackConfig = {
@@ -7,6 +7,7 @@ export type SlackConfig = {
   url: string;
   emoji: boolean;
   short_address: boolean;
+  exclude: Events[];
 };
 
 export type SlackNotificationChannel = {
@@ -16,9 +17,9 @@ export type SlackNotificationChannel = {
 export const create = (config: SlackConfig): Sender => {
   const webhook = new IncomingWebhook(config.url);
 
-  return async (events: Event[]) => {
+  return FilteredSender(async (events: Event[]) => {
     const lines = format(events, config.emoji, config.short_address);
     const text = lines.join("\n");
     await webhook.send(text);
-  };
+  }, config);
 };

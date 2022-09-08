@@ -1,7 +1,7 @@
 import { getLogger } from "loglevel";
 import { createTransport } from "nodemailer";
 
-import { Event, Sender } from "../events";
+import { Events, Event, Sender, FilteredSender } from "../events";
 
 import { email as formatEmail } from "../format";
 
@@ -18,6 +18,7 @@ export type EmailConfig = {
   from?: string;
   emoji: boolean;
   short_address: boolean;
+  exclude: Events[];
 };
 
 export const create = (config: EmailConfig): Sender => {
@@ -46,7 +47,7 @@ export const create = (config: EmailConfig): Sender => {
 
   const log = getLogger("email-sender");
 
-  return async (events: Event[]) => {
+  return FilteredSender(async (events: Event[]) => {
     log.debug(`About to send email for ${events.length} events`, events);
 
     const [subject, text] = formatEmail(
@@ -65,5 +66,5 @@ export const create = (config: EmailConfig): Sender => {
     });
     log.debug("Sent email", result);
     return Promise.resolve();
-  };
+  }, config);
 };
