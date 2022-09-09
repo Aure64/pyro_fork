@@ -105,7 +105,7 @@ build-deb() {
 
 build() {
     build-docker
-    buil-deb
+    build-deb
 }
 
 publish-version() {
