@@ -1,8 +1,14 @@
 export { NetworkConnection } from "./gen/NetworkConnection";
 export { TezosVersion } from "./gen/TezosVersion";
 export { BootstrappedStatus } from "./gen/BootstrappedStatus";
-export { Delegate } from "./gen/Delegate";
+
 export { Participation } from "./gen/Psithaca2MLR/Participation";
+
+import { Delegate as DelegateH } from "./gen/Delegate";
+import { Delegate as DelegateI } from "./gen/Delegate";
+import { Delegate as DelegateJ } from "./gen/Delegate";
+import { Delegate as DelegateK } from "./gen/PtKathmankSp/Delegate";
+import { Delegate as DelegateL } from "./gen/PtLimaPtLMwf/Delegate";
 
 import { ShellHeader as BlockHeaderH } from "./gen/PtHangz2aRng/BlockHeader";
 import { ShellHeader as BlockHeaderI } from "./gen/Psithaca2MLR/BlockHeader";
@@ -65,6 +71,14 @@ import {
   DoubleEndorsementEvidence1 as DoubleEndorsementEvidenceL,
   Endorsement1 as EndorsementWithSlotL,
 } from "./gen/PtLimaPtLMwf/Block";
+
+export { DelegateH, DelegateI, DelegateJ, DelegateK, DelegateL };
+export type Delegate =
+  | DelegateH
+  | DelegateI
+  | DelegateJ
+  | DelegateK
+  | DelegateL;
 
 export { BlockH, BlockI, BlockJ, BlockK, BlockL };
 export type Block = BlockH | BlockI | BlockJ | BlockK | BlockL;

@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "full_balance": {
+      "$ref": "#/definitions/_015_PtLimaPt$mutez"
+    },
+    "current_frozen_deposits": {
+      "$ref": "#/definitions/_015_PtLimaPt$mutez"
+    },
+    "frozen_deposits": {
+      "$ref": "#/definitions/_015_PtLimaPt$mutez"
+    },
+    "staking_balance": {
+      "$ref": "#/definitions/_015_PtLimaPt$mutez"
+    },
+    "frozen_deposits_limit": {
+      "$ref": "#/definitions/_015_PtLimaPt$mutez"
+    },
+    "delegated_contracts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/_015_PtLimaPt$contract_id"
+      }
+    },
+    "delegated_balance": {
+      "$ref": "#/definitions/_015_PtLimaPt$mutez"
+    },
+    "deactivated": {
+      "type": "boolean"
+    },
+    "grace_period": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "voting_power": {
+      "$ref": "#/definitions/int64"
+    },
+    "current_ballot": {
+      "type": "string",
+      "enum": [
+        "nay",
+        "yay",
+        "pass"
+      ]
+    },
+    "current_proposals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Protocol_hash"
+      }
+    },
+    "remaining_proposals": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    },
+    "active_consensus_key": {
+      "$ref": "#/definitions/Signature$Public_key_hash"
+    },
+    "pending_consensus_keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "pkh": {
+            "$ref": "#/definitions/Signature$Public_key_hash"
+          }
+        },
+        "required": [
+          "pkh",
+          "cycle"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "active_consensus_key",
+    "grace_period",
+    "deactivated",
+    "delegated_balance",
+    "delegated_contracts",
+    "staking_balance",
+    "frozen_deposits",
+    "current_frozen_deposits",
+    "full_balance"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "_015_PtLimaPt$contract_id": {
+      "$ref": "#/definitions/unistring"
+    },
+    "_015_PtLimaPt$mutez": {
+      "$ref": "#/definitions/positive_bignum"
+    },
+    "Protocol_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "Signature$Public_key_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "int64": {
+      "title": "64 bit integers",
+      "description": "Decimal representation of 64 bit integers",
+      "type": "string"
+    },
+    "positive_bignum": {
+      "title": "Positive big number",
+      "description": "Decimal representation of a positive big number",
+      "type": "string"
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}

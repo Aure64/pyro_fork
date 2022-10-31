@@ -168,7 +168,7 @@ const main = async () => {
     },
     [urls.E_DELEGATES_PKH("head", sampleAddress)]: {
       name: "Delegate",
-      protocol: false,
+      protocol: true,
     },
     [urls.E_DELEGATE_PARTICIPATION("head", sampleAddress)]: {
       name: "Participation",

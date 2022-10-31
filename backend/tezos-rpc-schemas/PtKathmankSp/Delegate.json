@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "full_balance": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    },
+    "current_frozen_deposits": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    },
+    "frozen_deposits": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    },
+    "staking_balance": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    },
+    "frozen_deposits_limit": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    },
+    "delegated_contracts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/_014_PtKathma$contract_id"
+      }
+    },
+    "delegated_balance": {
+      "$ref": "#/definitions/_014_PtKathma$mutez"
+    },
+    "deactivated": {
+      "type": "boolean"
+    },
+    "grace_period": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "voting_power": {
+      "$ref": "#/definitions/int64"
+    },
+    "current_ballot": {
+      "type": "string",
+      "enum": [
+        "nay",
+        "yay",
+        "pass"
+      ]
+    },
+    "current_proposals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Protocol_hash"
+      }
+    },
+    "remaining_proposals": {
+      "type": "integer",
+      "minimum": -1073741824,
+      "maximum": 1073741823
+    }
+  },
+  "required": [
+    "grace_period",
+    "deactivated",
+    "delegated_balance",
+    "delegated_contracts",
+    "staking_balance",
+    "frozen_deposits",
+    "current_frozen_deposits",
+    "full_balance"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "_014_PtKathma$contract_id": {
+      "$ref": "#/definitions/unistring"
+    },
+    "_014_PtKathma$mutez": {
+      "$ref": "#/definitions/positive_bignum"
+    },
+    "Protocol_hash": {
+      "$ref": "#/definitions/unistring"
+    },
+    "int64": {
+      "title": "64 bit integers",
+      "description": "Decimal representation of 64 bit integers",
+      "type": "string"
+    },
+    "positive_bignum": {
+      "title": "Positive big number",
+      "description": "Decimal representation of a positive big number",
+      "type": "string"
+    },
+    "unistring": {
+      "type": "string"
+    }
+  }
+}
