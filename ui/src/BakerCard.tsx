@@ -16,6 +16,7 @@ import {
   MdOutlineCloud,
   MdOutlineAccountBalanceWallet,
   MdVpnKey,
+  MdSwapHoriz,
 } from 'react-icons/md';
 import type { Baker, BakerEvent, LevelEvents } from './api';
 import Card from './Card';
@@ -182,6 +183,22 @@ export default ({
                   </Text>
                 </Link>
               </Tooltip>
+              {consensusKey.pendings && consensusKey.pendings.length > 0 && (
+                <>
+                  <Tooltip
+                    label={`Pending consensus key ${consensusKey.pendings[0].pkh}`}
+                  >
+                    <Box>
+                      <Icon color="blue.500" display="block" as={MdSwapHoriz} />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip label="Pending consensus key activation cycle">
+                    <Box fontSize="x-small">
+                      {consensusKey.pendings[0].cycle}
+                    </Box>
+                  </Tooltip>
+                </>
+              )}
             </HStack>
           )}
 
