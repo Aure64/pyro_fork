@@ -31,6 +31,7 @@ import { delegatesUrl } from "./urls";
 
 import { TzAddress } from "rpc/types";
 import { URL } from "rpc/types";
+import { ConsensusKey } from "rpc/types";
 
 import { Block } from "./types";
 import { BakingRights } from "./types";
@@ -79,6 +80,10 @@ export type RpcClient = {
   getFrozenDeposits: (pkh: TzAddress, block?: string) => Promise<string>;
   getStakingBalance: (pkh: TzAddress, block?: string) => Promise<string>;
   getGracePeriod: (pkh: TzAddress, block?: string) => Promise<number>;
+  getConsensusKey: (
+    pkh: TzAddress,
+    block?: string
+  ) => Promise<ConsensusKey | null>;
   getDeactivated: (pkh: TzAddress, block?: string) => Promise<boolean>;
   getEndorsingRights: (
     block: string,
@@ -373,6 +378,17 @@ export default (
 
     getParticipation: (pkh: TzAddress, block = "head") => {
       return getParticipation(nodeRpcUrl, pkh, block);
+    },
+
+    getConsensusKey: async (pkh: TzAddress, block = "head") => {
+      try {
+        return await fetchDelegateField(pkh, block, "consensus_key");
+      } catch (err) {
+        if (err instanceof HttpResponseError && err.status === 404) {
+          log.debug(`Got ${err.status} from ${err.url}`);
+        }
+        return Promise.resolve(null);
+      }
     },
 
     getChainId: () => getChainId(nodeRpcUrl),

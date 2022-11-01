@@ -57,6 +57,13 @@ query getBakers($offset: Int!, $limit: Int!)
         remaining_allowed_missed_slots
         expected_endorsing_rewards
       }
+      consensusKey {
+        active
+        pendings {
+          pkh
+          cycle
+        }
+      }
       lastProcessed {
         cyclePosition
         cycle

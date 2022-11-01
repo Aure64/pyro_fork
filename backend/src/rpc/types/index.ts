@@ -216,3 +216,8 @@ export enum OpKind {
 
 export type TzAddress = string;
 export type URL = string;
+
+export type ConsensusKey = {
+  active: string;
+  pendings?: { cycle: number; pkh: string }[];
+};

@@ -68,6 +68,22 @@ export const Participation = objectType({
   },
 });
 
+export const PendingConsensusKey = objectType({
+  name: "PendingConsensusKey",
+  definition(t) {
+    t.nonNull.string("pkh");
+    t.nonNull.int("cycle");
+  },
+});
+
+export const ConsensusKey = objectType({
+  name: "ConsensusKey",
+  definition(t) {
+    t.nonNull.string("active");
+    t.list.field("pendings", { type: nonNull(PendingConsensusKey) });
+  },
+});
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bakerCache = new LRU<string, any>({ max: 100 });
 
@@ -149,6 +165,23 @@ export const Baker = objectType({
           level,
           address,
           parent.atRiskThreshold
+        );
+      },
+    });
+
+    t.field("consensusKey", {
+      type: ConsensusKey,
+      async resolve(parent, _args, ctx) {
+        if (!parent.lastProcessed) return null;
+
+        const { cycle, level } = parent.lastProcessed;
+        const protocol = await getProtocol(cycle, level, ctx);
+        if (protocol.startsWith("PtKathman")) {
+          return null;
+        }
+        return ctx.rpc.getConsensusKey(
+          parent.address,
+          `head~${parent.headDistance}`
         );
       },
     });

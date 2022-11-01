@@ -15,6 +15,7 @@ import {
   MdCloudOff,
   MdOutlineCloud,
   MdOutlineAccountBalanceWallet,
+  MdVpnKey,
 } from 'react-icons/md';
 import type { Baker, BakerEvent, LevelEvents } from './api';
 import Card from './Card';
@@ -72,6 +73,7 @@ export default ({
     atRisk,
     updatedAt,
     participation,
+    consensusKey,
     blocksPerCycle,
     lastProcessed,
   },
@@ -131,14 +133,18 @@ export default ({
     rewardsRiskColor = 'yellow';
   }
 
+  const usesConsensusKey = consensusKey && consensusKey.active !== address;
+  const consensusKeyIconColor = usesConsensusKey ? 'blue.500' : 'gray.400';
+
   return (
     <Card minHeight="248px">
       <HStack w="100%" justifyContent="space-between" alignItems="flex-start">
-        <VStack>
+        <VStack alignItems="flex-start" spacing={0}>
           <HStack maxW={250}>
             <Tooltip label={deactivationStatusText}>
               <Box>
                 <Icon
+                  display="block"
                   as={deactivationStatusIcon}
                   color={deactivationStatusColor}
                 />
@@ -146,10 +152,37 @@ export default ({
             </Tooltip>
             <Tooltip label={address}>
               <Link href={explorerUrl || undefined} isExternal>
-                <Text isTruncated>{ellipsifyMiddle(address, 12)}</Text>
+                <Text fontFamily="mono" fontSize="small" isTruncated>
+                  {ellipsifyMiddle(address, 12)}
+                </Text>
               </Link>
             </Tooltip>
           </HStack>
+
+          {consensusKey && (
+            <HStack maxW={250}>
+              <Tooltip label="Consensus key">
+                <Box>
+                  <Icon
+                    color={consensusKeyIconColor}
+                    display="block"
+                    as={MdVpnKey}
+                  />
+                </Box>
+              </Tooltip>
+              <Tooltip label={consensusKey.active}>
+                <Text
+                  fontFamily="mono"
+                  fontSize="x-small"
+                  fontWeight={usesConsensusKey ? 'bold' : undefined}
+                  isTruncated
+                >
+                  {ellipsifyMiddle(consensusKey.active, 12)}
+                </Text>
+              </Tooltip>
+            </HStack>
+          )}
+
           {participation && (
             <HStack w="100%" d="flex">
               <Tooltip
