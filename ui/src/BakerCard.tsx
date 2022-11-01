@@ -171,14 +171,16 @@ export default ({
                 </Box>
               </Tooltip>
               <Tooltip label={consensusKey.active}>
-                <Text
-                  fontFamily="mono"
-                  fontSize="x-small"
-                  fontWeight={usesConsensusKey ? 'bold' : undefined}
-                  isTruncated
-                >
-                  {ellipsifyMiddle(consensusKey.active, 12)}
-                </Text>
+                <Link href={consensusKey.explorerUrl || undefined} isExternal>
+                  <Text
+                    fontFamily="mono"
+                    fontSize="x-small"
+                    fontWeight={usesConsensusKey ? 'bold' : undefined}
+                    isTruncated
+                  >
+                    {ellipsifyMiddle(consensusKey.active, 12)}
+                  </Text>
+                </Link>
               </Tooltip>
             </HStack>
           )}

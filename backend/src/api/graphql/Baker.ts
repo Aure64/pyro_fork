@@ -5,6 +5,9 @@ import { Context } from "../context";
 import LRU from "lru-cache";
 import { RpcClient } from "../../rpc/client";
 
+const mkExplorerUrl = (ctx: Context, thing: string) =>
+  ctx.explorerUrl ? `${ctx.explorerUrl}/${thing}` : null;
+
 export const BakerEvent = objectType({
   name: "BakerEvent",
 
@@ -80,6 +83,7 @@ export const ConsensusKey = objectType({
   name: "ConsensusKey",
   definition(t) {
     t.nonNull.string("active");
+    t.string("explorerUrl");
     t.list.field("pendings", { type: nonNull(PendingConsensusKey) });
   },
 });
@@ -179,10 +183,18 @@ export const Baker = objectType({
         if (protocol.startsWith("PtKathman")) {
           return null;
         }
-        return ctx.rpc.getConsensusKey(
+
+        const consensusKey = await ctx.rpc.getConsensusKey(
           parent.address,
           `head~${parent.headDistance}`
         );
+
+        if (!consensusKey) return null;
+
+        return {
+          ...consensusKey,
+          explorerUrl: mkExplorerUrl(ctx, consensusKey.active),
+        };
       },
     });
 
@@ -293,9 +305,7 @@ export const BakerQuery = extendType({
                 const firstEvent = first(events)!;
                 return {
                   level: parseInt(levelStr),
-                  explorerUrl: ctx.explorerUrl
-                    ? `${ctx.explorerUrl}/${levelStr}`
-                    : null,
+                  explorerUrl: mkExplorerUrl(ctx, levelStr),
                   cycle: firstEvent.cycle,
                   timestamp: firstEvent.timestamp.toISOString(),
                   events: events.map((e) => {
@@ -312,9 +322,7 @@ export const BakerQuery = extendType({
               address: bakerInfo.address,
               blocksPerCycle: bakerMonitorInfo.blocksPerCycle,
               atRiskThreshold: bakerMonitorInfo.atRiskThreshold,
-              explorerUrl: ctx.explorerUrl
-                ? `${ctx.explorerUrl}/${bakerInfo.address}`
-                : null,
+              explorerUrl: mkExplorerUrl(ctx, bakerInfo.address),
               recentEvents: take(orderBy(recentEvents, "level", "desc"), 5),
               lastProcessed: bakerMonitorInfo.lastProcessed,
               headDistance: bakerMonitorInfo.headDistance,

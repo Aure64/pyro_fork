@@ -59,6 +59,7 @@ query getBakers($offset: Int!, $limit: Int!)
       }
       consensusKey {
         active
+        explorerUrl
         pendings {
           pkh
           cycle
