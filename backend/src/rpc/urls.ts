@@ -1,3 +1,5 @@
+import { URLSearchParams } from "url";
+
 export const E_NETWORK_CONNECTIONS = "network/connections";
 
 export const E_TEZOS_VERSION = "version";

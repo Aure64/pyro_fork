@@ -16,8 +16,7 @@ export const delay2 = (milliseconds: number): CancellableDelay => {
     debug("dummy delay cancel invoked, no op");
   };
   const promise = new Promise<void>((resolve, reject) => {
-    //https://github.com/Microsoft/TypeScript/issues/30128
-    const timeoutHandle = +setTimeout(resolve, milliseconds);
+    const timeoutHandle = setTimeout(resolve, milliseconds);
     cancel = () => {
       clearTimeout(timeoutHandle);
       reject(new CancelledError());

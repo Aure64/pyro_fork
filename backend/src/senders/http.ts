@@ -1,8 +1,8 @@
 import { Server } from "net";
-import fetch from "cross-fetch";
 import { createServer } from "http";
 import { getLogger } from "loglevel";
 import { Events, Event, Sender } from "../events";
+import { fetchTimeout } from "../rpc/util";
 
 export type WebhookConfig = {
   enabled: boolean;
@@ -41,7 +41,7 @@ export const create = (config: WebhookConfig): Sender => {
       "Content-Type": "application/json",
       "User-Agent": config.user_agent,
     };
-    const result = await fetch(url, { body, method, headers });
+    const result = await fetchTimeout(url, 30e3, { body, method, headers });
     if (!result.ok) {
       log.error(result);
       throw new Error(result.statusText);

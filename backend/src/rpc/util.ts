@@ -1,7 +1,12 @@
 import { delay } from "../delay";
 import { getLogger } from "loglevel";
-import fetch from "cross-fetch";
+import fetch, { RequestInit } from "node-fetch";
+import { AbortSignal } from "node-fetch/externals";
 import { TzAddress } from "./types";
+import http from "http";
+import https from "https";
+import { URL } from "url";
+
 /**
  * Wraps provided API function so that it is retried on 404.
  * These are common on server clusters where a node may slightly lag
@@ -88,11 +93,34 @@ export class HttpResponseError extends Error {
   }
 }
 
-// https://stackoverflow.com/questions/46946380/fetch-api-request-timeout/57888548#57888548
+const httpAgent = new http.Agent({
+  keepAlive: false,
+});
+const httpsAgent = new https.Agent({
+  keepAlive: false,
+});
 
-export const fetchTimeout = (url: string, ms: number) => {
+const agentSelector = (_parsedURL: URL) => {
+  if (_parsedURL.protocol == "http:") {
+    return httpAgent;
+  } else {
+    return httpsAgent;
+  }
+};
+
+// https://stackoverflow.com/questions/46946380/fetch-api-request-timeout/57888548#57888548
+export const fetchTimeout = (
+  url: string,
+  ms: number,
+  options?: RequestInit
+) => {
   const controller = new AbortController();
-  const promise = fetch(url, { signal: controller.signal });
+  const promise = fetch(url, {
+    //https://github.com/node-fetch/node-fetch/issues/1652
+    signal: controller.signal as AbortSignal,
+    agent: agentSelector,
+    ...options,
+  });
   const timeout = setTimeout(() => controller.abort(), ms);
   return promise.finally(() => clearTimeout(timeout));
 };
@@ -108,7 +136,7 @@ export const get = async (url: string) => {
   let nodeErrors: TezosNodeError[] = [];
   if (response.status === 500) {
     try {
-      nodeErrors = (await response.json()) || [];
+      nodeErrors = ((await response.json()) as TezosNodeError[]) || [];
     } catch (err) {
       getLogger("rpc").error(
         `|> 500 ${url} could not get error response content`
