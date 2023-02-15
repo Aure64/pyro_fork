@@ -153,7 +153,12 @@ export type _016_PtMumbai$Operation$Alpha$SuccessfulManagerOperationResult =
  * Decimal representation of a positive big number
  */
 export type PositiveBigNumber = string;
-export type Micheline$016_PtMumbai$MichelsonV1$Expression = Int | String | Bytes | Sequence | Prim_Generic;
+export type Micheline$016_PtMumbai$MichelsonV1$Expression =
+  | Int
+  | String
+  | Bytes
+  | Sequence
+  | Prim_Generic;
 /**
  * Decimal representation of a big number
  */
@@ -463,7 +468,11 @@ export type _016_PtMumbai$Operation$Alpha$OperationContentsAndResult =
   | ZkRollupOrigination1
   | ZkRollupPublish1
   | ZkRollupUpdate1;
-export type _016_PtMumbai$Operation$Alpha$OperationResult$Reveal = Applied | Failed | Skipped | Backtracked;
+export type _016_PtMumbai$Operation$Alpha$OperationResult$Reveal =
+  | Applied
+  | Failed
+  | Skipped
+  | Backtracked;
 export type _016_PtMumbai$ApplyInternalResults$Alpha$OperationResult =
   | Transaction1
   | Origination2
@@ -484,19 +493,28 @@ export type _016_PtMumbai$Operation$Alpha$InternalOperationResult$Delegation =
   | Failed3
   | Skipped3
   | Backtracked2;
-export type _016_PtMumbai$Operation$Alpha$InternalOperationResult$Event = Applied3 | Failed4 | Skipped4 | Backtracked3;
+export type _016_PtMumbai$Operation$Alpha$InternalOperationResult$Event =
+  | Applied3
+  | Failed4
+  | Skipped4
+  | Backtracked3;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$Transaction =
   | (ToContract3 | ToTxRollup3 | ToSmartRollup3)
   | Failed5
   | Skipped5
   | (ToContract4 | ToTxRollup4 | ToSmartRollup4);
-export type _016_PtMumbai$Operation$Alpha$OperationResult$Origination = Applied4 | Failed6 | Skipped6 | Backtracked4;
-export type _016_PtMumbai$Operation$Alpha$OperationResult$Delegation = Applied5 | Failed7 | Skipped7 | Backtracked5;
+export type _016_PtMumbai$Operation$Alpha$OperationResult$Origination =
+  | Applied4
+  | Failed6
+  | Skipped6
+  | Backtracked4;
+export type _016_PtMumbai$Operation$Alpha$OperationResult$Delegation =
+  | Applied5
+  | Failed7
+  | Skipped7
+  | Backtracked5;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$RegisterGlobalConstant =
-  | Applied6
-  | Failed8
-  | Skipped8
-  | Backtracked6;
+  Applied6 | Failed8 | Skipped8 | Backtracked6;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$SetDepositsLimit =
   | Applied7
   | Failed9
@@ -534,15 +552,9 @@ export type _016_PtMumbai$Operation$Alpha$OperationResult$TxRollupReturnBond =
   | Skipped15
   | Backtracked13;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$TxRollupFinalizeCommitment =
-  | Applied14
-  | Failed16
-  | Skipped16
-  | Backtracked14;
+  Applied14 | Failed16 | Skipped16 | Backtracked14;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$TxRollupRemoveCommitment =
-  | Applied15
-  | Failed17
-  | Skipped17
-  | Backtracked15;
+  Applied15 | Failed17 | Skipped17 | Backtracked15;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$TxRollupRejection =
   | Applied16
   | Failed18
@@ -554,25 +566,13 @@ export type _016_PtMumbai$Operation$Alpha$OperationResult$TransferTicket =
   | Skipped19
   | Backtracked17;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$DalPublishSlotHeader =
-  | Applied18
-  | Failed20
-  | Skipped20
-  | Backtracked18;
+  Applied18 | Failed20 | Skipped20 | Backtracked18;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$TxRollupDispatchTickets =
-  | Applied19
-  | Failed21
-  | Skipped21
-  | Backtracked19;
+  Applied19 | Failed21 | Skipped21 | Backtracked19;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$SmartRollupOriginate =
-  | Applied20
-  | Failed22
-  | Skipped22
-  | Backtracked20;
+  Applied20 | Failed22 | Skipped22 | Backtracked20;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$SmartRollupAddMessages =
-  | Applied21
-  | Failed23
-  | Skipped23
-  | Backtracked21;
+  Applied21 | Failed23 | Skipped23 | Backtracked21;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$SmartRollupCement =
   | Applied22
   | Failed24
@@ -610,15 +610,9 @@ export type Ongoing3 = "ongoing";
 export type ConflictResolved3 = "conflict_resolved";
 export type Timeout3 = "timeout";
 export type _016_PtMumbai$Operation$Alpha$OperationResult$SmartRollupExecuteOutboxMessage =
-  | Applied26
-  | Failed28
-  | Skipped28
-  | Backtracked26;
+  Applied26 | Failed28 | Skipped28 | Backtracked26;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$SmartRollupRecoverBond =
-  | Applied27
-  | Failed29
-  | Skipped29
-  | Backtracked27;
+  Applied27 | Failed29 | Skipped29 | Backtracked27;
 export type _016_PtMumbai$Operation$Alpha$OperationResult$ZkRollupOrigination =
   | Applied28
   | Failed30
@@ -1569,7 +1563,10 @@ export interface ZkRollupOrigination {
   gas_limit: PositiveBigNumber;
   storage_limit: PositiveBigNumber;
   public_parameters: string;
-  circuits_info: [] | [_016_PtMumbai$ContractId] | [_016_PtMumbai$ContractId, Public | Private | Fee][];
+  circuits_info:
+    | []
+    | [_016_PtMumbai$ContractId]
+    | [_016_PtMumbai$ContractId, Public | Private | Fee][];
   init_state: string[];
   nb_ops: number;
 }
@@ -3125,7 +3122,10 @@ export interface ZkRollupOrigination1 {
   gas_limit: PositiveBigNumber;
   storage_limit: PositiveBigNumber;
   public_parameters: string;
-  circuits_info: [] | [_016_PtMumbai$ContractId] | [_016_PtMumbai$ContractId, Public1 | Private1 | Fee1][];
+  circuits_info:
+    | []
+    | [_016_PtMumbai$ContractId]
+    | [_016_PtMumbai$ContractId, Public1 | Private1 | Fee1][];
   init_state: string[];
   nb_ops: number;
   metadata: {
