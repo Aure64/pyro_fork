@@ -30,6 +30,7 @@ import protocolI from "./bm-proto-i";
 import protocolJ from "./bm-proto-j";
 import protocolK from "./bm-proto-k";
 import protocolL from "./bm-proto-l";
+import protocolM from "./bm-proto-m";
 
 const name = "bm";
 
@@ -261,6 +262,14 @@ export const create = async (
 
           case "PtLimaPtLMwfNinJi9rCfDPWea8dFgTZ1MeJ9f1m2SRic6ayiwW":
             events = await protocolL({
+              bakers,
+              block,
+              rpc: rpc,
+            });
+            break;
+
+          case "PtMumbaiiFFEGbew1rRjzSPyzRbA51Tm3RVZL5suHPxSZYDhCEc":
+            events = await protocolM({
               bakers,
               block,
               rpc: rpc,
