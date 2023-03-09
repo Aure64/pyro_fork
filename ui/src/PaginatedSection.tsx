@@ -50,6 +50,7 @@ export default ({
   const { data, error, loading } = query({
     pollInterval: 15e3,
     variables: { offset, limit: pageSize },
+    errorPolicy: 'all',
   });
 
   let totalCount = 0;
