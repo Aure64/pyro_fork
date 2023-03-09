@@ -9,7 +9,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/gql': 'http://localhost:2020',
+      '/gql': 'http://127.0.0.1:2020',
     },
   },
 });
