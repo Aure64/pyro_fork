@@ -259,7 +259,7 @@ describe("checkBlockAccusationsForDoubleBake", () => {
 
 describe("checkBlockAccusationsForDoubleEndorsement", () => {
   const evidence: OperationM = {
-    protocol: "PtMumbaiiFFEGbew1rRjzSPyzRbA51Tm3RVZL5suHPxSZYDhCEc",
+    protocol: "PtMumbai2TmsJHNGRkD8v8YDbtao7BLUC3wjASn1inAKLFCjaH1",
     chain_id: "NetXKMbjQL2SBox",
     hash: "ooDS6XHoTYeK9U7QnmueJQgpCvbwueBKoBBGNNHDr6pkhUMznKe",
     branch: "BLw6hXMmr3MGhWGhRymixheA6hr9MEV25raYxtFCZuH3fFEPwFH",

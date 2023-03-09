@@ -7,7 +7,7 @@
     "protocol": {
       "type": "string",
       "enum": [
-        "PtMumbaiiFFEGbew1rRjzSPyzRbA51Tm3RVZL5suHPxSZYDhCEc"
+        "PtMumbai2TmsJHNGRkD8v8YDbtao7BLUC3wjASn1inAKLFCjaH1"
       ]
     },
     "chain_id": {
