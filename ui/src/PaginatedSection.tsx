@@ -17,6 +17,9 @@ const getInt = (key: string, defaultValue: string) => {
   return parseInt(localStorage.getItem(key) || defaultValue);
 };
 
+import type { useGetBakersQuery, useGetNodesQuery } from './api';
+import type { GraphQLErrors } from '@apollo/client/errors';
+
 export default ({
   title,
   storageNs,
@@ -27,9 +30,9 @@ export default ({
 }: {
   title: string;
   storageNs: string;
-  query: any;
+  query: typeof useGetBakersQuery | typeof useGetNodesQuery;
   getCount: (data: any) => number;
-  render: (data: any) => JSX.Element[];
+  render: (data: any, errors?: GraphQLErrors) => JSX.Element[];
   renderSubHeader?: () => ReactElement;
 }) => {
   const storageKeyOffset = `${storageNs}.offset`;
@@ -57,7 +60,7 @@ export default ({
   let renderedItems = null;
   if (data) {
     totalCount = getCount(data);
-    renderedItems = render(data);
+    renderedItems = render(data, error?.graphQLErrors);
   }
 
   const setAndSaveOffset = (newOffset: number) => {
@@ -87,13 +90,24 @@ export default ({
         />
       )}
       {renderSubHeader && renderSubHeader()}
-      {error && (
+      {error && error.networkError && (
         <Alert status="error">
           <AlertIcon />
-          <AlertTitle mr={2}>Error</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
+          <AlertTitle mr={2}>Network Error</AlertTitle>
+          <AlertDescription>{error.networkError.message}</AlertDescription>
         </Alert>
       )}
+      {error &&
+        error.graphQLErrors.length > 0 &&
+        error.graphQLErrors
+          .filter((error) => !error.extensions)
+          .map((error, index) => (
+            <Alert key={`${index}`} status="error">
+              <AlertIcon />
+              <AlertTitle mr={2}>Error</AlertTitle>
+              <AlertDescription>{error.message}</AlertDescription>
+            </Alert>
+          ))}
 
       {/* make sure component is unmounted when not visible, we don't want to keep it's state */}
       {isSettingsOpened && (

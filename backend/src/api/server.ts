@@ -91,15 +91,6 @@ export const start = (
         explorer_url,
         show_system_info
       ),
-      customFormatErrorFn: (error) => {
-        const params = {
-          message: error.message,
-          locations: error.locations,
-          stack: error.stack,
-        };
-        console.error(params);
-        return params;
-      },
     })
   );
 

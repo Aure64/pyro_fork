@@ -9,6 +9,9 @@ import BakerCard from './BakerCard';
 import { takeStart } from './format';
 import PaginatedSection from './PaginatedSection';
 import { CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
+import type { GraphQLErrors } from '@apollo/client/errors';
+
+import { groupBy } from 'lodash';
 
 const InfoItem = ({
   text,
@@ -39,9 +42,24 @@ export default () => {
       storageNs="bakers"
       query={useGetBakersQuery}
       getCount={(data: GetBakersQuery) => data.bakers.totalCount}
-      render={({ bakers: { items } }: GetBakersQuery) =>
-        items.map((baker) => <BakerCard key={baker.address} baker={baker} />)
-      }
+      render={(
+        { bakers: { items } }: GetBakersQuery,
+        errors?: GraphQLErrors,
+      ) => {
+        const errorsByItem = errors
+          ? groupBy(
+              errors.filter((x) => x.path && x.path[1] === 'items'),
+              (x) => x.path && x.path[2],
+            )
+          : {};
+        return items.map((baker, index) => (
+          <BakerCard
+            key={baker.address}
+            baker={baker}
+            errors={errorsByItem[index]}
+          />
+        ));
+      }}
       renderSubHeader={() => {
         return (
           (networkInfo && (

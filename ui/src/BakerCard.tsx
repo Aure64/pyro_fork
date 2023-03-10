@@ -1,4 +1,7 @@
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
   Link,
   Box,
   HStack,
@@ -17,6 +20,7 @@ import {
   MdOutlineAccountBalanceWallet,
   MdVpnKey,
   MdSwapHoriz,
+  MdError,
 } from 'react-icons/md';
 import type { Baker, BakerEvent, LevelEvents } from './api';
 import Card from './Card';
@@ -24,6 +28,9 @@ import { ellipsifyMiddle, formatMutezAsTez } from './format';
 import RelativeTimeRow from './RelativeTimeRow';
 import UpdatedAt from './UpdatedAt';
 import Priority from './Priority';
+import type { GraphQLError } from 'graphql';
+
+import { groupBy, partition } from 'lodash';
 
 const emoji: { [key: string]: string } = {
   missed_bake: '😡',
@@ -78,32 +85,43 @@ export default ({
     blocksPerCycle,
     lastProcessed,
   },
+  errors,
 }: {
   baker: Omit<Baker, 'headDistance' | 'atRiskThreshold'>;
+  errors?: GraphQLError[];
 }) => {
   const healthy = !deactivated && isHealthy(recentEvents);
 
-  const deactivationStatusText = deactivated
-    ? 'deactivated'
-    : atRisk
-    ? `may be deactivated at the end of cycle ${gracePeriod}`
-    : healthy
-    ? 'active'
-    : 'active, but not healthy';
+  const deactivationStatusText =
+    deactivated === null || errors
+      ? `Error loading data`
+      : deactivated
+      ? 'deactivated'
+      : atRisk
+      ? `may be deactivated at the end of cycle ${gracePeriod}`
+      : healthy
+      ? 'active'
+      : 'active, but not healthy';
 
-  const deactivationStatusColor = deactivated
-    ? 'gray.500'
-    : atRisk
-    ? 'red.500'
-    : healthy
-    ? 'blue.500'
-    : 'orange.500';
+  const deactivationStatusColor =
+    deactivated === null || errors
+      ? 'red.500'
+      : deactivated
+      ? 'gray.500'
+      : atRisk
+      ? 'red.500'
+      : healthy
+      ? 'blue.500'
+      : 'orange.500';
 
-  const deactivationStatusIcon = deactivated
-    ? MdCloudOff
-    : atRisk
-    ? MdOutlineCloud
-    : MdCloud;
+  const deactivationStatusIcon =
+    deactivated === null || errors
+      ? MdError
+      : deactivated
+      ? MdCloudOff
+      : atRisk
+      ? MdOutlineCloud
+      : MdCloud;
 
   let cycleProgress = 0;
   const cyclePosition = lastProcessed?.cyclePosition;
@@ -136,6 +154,11 @@ export default ({
 
   const usesConsensusKey = consensusKey && consensusKey.active !== address;
   const consensusKeyIconColor = usesConsensusKey ? 'blue.500' : 'gray.400';
+
+  const [errorsWithNodeErrors, otherErrors] = partition(
+    errors,
+    (x) => (x.extensions as any).error?.nodeErrors,
+  );
 
   return (
     <Card minHeight="248px">
@@ -259,6 +282,43 @@ export default ({
         </VStack>
       </HStack>
       <VStack spacing={0} alignContent="stretch">
+        {errors &&
+          Object.keys(
+            groupBy(
+              errorsWithNodeErrors.flatMap(
+                (x) => (x.extensions as any).error?.nodeErrors || [],
+              ),
+              'id',
+            ),
+          ).map((nodeErrorId) => {
+            return (
+              <Alert status="error" key={nodeErrorId}>
+                <AlertIcon />
+                <AlertDescription>{nodeErrorId}</AlertDescription>
+              </Alert>
+            );
+          })}
+
+        {errors &&
+          Object.keys(
+            groupBy(
+              otherErrors.map(
+                (x) =>
+                  (x.extensions as any).error || {
+                    statusText: 'Unknown error',
+                  },
+              ),
+              'statusText',
+            ),
+          ).map((statusText) => {
+            return (
+              <Alert status="error" key={statusText}>
+                <AlertIcon />
+                <AlertDescription>{statusText}</AlertDescription>
+              </Alert>
+            );
+          })}
+
         {recentEvents.map((levelEvents, index) => {
           return (
             <RelativeTimeRow

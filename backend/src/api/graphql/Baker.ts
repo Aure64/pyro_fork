@@ -4,6 +4,8 @@ import { Context } from "../context";
 
 import LRU from "lru-cache";
 import { RpcClient } from "../../rpc/client";
+import { GraphQLError } from "graphql";
+import { HttpResponseError } from "../../rpc/util";
 
 const mkExplorerUrl = (ctx: Context, thing: string) =>
   ctx.explorerUrl ? `${ctx.explorerUrl}/${thing}` : null;
@@ -91,6 +93,12 @@ export const ConsensusKey = objectType({
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bakerCache = new LRU<string, any>({ max: 100 });
 
+const mkGQLError = (originalError: Error) => {
+  return new GraphQLError(originalError.message, {
+    extensions: { code: "TEZOS_RPC_ERROR", error: originalError },
+  });
+};
+
 const getGracePeriod = async (
   rpc: RpcClient,
   cycle: number,
@@ -101,13 +109,17 @@ const getGracePeriod = async (
   const cacheKey = `${cycle}:${address}:gracePeriod`;
   let value = bakerCache.get(cacheKey);
   if (!value) {
-    value = await rpc.getGracePeriod(address, `${level}`);
-    const atRisk = value - cycle <= atRiskThreshold;
-    //baker's grace period end is updated at first endorsement
-    //so "at risk" bakers may stop being at risk during the cycle
-    //so shouldn't be cached
-    if (!atRisk) {
-      bakerCache.set(cacheKey, value);
+    try {
+      value = await rpc.getGracePeriod(address, `${level}`);
+      const atRisk = value - cycle <= atRiskThreshold;
+      //baker's grace period end is updated at first endorsement
+      //so "at risk" bakers may stop being at risk during the cycle
+      //so shouldn't be cached
+      if (!atRisk) {
+        bakerCache.set(cacheKey, value);
+      }
+    } catch (err) {
+      throw mkGQLError(err);
     }
   }
   return value;
@@ -128,20 +140,28 @@ export const Baker = objectType({
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getFullBalance(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        try {
+          return await ctx.rpc.getFullBalance(
+            parent.address,
+            `head~${parent.headDistance}`
+          );
+        } catch (err) {
+          throw mkGQLError(err);
+        }
       },
     });
     t.field("frozenBalance", {
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getFrozenDeposits(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        try {
+          return await ctx.rpc.getFrozenDeposits(
+            parent.address,
+            `head~${parent.headDistance}`
+          );
+        } catch (err) {
+          throw mkGQLError(err);
+        }
       },
     });
 
@@ -149,10 +169,14 @@ export const Baker = objectType({
       type: "String",
       async resolve(parent, _args, ctx) {
         if (!parent.lastProcessed) return null;
-        return ctx.rpc.getStakingBalance(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        try {
+          return await ctx.rpc.getStakingBalance(
+            parent.address,
+            `head~${parent.headDistance}`
+          );
+        } catch (err) {
+          throw mkGQLError(err);
+        }
       },
     });
 
@@ -184,17 +208,20 @@ export const Baker = objectType({
           return null;
         }
 
-        const consensusKey = await ctx.rpc.getConsensusKey(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        try {
+          const consensusKey = await ctx.rpc.getConsensusKey(
+            parent.address,
+            `head~${parent.headDistance}`
+          );
+          if (!consensusKey) return null;
 
-        if (!consensusKey) return null;
-
-        return {
-          ...consensusKey,
-          explorerUrl: mkExplorerUrl(ctx, consensusKey.active),
-        };
+          return {
+            ...consensusKey,
+            explorerUrl: mkExplorerUrl(ctx, consensusKey.active),
+          };
+        } catch (err) {
+          throw mkGQLError(err);
+        }
       },
     });
 
@@ -225,8 +252,12 @@ export const Baker = objectType({
         const cacheKey = `${cycle}:${address}:deactivated`;
         let value = bakerCache.get(cacheKey);
         if (!value) {
-          value = ctx.rpc.getDeactivated(parent.address, `${level}`);
-          bakerCache.set(cacheKey, value);
+          try {
+            value = await ctx.rpc.getDeactivated(address, `${level}`);
+            bakerCache.set(cacheKey, value);
+          } catch (err) {
+            throw mkGQLError(err);
+          }
         }
         return value;
       },
@@ -241,10 +272,14 @@ export const Baker = objectType({
         if (protocol.startsWith("PtHangz2")) {
           return null;
         }
-        return ctx.rpc.getParticipation(
-          parent.address,
-          `head~${parent.headDistance}`
-        );
+        try {
+          return await ctx.rpc.getParticipation(
+            parent.address,
+            `head~${parent.headDistance}`
+          );
+        } catch (err) {
+          throw mkGQLError(err);
+        }
       },
     });
 
