@@ -843,6 +843,7 @@ const makeConfigValidations = (): Validator.Rules => {
   Validator.register(
     "baker",
     (value) => {
+      if (typeof value !== "string") return false;
       return validateAddress(value) === TzValidationResult.VALID;
     },
     "The :attribute is not a valid baker address."
