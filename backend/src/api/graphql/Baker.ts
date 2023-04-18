@@ -5,7 +5,6 @@ import { Context } from "../context";
 import LRU from "lru-cache";
 import { RpcClient } from "../../rpc/client";
 import { GraphQLError } from "graphql";
-import { HttpResponseError } from "../../rpc/util";
 
 const mkExplorerUrl = (ctx: Context, thing: string) =>
   ctx.explorerUrl ? `${ctx.explorerUrl}/${thing}` : null;
