@@ -71,7 +71,8 @@ export const open = async (
     try {
       await fs.promises.unlink(mkFullPath(key));
     } catch (err) {
-      if (err.code && err.code === "ENOENT") {
+      const e = err as NodeJS.ErrnoException;
+      if (e.code && e.code === "ENOENT") {
         //ignore
       } else throw err;
     }

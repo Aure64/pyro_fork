@@ -119,7 +119,7 @@ const getGracePeriod = async (
         bakerCache.set(cacheKey, value);
       }
     } catch (err) {
-      throw mkGQLError(err);
+      throw mkGQLError(err as Error);
     }
   }
   return value;
@@ -146,7 +146,7 @@ export const Baker = objectType({
             `head~${parent.headDistance}`
           );
         } catch (err) {
-          throw mkGQLError(err);
+          throw mkGQLError(err as Error);
         }
       },
     });
@@ -160,7 +160,7 @@ export const Baker = objectType({
             `head~${parent.headDistance}`
           );
         } catch (err) {
-          throw mkGQLError(err);
+          throw mkGQLError(err as Error);
         }
       },
     });
@@ -175,7 +175,7 @@ export const Baker = objectType({
             `head~${parent.headDistance}`
           );
         } catch (err) {
-          throw mkGQLError(err);
+          throw mkGQLError(err as Error);
         }
       },
     });
@@ -220,7 +220,7 @@ export const Baker = objectType({
             explorerUrl: mkExplorerUrl(ctx, consensusKey.active),
           };
         } catch (err) {
-          throw mkGQLError(err);
+          throw mkGQLError(err as Error);
         }
       },
     });
@@ -256,7 +256,7 @@ export const Baker = objectType({
             value = await ctx.rpc.getDeactivated(address, `${level}`);
             bakerCache.set(cacheKey, value);
           } catch (err) {
-            throw mkGQLError(err);
+            throw mkGQLError(err as Error);
           }
         }
         return value;
@@ -278,7 +278,7 @@ export const Baker = objectType({
             `head~${parent.headDistance}`
           );
         } catch (err) {
-          throw mkGQLError(err);
+          throw mkGQLError(err as Error);
         }
       },
     });

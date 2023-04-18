@@ -197,7 +197,7 @@ const subscribeToNode = (
           createdAt: now(),
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       log.warn(`Node subscription error: ${err.message}`);
       events.push({
         kind: Events.RpcError,
@@ -255,7 +255,7 @@ const updateNodeInfo = async ({
     blockHash = await rpc.getBlockHash();
     log.debug(`Checking block ${blockHash}`);
     history = await rpc.getBlockHistory(blockHash);
-  } catch (err) {
+  } catch (err: any) {
     const logMessage = blockHash
       ? `Unable to get block history for ${blockHash}: `
       : `Unable to get head block hash: `;
@@ -284,7 +284,7 @@ const updateNodeInfo = async ({
       try {
         bootstrappedStatus = await rpc.getBootsrappedStatus();
         log.debug(`bootstrap status:`, bootstrappedStatus);
-      } catch (err) {
+      } catch (err: any) {
         log.warn(`Unable to get bootsrap status`, err);
         if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
           hasStatusEndpoint = false;
@@ -297,7 +297,7 @@ const updateNodeInfo = async ({
         const connections = await rpc.getNetworkConnections();
         peerCount = connections.length;
         log.debug(`Node has ${peerCount} peers`);
-      } catch (err) {
+      } catch (err: any) {
         log.warn(`Unable to get network connections info`, err);
         if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
           hasNetworkConnectionsEndpoint = false;
@@ -309,7 +309,7 @@ const updateNodeInfo = async ({
       try {
         tezosVersion = await rpc.getTezosVersion();
         log.debug(`Tezos version:`, tezosVersion);
-      } catch (err) {
+      } catch (err: any) {
         log.warn(`Unable to get tezos version info`, err);
         if (UNAVAILABLE_RPC_HTTP_STATUS.includes(err.status)) {
           hasVersionEndpoint = false;

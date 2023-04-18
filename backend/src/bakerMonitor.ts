@@ -364,7 +364,7 @@ export const create = async (
         lastBlockCycle = blockCycle;
         await delay(1000);
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err.name === "HttpRequestFailed") {
         log.warn("RPC Error:", err.message);
       } else {
