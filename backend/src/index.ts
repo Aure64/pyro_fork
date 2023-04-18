@@ -13,7 +13,7 @@ import run from "./run";
 /**
  * Calls makeConfigFile and writes the result to the specified path.
  */
-const writeSampleConfig = (path: string | null) => {
+const writeSampleConfig = (path: string | null | undefined) => {
   const sampleConfig = Config.makeSampleConfig();
   const serialized = TOML.stringify(sampleConfig);
   if (path) {
@@ -52,9 +52,11 @@ const main = async () => {
         .command(
           "sample [path]",
           "Print sample config or write it to a file",
-          undefined,
-          ({ path }: { path: string }) => {
-            writeSampleConfig(path);
+          (yargs) => {
+            return yargs.positional("path", { type: "string" });
+          },
+          (args) => {
+            writeSampleConfig(args.path);
           }
         )
         .demandCommand();

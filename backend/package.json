@@ -80,7 +80,7 @@
     "proper-lockfile": "^4.1.2",
     "systeminformation": "^5.16.9",
     "validatorjs": "3.22.1",
-    "yargs": "^17.3.1"
+    "yargs": "^17.7.1"
   },
   "files": [
     "ui",
