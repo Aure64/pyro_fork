@@ -13,7 +13,7 @@
     "generate:gql": "graphql-codegen"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.10",
+    "@apollo/client": "^3.7.12",
     "@chakra-ui/react": "^1.8.8",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
@@ -24,9 +24,9 @@
     "react-icons": "^4.3.1"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^3.2.2",
-    "@graphql-codegen/typescript": "^3.0.2",
-    "@graphql-codegen/typescript-operations": "^2.4.0",
+    "@graphql-codegen/cli": "^3.3.0",
+    "@graphql-codegen/typescript": "^3.0.3",
+    "@graphql-codegen/typescript-operations": "^3.0.3",
     "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@testing-library/react": "^12.1.5",
     "@types/react": "^17.0.45",
