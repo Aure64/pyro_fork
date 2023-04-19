@@ -2,7 +2,7 @@ import { first, groupBy, orderBy, take } from "lodash";
 import { extendType, nonNull, objectType, list, intArg } from "nexus";
 import { Context } from "../context";
 
-import LRU from "lru-cache";
+import { LRUCache } from "lru-cache";
 import { RpcClient } from "../../rpc/client";
 import { GraphQLError } from "graphql";
 
@@ -90,7 +90,7 @@ export const ConsensusKey = objectType({
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const bakerCache = new LRU<string, any>({ max: 100 });
+const bakerCache = new LRUCache<string, any>({ max: 100 });
 
 const mkGQLError = (originalError: Error) => {
   return new GraphQLError(originalError.message, {

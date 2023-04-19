@@ -1,6 +1,6 @@
 import { getLogger } from "loglevel";
 import { delay } from "../delay";
-import LRU from "lru-cache";
+import { LRUCache } from "lru-cache";
 
 import { makeMemoizedAsyncFunction } from "../memoization";
 
@@ -205,9 +205,9 @@ export default (
 
   const log = getLogger("rpc");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const delegateCache = new LRU<string, any>({
+  const delegateCache = new LRUCache<string, any>({
     max: 5 * 25,
-    maxAge: 60e3,
+    ttl: 60e3,
   });
   const fetchDelegateField = async (
     pkh: TzAddress,
@@ -234,16 +234,21 @@ export default (
       //minutes, with different ttls so avoid request bursts when they
       //all expire at the same time this means displayed balances may
       //be slightly stale
-      delegateCache.set(cacheKey, value, 60e3 * (1 + 3 * Math.random()));
+      delegateCache.set(cacheKey, value, {
+        ttl: 60e3 * (1 + 3 * Math.random()),
+      });
     } else {
       log.debug(
-        `CACHE HIT: '${value}' under ${cacheKey} (${delegateCache.itemCount} items cached)`
+        `CACHE HIT: '${value}' under ${cacheKey} (${delegateCache.size} items cached)`
       );
     }
     return value;
   };
 
-  const tezosVersionCache = new LRU<string, TezosVersion>({ maxAge: 5 * 60e3 });
+  const tezosVersionCache = new LRUCache<string, TezosVersion>({
+    max: 1,
+    ttl: 5 * 60e3,
+  });
 
   const fetchTezosVersion = async () => {
     let tezosVersion = tezosVersionCache.get("value");
