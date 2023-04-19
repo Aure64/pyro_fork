@@ -48,13 +48,16 @@ const onIconClick = () => {
   window.open('https://gitlab.com/tezos-kiln/pyrometer', '_blank');
 };
 
-const Label: React.FC = ({ children }) => (
+const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Text fontWeight="bold" as="span" color="#606060">
     {children}
   </Text>
 );
 
-const LabeledItem: React.FC<{ label: string }> = ({ label, children }) => (
+const LabeledItem: React.FC<{ label: string; children: React.ReactNode }> = ({
+  label,
+  children,
+}) => (
   <Box>
     <Label>{label}:</Label> {children}
   </Box>
