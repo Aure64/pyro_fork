@@ -226,7 +226,7 @@ export default ({
           )}
 
           {participation && (
-            <HStack w="100%" d="flex">
+            <HStack w="100%" display="flex">
               <Tooltip
                 label={`Missed slots: ${participation.missed_slots} of ${
                   participation.remaining_allowed_missed_slots +

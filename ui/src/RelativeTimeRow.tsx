@@ -14,7 +14,7 @@ export default ({
 }) => {
   return (
     <Box
-      d="flex"
+      display="flex"
       w="100%"
       justifyContent="space-between"
       alignItems="baseline"

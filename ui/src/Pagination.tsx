@@ -137,12 +137,12 @@ export default ({
       >
         <Button
           onClick={first}
-          disabled={loading || currentPage <= 1}
+          isDisabled={loading || currentPage <= 1}
           leftIcon={<IconFirst />}
         />
         <Button
           onClick={prev}
-          disabled={loading || !hasPrev()}
+          isDisabled={loading || !hasPrev()}
           leftIcon={<IconPrev />}
         />
 
@@ -157,7 +157,7 @@ export default ({
           gutter={2}
         >
           <PopoverTrigger>
-            <Button disabled={loading}>
+            <Button isDisabled={loading}>
               <Text fontFamily="mono" pl={5} pr={5}>
                 {currentPage}/{pageCount}
               </Text>
@@ -178,13 +178,13 @@ export default ({
 
         <Button
           onClick={next}
-          disabled={loading || !hasNext()}
+          isDisabled={loading || !hasNext()}
           leftIcon={<IconNext />}
         />
 
         <Button
           onClick={last}
-          disabled={loading || currentPage > pageCount - 1}
+          isDisabled={loading || currentPage > pageCount - 1}
           leftIcon={<IconLast />}
         />
       </ButtonGroup>

@@ -105,7 +105,7 @@ const FsItem = ({ use, mount, available, size, used, fs }: FsSizeData) => {
 };
 
 const FsSizeInfo = ({ data }: { data: (FsSizeData | null | undefined)[] }) => (
-  <HStack d="flex" wrap="wrap">
+  <HStack display="flex" wrap="wrap">
     <VStack alignItems="flex-start">
       <Label>Disk:</Label>
       {data.filter(notEmpty).map((x, index) => (
@@ -121,7 +121,7 @@ const MemInfo = ({
   swaptotal,
   swapused,
 }: Omit<MemData, 'used'>) => (
-  <HStack d="flex" wrap="wrap" spacing={5}>
+  <HStack display="flex" wrap="wrap" spacing={5}>
     <Box>
       <Label>Mem:</Label>{' '}
       <Progress value={(100 * active) / total} minW="120px" />

@@ -66,7 +66,7 @@ export default ({
       )}
       <RecentBlocks recentBlocks={recentBlocks} />
     </Box>
-    <Box justifyContent="space-between" d="flex" alignContent="center">
+    <Box justifyContent="space-between" display="flex" alignContent="center">
       <HStack spacing={1}>
         {tezosVersion.version && <Text>v{tezosVersion.version}</Text>}
         {tezosVersion.commitHash && (
