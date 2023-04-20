@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     target: 'es2020',
+    chunkSizeWarningLimit: 1024,
   },
   server: {
     proxy: {
