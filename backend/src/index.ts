@@ -25,7 +25,7 @@ const writeSampleConfig = (path: string | null | undefined) => {
 
 const clearData = (dataDirectory: string) => {
   if (FS.existsSync(dataDirectory)) {
-    FS.rmdirSync(dataDirectory, { recursive: true });
+    FS.rmSync(dataDirectory, { recursive: true });
     console.log(`Data directory deleted: ${dataDirectory}`);
   } else {
     console.log("Data directory does not exist");

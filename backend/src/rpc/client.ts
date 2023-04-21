@@ -27,6 +27,7 @@ import { E_BLOCK_HEADER } from "./urls";
 import { E_BLOCK_HASH } from "./urls";
 import { E_DELEGATES_PKH } from "./urls";
 import { E_DELEGATE_PARTICIPATION } from "./urls";
+import { E_ACTIVE_DELEGATES } from "./urls";
 import { delegatesUrl } from "./urls";
 
 import { TzAddress } from "rpc/types";
@@ -37,10 +38,6 @@ import { Block } from "./types";
 import { BakingRights } from "./types";
 import { EndorsingRights } from "./types";
 import { Constants } from "./types";
-
-// interface WithPayloadRound {
-//   payload_round: number;
-// }
 
 export const getNetworkConnections = async (
   node: string
@@ -103,6 +100,7 @@ export type RpcClient = {
     level: number,
     maxRoundOrPriority: number
   ) => Promise<[BakingRights, EndorsingRights]>;
+  getActiveBakers: (block: string) => Promise<TzAddress[]>;
 };
 
 export type RpcClientConfig = {
@@ -280,6 +278,13 @@ export default (
   let frozenDepositsFields = [F_FROZEN_DEPOSITS, F_FROZEN_BALANCE];
   let fullBalanceFields = [F_FULL_BALANCE, F_BALANCE];
 
+  const getActiveBakers = async (
+    node: string,
+    block: string
+  ): Promise<TzAddress[]> => {
+    return await rpcFetch(`${node}/${E_ACTIVE_DELEGATES(block)}`);
+  };
+
   return {
     url: nodeRpcUrl,
 
@@ -420,6 +425,10 @@ export default (
       ]);
 
       return [bakingRights, endorsingRights];
+    },
+
+    getActiveBakers: async (block = "head") => {
+      return getActiveBakers(nodeRpcUrl, block);
     },
   };
 };

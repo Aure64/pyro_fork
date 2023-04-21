@@ -1,6 +1,8 @@
 import { join as joinPath } from "path";
 import { getLogger } from "loglevel";
 
+import { LRUCache } from "lru-cache";
+
 import { BakerBlockEvent, Event, BakerEvent } from "./events";
 
 import { tryForever, HttpResponseError } from "./rpc/util";
@@ -84,7 +86,7 @@ const successKinds = new Set<Events>([Events.Baked, Events.Endorsed]);
 export const create = async (
   storageDirectory: string,
   {
-    bakers,
+    bakers: configuredBakers,
     rpc: rpcUrl,
     max_catchup_blocks: catchupLimit,
     head_distance: headDistance,
@@ -94,9 +96,6 @@ export const create = async (
   enableHistory: boolean,
   onEvent: (event: Event) => Promise<void>
 ): Promise<BakerMonitor> => {
-  //dedup
-  bakers = [...new Set(bakers)];
-
   const log = getLogger(name);
   // const rpc = new RpcClient(rpcUrl);
   const rpc = RpcClient(rpcUrl, rpcConfig);
@@ -116,6 +115,32 @@ export const create = async (
 
   log.info("Protocol constants", JSON.stringify(constants, null, 2));
 
+  //dedup
+  configuredBakers = [...new Set(configuredBakers)];
+
+  const monitorAllActiveBakers = configuredBakers.some((x) => x === "*");
+
+  if (monitorAllActiveBakers) {
+    console.log("Monitoring all active bakers");
+  }
+
+  const activeBakersCache = new LRUCache<number, TzAddress[]>({ max: 1 });
+
+  const getMonitoredAddresses = async ({
+    blockLevel,
+    blockCycle,
+  }: ChainPositionInfo) => {
+    if (monitorAllActiveBakers) {
+      let activeBakers = activeBakersCache.get(blockCycle);
+      if (!activeBakers) {
+        activeBakers = await rpc.getActiveBakers(`${blockLevel}`);
+        activeBakersCache.set(blockCycle, activeBakers);
+      }
+      return activeBakers;
+    }
+    return configuredBakers;
+  };
+
   const CHAIN_POSITION_KEY = "position";
 
   const store = await storage.open([
@@ -128,6 +153,8 @@ export const create = async (
     [key: string]: EventLog.EventLog<BakerBlockEvent>;
   } = {};
 
+  const historyDir = joinPath(storageDirectory, "history");
+
   const getBakerEventLog = async (
     baker: TzAddress
   ): Promise<EventLog.EventLog<BakerBlockEvent>> => {
@@ -139,10 +166,9 @@ export const create = async (
     return bakerLog;
   };
 
-  const historyDir = joinPath(storageDirectory, "history");
-  for (const baker of bakers) {
-    bakerEventLogs[baker] = await EventLog.open(historyDir, baker, MAX_HISTORY);
-  }
+  // for (const baker of bakers) {
+  //   bakerEventLogs[baker] = await EventLog.open(historyDir, baker, MAX_HISTORY);
+  // }
 
   const addToHistory = async (event: BakerBlockEvent) => {
     const bakerLog = await getBakerEventLog(event.baker);
@@ -166,8 +192,10 @@ export const create = async (
   const task = async (isInterrupted: () => boolean) => {
     try {
       const chainPosition = await getPosition();
+      const bakers = await getMonitoredAddresses(chainPosition);
       const lastBlockLevel = chainPosition.blockLevel;
       let lastBlockCycle = chainPosition.blockCycle;
+
       log.debug(`Getting block header for head~${headDistance}`);
 
       const headMinusXHeader = await rpc.getBlockHeader(`head~${headDistance}`);
@@ -377,26 +405,27 @@ export const create = async (
 
   const srv = service.create(name, task, interval);
 
-  const bakerInfo: BakerInfo[] = [];
-  for (const baker of bakers) {
-    const bakerEventLog = await getBakerEventLog(baker);
-    bakerInfo.push({
-      address: baker,
-      recentEvents: async () => {
-        const recentEvents: BakerBlockEvent[] = [];
-        for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
-          recentEvents.push(record.value);
-        }
-        return recentEvents;
-      },
-    });
-  }
-
   const info = async () => {
     const chainPosition = await getPosition();
+    const bakers = await getMonitoredAddresses(chainPosition);
     const lastBlockLevel = chainPosition.blockLevel;
     const lastBlockCycle = chainPosition.blockCycle;
     const cyclePosition = chainPosition.cyclePosition || 0;
+
+    const bakerInfo: BakerInfo[] = [];
+    for (const baker of bakers) {
+      const bakerEventLog = await getBakerEventLog(baker);
+      bakerInfo.push({
+        address: baker,
+        recentEvents: async () => {
+          const recentEvents: BakerBlockEvent[] = [];
+          for await (const record of bakerEventLog.readFrom(-MAX_HISTORY)) {
+            recentEvents.push(record.value);
+          }
+          return recentEvents;
+        },
+      });
+    }
 
     return {
       bakerInfo,
