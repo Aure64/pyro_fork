@@ -131,6 +131,7 @@ export const create = async (
     blockCycle,
   }: ChainPositionInfo) => {
     if (monitorAllActiveBakers) {
+      if (blockLevel < 0) return [];
       let activeBakers = activeBakersCache.get(blockCycle);
       if (!activeBakers) {
         activeBakers = await rpc.getActiveBakers(`${blockLevel}`);
