@@ -1,5 +1,12 @@
 import { first, groupBy, orderBy, take } from "lodash";
-import { extendType, nonNull, objectType, list, intArg } from "nexus";
+import {
+  extendType,
+  nonNull,
+  objectType,
+  list,
+  intArg,
+  stringArg,
+} from "nexus";
 import { Context } from "../context";
 
 import { LRUCache } from "lru-cache";
@@ -290,13 +297,7 @@ export const Bakers = objectType({
   name: "Bakers",
   definition(t) {
     t.nonNull.field("items", { type: list(nonNull(Baker)) });
-    t.nonNull.field("totalCount", {
-      type: "Int",
-      async resolve(_root, _args, ctx) {
-        const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
-        return bakerMonitorInfo.bakerInfo.length;
-      },
-    });
+    t.nonNull.int("totalCount");
   },
 });
 
@@ -323,13 +324,28 @@ export const BakerQuery = extendType({
       args: {
         offset: nonNull(intArg()),
         limit: nonNull(intArg()),
+        bakers: list(nonNull(stringArg())),
       },
 
-      async resolve(_root, args, ctx) {
+      async resolve(_root, { offset, limit, bakers: bakersFilter }, ctx) {
         const bakerMonitorInfo = await ctx.bakerInfoCollection.info();
-
-        const bakers = bakerMonitorInfo.bakerInfo
-          .slice(args.offset, args.offset + args.limit)
+        const bakerInfo =
+          bakersFilter && bakersFilter.length > 0
+            ? bakerMonitorInfo.bakerInfo.filter((x) =>
+                bakersFilter.includes(x.address)
+              )
+            : bakerMonitorInfo.bakerInfo;
+        if (bakersFilter) {
+          const sortWeights: { [key: string]: number } = {};
+          for (let i = 0; i < bakersFilter.length; i++) {
+            sortWeights[bakersFilter[i]] = i;
+          }
+          bakerInfo.sort(
+            (a, b) => sortWeights[a.address] - sortWeights[b.address]
+          );
+        }
+        const bakers = bakerInfo
+          .slice(offset, offset + limit)
           .map(async (bakerInfo) => {
             const grouped = groupBy(await bakerInfo.recentEvents(), "level");
             const recentEvents = Object.entries(grouped).map(
@@ -364,7 +380,7 @@ export const BakerQuery = extendType({
             };
           });
 
-        return { items: bakers };
+        return { items: bakers, totalCount: bakerInfo.length };
       },
     });
 
