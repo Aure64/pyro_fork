@@ -91,7 +91,9 @@ export const create = async (
           `Sending message ${count} of length ${message.length}`,
           message
         );
-        await bot.sendMessage(chatId, message);
+        await bot.sendMessage(chatId, `<pre>${message}</pre>`, {
+          parse_mode: "HTML",
+        });
         message = line + "\n";
         await delay(1000);
       }
@@ -102,7 +104,9 @@ export const create = async (
         `Sending message ${count} of length ${message.length}`,
         message
       );
-      await bot.sendMessage(chatId, message);
+      await bot.sendMessage(chatId, `<pre>${message}</pre>`, {
+        parse_mode: "HTML",
+      });
     }
   }, config);
 };
