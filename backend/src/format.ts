@@ -110,8 +110,8 @@ export const formatRange = (a?: number, b?: number): string => {
   if (b && !a) return `${b}`;
   let i = 0;
   if (a !== undefined && b !== undefined) {
-    let aStr = a.toString();
-    let bStr = b.toString();
+    const aStr = a.toString();
+    const bStr = b.toString();
     while (aStr[i] === bStr[i]) {
       i++;
     }
