@@ -3,8 +3,4 @@ module.exports = {
   testEnvironment: "node",
   modulePathIgnorePatterns: ["/dist"],
   setupFiles: ["./setupJest.js"],
-  snapshotFormat: {
-    escapeString: true,
-    printBasicPrototype: true,
-  },
 };

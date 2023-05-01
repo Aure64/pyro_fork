@@ -18,14 +18,16 @@ const formatTime = (t: Date): string => {
 const format = (
   events: eventTypes.Event[],
   useEmoji = false,
-  abbreviateAddress = false
+  abbreviateAddress = false,
+  linePerBaker = false
 ): string[] => {
   const bakerEvents = events.filter(isBakerEvent);
   const otherEvents = events.filter(nonBakerEvent);
   const formattedBakerEvents = aggregateByBaker(
     bakerEvents,
     useEmoji,
-    abbreviateAddress
+    abbreviateAddress,
+    linePerBaker
   );
   const formattedOtherEvents = otherEvents.map(toString);
   return [...formattedOtherEvents, ...formattedBakerEvents];
@@ -97,7 +99,7 @@ const Formatters: {
 };
 
 export const abbreviateBakerAddress = (addr: string) =>
-  `${addr.substr(0, 4)}..${addr.substr(-4)}`;
+  `${addr.substr(0, 4)}…${addr.substr(-4)}`;
 
 export const toString = (e: eventTypes.Event): string =>
   (Formatters[e.kind] as (v: eventTypes.Event) => string)(e);
@@ -106,6 +108,18 @@ export const formatRange = (a?: number, b?: number): string => {
   if (!a && !b) return "";
   if (a && (!b || b === a)) return `${a}`;
   if (b && !a) return `${b}`;
+  let i = 0;
+  if (a !== undefined && b !== undefined) {
+    let aStr = a.toString();
+    let bStr = b.toString();
+    while (aStr[i] === bStr[i]) {
+      i++;
+    }
+    const common = aStr.substring(0, i);
+    const restA = aStr.substring(i);
+    const restB = bStr.substring(i);
+    return `${common}[${restA}-${restB}]`;
+  }
   return `${a}-${b}`;
 };
 
@@ -120,10 +134,42 @@ export const levelRange = (events: eventTypes.Event[]): [number?, number?] => {
   return [firstLevel, lastLevel];
 };
 
+const DIGITS_SUPERSCRIPT: {
+  [key: string]: string;
+} = {
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+};
+
+export const renderNumber = (
+  n: number,
+  digitsMap: { [key: string]: string }
+) => {
+  const s = n.toString();
+  const result = [];
+  for (let i = 0; i < s.length; i++) {
+    result.push(digitsMap[s[i]]);
+  }
+  return result.join("");
+};
+
+export const n2superscript = (n: number) => {
+  return renderNumber(n, DIGITS_SUPERSCRIPT);
+};
+
 export const aggregateByBaker = (
   events: eventTypes.BakerEvent[],
   useEmoji = false,
-  abbreviateAddress = false
+  abbreviateAddress = false,
+  linePerBaker = false
 ): string[] => {
   const formatKind = useEmoji ? formatKindEmoji : formatKindText;
   const eventsByBaker = groupBy(events, "baker");
@@ -135,24 +181,38 @@ export const aggregateByBaker = (
     for (const kind in eventsByKind) {
       let formattedRange = "";
       const events = eventsByKind[kind];
+      const count = events.length;
+      let rangeCount = count;
       if (kind === E.Deactivated || kind === E.DeactivationRisk) {
         const firstEvent = first(events) as eventTypes.CycleEvent;
         formattedRange = `cycle ${firstEvent.cycle}`;
       } else {
         const [firstLevel, lastLevel] = levelRange(events);
         formattedRange = formatRange(firstLevel, lastLevel);
+        if (firstLevel && lastLevel) {
+          rangeCount = lastLevel - firstLevel + 1;
+        }
       }
-      const count = events.length;
-      const formattedKind = `${formatKind(kind as E)}${
-        count === 1 ? "" : " " + count
-      } @ ${formattedRange}`;
+      const formattedKind = `${formatKind(kind as E)} @${formattedRange}${
+        count === rangeCount ? "" : n2superscript(count)
+      }`;
       formattedWithCounts.push(formattedKind);
     }
     const formattedBaker = abbreviateAddress
       ? abbreviateBakerAddress(baker)
       : baker;
-    const line = `${formattedBaker} ${formattedWithCounts.join(", ")}`;
-    lines.push(line);
+    if (linePerBaker) {
+      const line = `${formattedBaker} ${formattedWithCounts.join(" ")}`;
+      lines.push(line);
+    } else {
+      const bakerLines = formattedWithCounts.map((x, i) => {
+        if (i === 0) {
+          return `${formattedBaker} ${x}`;
+        }
+        return `. ${x}`.padStart(x.length + formattedBaker.length + 1);
+      });
+      Array.prototype.push.apply(lines, bakerLines);
+    }
   }
   return lines;
 };
@@ -176,7 +236,7 @@ export const summary = (
     }
   }
   if (formattedRange) {
-    parts.push(`@ ${formattedRange}`);
+    parts.push(`@${formattedRange}`);
   }
   return parts.join(" ");
 };
@@ -186,7 +246,7 @@ export const email = (
   useEmoji = false,
   abbreviateAddress = false
 ): [string, string] => {
-  const lines = format(events, useEmoji, abbreviateAddress);
+  const lines = format(events, useEmoji, abbreviateAddress, true);
 
   let subject;
   let text;
