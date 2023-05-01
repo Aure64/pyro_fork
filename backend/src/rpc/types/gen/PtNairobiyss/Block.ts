@@ -153,7 +153,12 @@ export type _017_PtNairob$Operation$Alpha$SuccessfulManagerOperationResult =
  * Decimal representation of a positive big number
  */
 export type PositiveBigNumber = string;
-export type Micheline$017_PtNairob$MichelsonV1$Expression = Int | String | Bytes | Sequence | Prim_Generic;
+export type Micheline$017_PtNairob$MichelsonV1$Expression =
+  | Int
+  | String
+  | Bytes
+  | Sequence
+  | Prim_Generic;
 /**
  * Decimal representation of a big number
  */
@@ -446,7 +451,11 @@ export type _017_PtNairob$Operation$Alpha$OperationContentsAndResult =
   | ZkRollupOrigination1
   | ZkRollupPublish1
   | ZkRollupUpdate1;
-export type _017_PtNairob$Operation$Alpha$OperationResult$Reveal = Applied | Failed | Skipped | Backtracked;
+export type _017_PtNairob$Operation$Alpha$OperationResult$Reveal =
+  | Applied
+  | Failed
+  | Skipped
+  | Backtracked;
 export type _017_PtNairob$ApplyInternalResults$Alpha$OperationResult =
   | Transaction1
   | Origination2
@@ -467,19 +476,28 @@ export type _017_PtNairob$Operation$Alpha$InternalOperationResult$Delegation =
   | Failed3
   | Skipped3
   | Backtracked2;
-export type _017_PtNairob$Operation$Alpha$InternalOperationResult$Event = Applied3 | Failed4 | Skipped4 | Backtracked3;
+export type _017_PtNairob$Operation$Alpha$InternalOperationResult$Event =
+  | Applied3
+  | Failed4
+  | Skipped4
+  | Backtracked3;
 export type _017_PtNairob$Operation$Alpha$OperationResult$Transaction =
   | (ToContract3 | ToTxRollup3 | ToSmartRollup3)
   | Failed5
   | Skipped5
   | (ToContract4 | ToTxRollup4 | ToSmartRollup4);
-export type _017_PtNairob$Operation$Alpha$OperationResult$Origination = Applied4 | Failed6 | Skipped6 | Backtracked4;
-export type _017_PtNairob$Operation$Alpha$OperationResult$Delegation = Applied5 | Failed7 | Skipped7 | Backtracked5;
+export type _017_PtNairob$Operation$Alpha$OperationResult$Origination =
+  | Applied4
+  | Failed6
+  | Skipped6
+  | Backtracked4;
+export type _017_PtNairob$Operation$Alpha$OperationResult$Delegation =
+  | Applied5
+  | Failed7
+  | Skipped7
+  | Backtracked5;
 export type _017_PtNairob$Operation$Alpha$OperationResult$RegisterGlobalConstant =
-  | Applied6
-  | Failed8
-  | Skipped8
-  | Backtracked6;
+  Applied6 | Failed8 | Skipped8 | Backtracked6;
 export type _017_PtNairob$Operation$Alpha$OperationResult$SetDepositsLimit =
   | Applied7
   | Failed9
@@ -501,20 +519,11 @@ export type _017_PtNairob$Operation$Alpha$OperationResult$TransferTicket =
   | Skipped12
   | Backtracked10;
 export type _017_PtNairob$Operation$Alpha$OperationResult$DalPublishSlotHeader =
-  | Applied11
-  | Failed13
-  | Skipped13
-  | Backtracked11;
+  Applied11 | Failed13 | Skipped13 | Backtracked11;
 export type _017_PtNairob$Operation$Alpha$OperationResult$SmartRollupOriginate =
-  | Applied12
-  | Failed14
-  | Skipped14
-  | Backtracked12;
+  Applied12 | Failed14 | Skipped14 | Backtracked12;
 export type _017_PtNairob$Operation$Alpha$OperationResult$SmartRollupAddMessages =
-  | Applied13
-  | Failed15
-  | Skipped15
-  | Backtracked13;
+  Applied13 | Failed15 | Skipped15 | Backtracked13;
 export type _017_PtNairob$Operation$Alpha$OperationResult$SmartRollupCement =
   | Applied14
   | Failed16
@@ -552,15 +561,9 @@ export type Ongoing3 = "ongoing";
 export type ConflictResolved3 = "conflict_resolved";
 export type Timeout3 = "timeout";
 export type _017_PtNairob$Operation$Alpha$OperationResult$SmartRollupExecuteOutboxMessage =
-  | Applied18
-  | Failed20
-  | Skipped20
-  | Backtracked18;
+  Applied18 | Failed20 | Skipped20 | Backtracked18;
 export type _017_PtNairob$Operation$Alpha$OperationResult$SmartRollupRecoverBond =
-  | Applied19
-  | Failed21
-  | Skipped21
-  | Backtracked19;
+  Applied19 | Failed21 | Skipped21 | Backtracked19;
 export type _017_PtNairob$Operation$Alpha$OperationResult$ZkRollupOrigination =
   | Applied20
   | Failed22
@@ -1397,7 +1400,10 @@ export interface ZkRollupOrigination {
   gas_limit: PositiveBigNumber;
   storage_limit: PositiveBigNumber;
   public_parameters: string;
-  circuits_info: [] | [_017_PtNairob$ContractId] | [_017_PtNairob$ContractId, Public | Private | Fee][];
+  circuits_info:
+    | []
+    | [_017_PtNairob$ContractId]
+    | [_017_PtNairob$ContractId, Public | Private | Fee][];
   init_state: string[];
   nb_ops: number;
 }
@@ -2657,7 +2663,10 @@ export interface ZkRollupOrigination1 {
   gas_limit: PositiveBigNumber;
   storage_limit: PositiveBigNumber;
   public_parameters: string;
-  circuits_info: [] | [_017_PtNairob$ContractId] | [_017_PtNairob$ContractId, Public1 | Private1 | Fee1][];
+  circuits_info:
+    | []
+    | [_017_PtNairob$ContractId]
+    | [_017_PtNairob$ContractId, Public1 | Private1 | Fee1][];
   init_state: string[];
   nb_ops: number;
   metadata: {
