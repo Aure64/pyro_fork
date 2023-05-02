@@ -74,8 +74,6 @@ export type BakerInfoCollection = { info: () => Promise<BakerMonitorInfo> };
 
 export type BakerMonitor = service.Service & BakerInfoCollection;
 
-const MAX_HISTORY = 7;
-
 const missedKinds = new Set<Events>([
   Events.MissedBake,
   Events.MissedBonus,
@@ -97,6 +95,8 @@ export const create = async (
   enableHistory: boolean,
   onEvent: (event: Event) => Promise<void>
 ): Promise<BakerMonitor> => {
+  const MAX_HISTORY = Math.max(7, missedEventsThreshold);
+
   const log = getLogger(name);
   // const rpc = new RpcClient(rpcUrl);
   const rpc = RpcClient(rpcUrl, rpcConfig);
