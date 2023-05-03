@@ -18,7 +18,7 @@ Pyrometer is a tool for monitoring events on
 - Install:
 
 ``` shell
-sudo dpkg -i pyrometer_0.4.0_all.deb
+sudo dpkg -i pyrometer_0.8.0_all.deb
 ```
 
 - If Pyrometer is installed on a machine where Tezos baker is [set up
@@ -243,6 +243,88 @@ docker run -p 2020:2020 registry.gitlab.com/tezos-kiln/pyrometer \
 Run Pyrometer with `pyrometer run --help` to see the CLI and config
 key names for the channel settings.
 
+### Notifications Format
+
+With the following configuration:
+
+```
+emoji = true
+short_address = true
+```
+notification looks like this:
+
+```
+tz1a…wDjM 🥖 @346707[3-6]²
+        . 👍 @346707[2-5]
+
+^^^^^^^^^ ^^ ^^^^^^^^^^^ ^
+    1     2       3      4
+```
+
+1) Baker's shortened tz address
+2) Event type
+3) Block level range
+4) Event count in the level range (if less than then number of levels
+in the range)
+
+
+With `short_address = false`:
+
+```
+tz1irJKkXS2DBWkU1NnmFQx1c1L7pbGg4yhk 👍 @346712[0-4]
+
+```
+
+With `emoji = false`:
+
+```
+tz1i…4yhk baked @3467146
+        . endorsed @346714[5-6]
+tz3R…CxD9 endorsed @346714[5-6]
+tz1a…wDjM endorsed @346714[5-6]
+```
+
+### Event Types
+
+- 🤒 baker unhealthy
+  baker missed `baker_monitor:missed_threshold` events in a row
+- 💪 baker recovered
+  baker successfully baked or endorsed after being unhealthy
+- 😡 missed bake
+  baker was scheduled to produce a block at this level, but failed to
+  do so
+- 😾 missed baking bonus
+  baker proposed a block payload, but failed to actually produce the
+  block itself, another baker did that and received the bonus
+- 🥖 baked
+  baker produced a block as scheduled per baking rights
+- ✂️️️️ double baked
+  baker produced two different blocks in the same round, baker's
+  deposit will be slashed as punishment
+- 😕 missed endorsement
+  baker missed an endosement
+- ‼️️ double endorsed
+  baker endorsed two different blocks in the same round
+- ‼️️ double pre-endorsed
+  baker pre-endorsed two different blocks in the same round
+- 🐌 node behind
+  a monitored node is not synchronized with the blockchain, is at a
+  lower block level then the other nodes in the network
+- 💫 node synced
+  a monitored node has caught up with the blockchain after falling behind
+- 🤔 low peers
+  a monitored node has fewer than `node_monitor:low_peer_count` peers
+- 🤝 low peers resolved
+  a monitored node connected to a sufficient number of
+  `node_monitor:low_peer_count` peers
+- 😴 deactivated
+  baker has been deactivated
+- 😪 deactivation risk
+  baker is at risk of deactivation (baker stopped participating and
+  will be deactivated once previously calculated baking right run out)
+- ⚠️ rpc error
+  an error occurred while communicating with Tezos node RPC interface
+
 #### Desktop
 
 Shows desktop notifications (not available when running in Docker)
@@ -266,7 +348,7 @@ Sends notifications via Telegram. To enable:
    after 24 hours and the chatId cannot be found, simply send another
    message to your bot and try again.
 
-![Screenshot of Pyrometer messages in Telegram](doc/telegram-screenshot.png)
+![Screenshot of Pyrometer messages in Telegram](doc/pyrometer-0.8.0-telegram-screenshot.png)
 
 #### Email
 
@@ -283,7 +365,7 @@ This channel will post your notifications to a Slack webhook. Follow
 [the instructions here](https://api.slack.com/messaging/webhooks) to
 configure your webhook, and provide the URL to Pyrometer.
 
-![Screenshot of Pyrometer messages in Slack](doc/slack-screenshot.png)
+![Screenshot of Pyrometer messages in Slack](doc/pyrometer-0.8.0-slack-screenshot.png)
 
 #### Webhook
 
