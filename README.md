@@ -287,42 +287,74 @@ tz1a…wDjM endorsed @346714[5-6]
 ### Event Types
 
 - 🤒 baker unhealthy
+
   baker missed `baker_monitor:missed_threshold` events in a row
+
 - 💪 baker recovered
+
   baker successfully baked or endorsed after being unhealthy
+
 - 😡 missed bake
+
   baker was scheduled to produce a block at this level, but failed to
   do so
+
 - 😾 missed baking bonus
+
   baker proposed a block payload, but failed to actually produce the
   block itself, another baker did that and received the bonus
+
 - 🥖 baked
+
   baker produced a block as scheduled per baking rights
+
 - ✂️️️️ double baked
+
   baker produced two different blocks in the same round, baker's
   deposit will be slashed as punishment
+
 - 😕 missed endorsement
+
   baker missed an endosement
+
 - ‼️️ double endorsed
+
   baker endorsed two different blocks in the same round
+
 - ‼️️ double pre-endorsed
+
   baker pre-endorsed two different blocks in the same round
+
 - 🐌 node behind
+
   a monitored node is not synchronized with the blockchain, is at a
   lower block level then the other nodes in the network
+
 - 💫 node synced
+
   a monitored node has caught up with the blockchain after falling behind
+
 - 🤔 low peers
-  a monitored node has fewer than `node_monitor:low_peer_count` peers
+
+  a monitored node has fewer than `node_monitor:low_peer_count` 
+  peers
+
 - 🤝 low peers resolved
+
   a monitored node connected to a sufficient number of
   `node_monitor:low_peer_count` peers
+
 - 😴 deactivated
+
   baker has been deactivated
+
 - 😪 deactivation risk
+
   baker is at risk of deactivation (baker stopped participating and
   will be deactivated once previously calculated baking right run out)
+
 - ⚠️ rpc error
+
   an error occurred while communicating with Tezos node RPC interface
 
 #### Desktop
