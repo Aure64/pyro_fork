@@ -98,7 +98,12 @@ exclude = [
 ]
 
 [baker_monitor]
-bakers = ["tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9", "tz3bvNMQ95vfAYtG8193ymshqjSvmxiCUuR5"]
+bakers = ["tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9",
+"tz3bvNMQ95vfAYtG8193ymshqjSvmxiCUuR5"]
+
+## use special "wildcard" baker address to monitor all active bakers:
+# bakers = ["*"]
+
 max_catchup_blocks = 120
 rpc = "https://mainnet-tezos.giganode.io/"
 
@@ -336,7 +341,7 @@ tz1a…wDjM endorsed @346714[5-6]
 
 - 🤔 low peers
 
-  a monitored node has fewer than `node_monitor:low_peer_count` 
+  a monitored node has fewer than `node_monitor:low_peer_count`
   peers
 
 - 🤝 low peers resolved
