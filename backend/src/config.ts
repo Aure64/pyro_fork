@@ -203,6 +203,7 @@ const LOW_PEER_COUNT: UserPref = {
 
 const mkExcludeEventsPref = (
   key: string,
+  group: string | undefined,
   defaultValue: Events[] = []
 ): UserPref => {
   return {
@@ -213,13 +214,13 @@ const mkExcludeEventsPref = (
     ).join(", ")}`,
     alias: undefined,
     type: "string",
-    group: undefined,
+    group,
     isArray: true,
     validationRule: "string",
   };
 };
 
-const EXCLUDED_EVENTS: UserPref = mkExcludeEventsPref("exclude", [
+const EXCLUDED_EVENTS: UserPref = mkExcludeEventsPref("exclude", undefined, [
   Events.Baked,
   Events.Endorsed,
 ]);
@@ -273,7 +274,10 @@ const SLACK_SHORT_ADDRESS: UserPref = {
   validationRule: ["boolean"],
 };
 
-const SLACK_EXCLUDED_EVENTS = mkExcludeEventsPref(`${SLACK_KEY}:exclude`);
+const SLACK_EXCLUDED_EVENTS = mkExcludeEventsPref(
+  `${SLACK_KEY}:exclude`,
+  SLACK_GROUP
+);
 
 const TELEGRAM_GROUP = "Telegram Notifications:";
 const TELEGRAM_KEY = "telegram";
@@ -326,7 +330,10 @@ const TELEGRAM_SHORT_ADDRESS: UserPref = {
   validationRule: ["boolean"],
 };
 
-const TELEGRAM_EXCLUDED_EVENTS = mkExcludeEventsPref(`${TELEGRAM_KEY}:exclude`);
+const TELEGRAM_EXCLUDED_EVENTS = mkExcludeEventsPref(
+  `${TELEGRAM_KEY}:exclude`,
+  TELEGRAM_GROUP
+);
 
 const EMAIL_GROUP = "Email Notifications:";
 const EMAIL_KEY = "email";
@@ -451,7 +458,10 @@ const EMAIL_SHORT_ADDRESS: UserPref = {
   validationRule: ["boolean"],
 };
 
-const EMAIL_EXCLUDED_EVENTS = mkExcludeEventsPref(`${EMAIL_KEY}:exclude`);
+const EMAIL_EXCLUDED_EVENTS = mkExcludeEventsPref(
+  `${EMAIL_KEY}:exclude`,
+  EMAIL_GROUP
+);
 
 const DESKTOP_GROUP = "Desktop Notifications:";
 const DESKTOP_KEY = "desktop";
@@ -500,7 +510,10 @@ const DESKTOP_SHORT_ADDRESS: UserPref = {
   validationRule: ["boolean"],
 };
 
-const DESKTOP_EXCLUDED_EVENTS = mkExcludeEventsPref(`${DESKTOP_KEY}:exclude`);
+const DESKTOP_EXCLUDED_EVENTS = mkExcludeEventsPref(
+  `${DESKTOP_KEY}:exclude`,
+  DESKTOP_GROUP
+);
 
 const WEBHOOK_GROUP = "Webhook Notifications:";
 const WEBHOOK_KEY = "webhook";
@@ -551,7 +564,10 @@ const WEBHOOK_TEST_ENDPOINT_PORT: UserPref = {
   validationRule: ["numeric", "min:0"],
 };
 
-const WEBHOOK_EXCLUDED_EVENTS = mkExcludeEventsPref(`${WEBHOOK_KEY}:exclude`);
+const WEBHOOK_EXCLUDED_EVENTS = mkExcludeEventsPref(
+  `${WEBHOOK_KEY}:exclude`,
+  WEBHOOK_GROUP
+);
 
 const configDirectory =
   process.env.CONFIGURATION_DIRECTORY ||
