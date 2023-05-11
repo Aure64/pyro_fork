@@ -9,6 +9,7 @@ export type SlackConfig = {
   emoji: boolean;
   short_address: boolean;
   exclude: Events[];
+  bakers: string[] | undefined;
 };
 
 export type SlackNotificationChannel = {

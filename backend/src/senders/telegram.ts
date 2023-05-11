@@ -14,6 +14,7 @@ export type TelegramConfig = {
   emoji: boolean;
   short_address: boolean;
   exclude: Events[];
+  bakers: string[] | undefined;
 };
 
 const MAX_MESSAGE_LENGTH = 4096;

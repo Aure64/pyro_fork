@@ -5,6 +5,7 @@ import {
   Baked,
   NodeSynced,
   FilteredSender,
+  MissedEndorsement,
 } from "./events";
 
 describe("filtered sender", () => {
@@ -40,6 +41,16 @@ describe("filtered sender", () => {
     node: "http://localhost:8732",
   };
 
+  const event5: MissedEndorsement = {
+    kind: Events.MissedEndorsement,
+    createdAt: new Date(),
+    baker: "tz345",
+    cycle: 2,
+    level: 2,
+    slotCount: 10,
+    timestamp: new Date(),
+  };
+
   it("sends all when no exclude", async () => {
     const toSend = [event1, event2, event3, event4];
     let sent: Event[] = [];
@@ -50,6 +61,7 @@ describe("filtered sender", () => {
       },
       {
         exclude: [],
+        bakers: undefined,
       }
     );
 
@@ -68,6 +80,7 @@ describe("filtered sender", () => {
       },
       {
         exclude: [Events.Baked],
+        bakers: undefined,
       }
     );
 
@@ -86,11 +99,31 @@ describe("filtered sender", () => {
       },
       {
         exclude: Object.values(Events),
+        bakers: undefined,
       }
     );
 
     await sender(toSend);
 
     expect(sent).toEqual([]);
+  });
+
+  it("sends only events for specified bakers ", async () => {
+    const toSend = [event5, event1, event2, event3, event4];
+    let sent: Event[] = [];
+
+    const sender = FilteredSender(
+      async (inEvents: Event[]) => {
+        sent = inEvents;
+      },
+      {
+        exclude: [],
+        bakers: ["tz345"],
+      }
+    );
+
+    await sender(toSend);
+
+    expect(sent).toEqual([event5, event1, event3, event4]);
   });
 });

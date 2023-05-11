@@ -9,6 +9,7 @@ export type DesktopConfig = {
   emoji: boolean;
   short_address: boolean;
   exclude: Events[];
+  bakers: string[] | undefined;
 };
 
 const post = async (message: string, sound: boolean): Promise<void> => {

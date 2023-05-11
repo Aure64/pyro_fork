@@ -128,16 +128,24 @@ export type Event = RpcEvent | NodeEvent | BakerEvent | Notification;
 
 export type Sender = (events: Event[]) => Promise<void>;
 
-export const excludeEvents = (inEvents: Event[], exclude: Events[]) => {
-  return inEvents.filter((e) => !exclude.includes(e.kind));
+export const excludeEvents = (
+  inEvents: Event[],
+  exclude: Events[],
+  bakers: string[] | undefined
+) => {
+  return inEvents.filter(
+    (e) =>
+      !exclude.includes(e.kind) &&
+      (!bakers || !("baker" in e) || bakers.includes(e.baker))
+  );
 };
 
 export const FilteredSender = (
   sender: Sender,
-  config: { exclude: Events[] }
+  config: { exclude: Events[]; bakers: string[] | undefined }
 ): Sender => {
   return async (inEvents: Event[]) => {
-    const events = excludeEvents(inEvents, config.exclude);
+    const events = excludeEvents(inEvents, config.exclude, config.bakers);
     if (events.length !== inEvents.length) {
       getLogger("events").debug(
         `Filtered out ${inEvents.length - events.length}`

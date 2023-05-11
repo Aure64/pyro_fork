@@ -19,6 +19,7 @@ export type EmailConfig = {
   emoji: boolean;
   short_address: boolean;
   exclude: Events[];
+  bakers: string[] | undefined;
 };
 
 export const create = (config: EmailConfig): Sender => {

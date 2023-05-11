@@ -220,6 +220,19 @@ const mkExcludeEventsPref = (
   };
 };
 
+const mkOnlyBakersPref = (key: string, group: string): UserPref => {
+  return {
+    key,
+    default: undefined,
+    description: `Only these bakers will receive notifications through this channel.`,
+    alias: undefined,
+    type: "string",
+    group: group,
+    isArray: true,
+    validationRule: "baker",
+  };
+};
+
 const EXCLUDED_EVENTS: UserPref = mkExcludeEventsPref("exclude", undefined, [
   Events.Baked,
   Events.Endorsed,
@@ -279,6 +292,8 @@ const SLACK_EXCLUDED_EVENTS = mkExcludeEventsPref(
   SLACK_GROUP
 );
 
+const SLACK_ONLY_BAKERS = mkOnlyBakersPref(`${SLACK_KEY}:bakers`, SLACK_GROUP);
+
 const TELEGRAM_GROUP = "Telegram Notifications:";
 const TELEGRAM_KEY = "telegram";
 
@@ -332,6 +347,11 @@ const TELEGRAM_SHORT_ADDRESS: UserPref = {
 
 const TELEGRAM_EXCLUDED_EVENTS = mkExcludeEventsPref(
   `${TELEGRAM_KEY}:exclude`,
+  TELEGRAM_GROUP
+);
+
+const TELEGRAM_ONLY_BAKERS = mkOnlyBakersPref(
+  `${TELEGRAM_KEY}:bakers`,
   TELEGRAM_GROUP
 );
 
@@ -463,6 +483,8 @@ const EMAIL_EXCLUDED_EVENTS = mkExcludeEventsPref(
   EMAIL_GROUP
 );
 
+const EMAIL_ONLY_BAKERS = mkOnlyBakersPref(`${EMAIL_KEY}:bakers`, EMAIL_GROUP);
+
 const DESKTOP_GROUP = "Desktop Notifications:";
 const DESKTOP_KEY = "desktop";
 
@@ -512,6 +534,11 @@ const DESKTOP_SHORT_ADDRESS: UserPref = {
 
 const DESKTOP_EXCLUDED_EVENTS = mkExcludeEventsPref(
   `${DESKTOP_KEY}:exclude`,
+  DESKTOP_GROUP
+);
+
+const DESKTOP_ONLY_BAKERS = mkOnlyBakersPref(
+  `${DESKTOP_KEY}:bakers`,
   DESKTOP_GROUP
 );
 
@@ -566,6 +593,11 @@ const WEBHOOK_TEST_ENDPOINT_PORT: UserPref = {
 
 const WEBHOOK_EXCLUDED_EVENTS = mkExcludeEventsPref(
   `${WEBHOOK_KEY}:exclude`,
+  WEBHOOK_GROUP
+);
+
+const WEBHOOK_ONLY_BAKERS = mkOnlyBakersPref(
+  `${WEBHOOK_KEY}:bakers`,
   WEBHOOK_GROUP
 );
 
@@ -748,11 +780,13 @@ const userPrefs = [
   SLACK_EMOJI,
   SLACK_SHORT_ADDRESS,
   SLACK_EXCLUDED_EVENTS,
+  SLACK_ONLY_BAKERS,
   TELEGRAM_ENABLED,
   TELEGRAM_TOKEN,
   TELEGRAM_EMOJI,
   TELEGRAM_SHORT_ADDRESS,
   TELEGRAM_EXCLUDED_EVENTS,
+  TELEGRAM_ONLY_BAKERS,
   EMAIL_ENABLED,
   EMAIL_HOST,
   EMAIL_PORT,
@@ -764,16 +798,19 @@ const userPrefs = [
   EMAIL_EMOJI,
   EMAIL_SHORT_ADDRESS,
   EMAIL_EXCLUDED_EVENTS,
+  EMAIL_ONLY_BAKERS,
   DESKTOP_ENABLED,
   DESKTOP_SOUND,
   DESKTOP_EMOJI,
   DESKTOP_SHORT_ADDRESS,
   DESKTOP_EXCLUDED_EVENTS,
+  DESKTOP_ONLY_BAKERS,
   WEBHOOK_ENABLED,
   WEBHOOK_URL,
   WEBHOOK_USER_AGENT,
   WEBHOOK_TEST_ENDPOINT_PORT,
   WEBHOOK_EXCLUDED_EVENTS,
+  WEBHOOK_ONLY_BAKERS,
   CONFIG_FILE,
   NOTIFICATIONS_INTERVAL,
   NOTIFICATIONS_MAX_BATCH_SIZE,
