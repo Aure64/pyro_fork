@@ -105,7 +105,7 @@ bakers = ["tz3RDC3Jdn4j15J7bBHZd29EUee9gVB1CxD9",
 # bakers = ["*"]
 
 max_catchup_blocks = 120
-rpc = "https://mainnet-tezos.giganode.io/"
+rpc = "https://mainnet.api.tez.ie/"
 
 [log]
 level = "debug"

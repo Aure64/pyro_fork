@@ -101,7 +101,7 @@ const BAKER_MISSED_THRESHOLD: UserPref = {
 
 const RPC: UserPref = {
   key: `${BAKER_GROUP.key}:rpc`,
-  default: "https://mainnet-tezos.giganode.io/",
+  default: "https://mainnet.api.tez.ie/",
   description: "Tezos RPC URL to query for baker and chain info",
   alias: ["r", "rpc"],
   type: "string",
