@@ -96,7 +96,7 @@ describe("channel", () => {
 
     const batches: Event[][] = [];
 
-    const maxBatchSize = 2;
+    const max_batch_size = 2;
     const interval = 0.1;
     const ttl = Number.MAX_SAFE_INTEGER;
 
@@ -107,7 +107,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      { maxBatchSize, ttl, interval }
+      { max_batch_size, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5e3);
@@ -123,7 +123,7 @@ describe("channel", () => {
 
     const batches: Event[][] = [];
 
-    const maxBatchSize = 50;
+    const max_batch_size = 50;
     const interval = 0.1;
     const ttl = 4 * 60;
 
@@ -134,7 +134,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      { maxBatchSize, ttl, interval }
+      { max_batch_size, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5e3);
@@ -150,7 +150,7 @@ describe("channel", () => {
 
     const batches: Event[][] = [];
 
-    const maxBatchSize = 3;
+    const max_batch_size = 3;
     const interval = 0.1;
     const ttl = Number.MAX_SAFE_INTEGER;
 
@@ -165,7 +165,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      { maxBatchSize, ttl, interval }
+      { max_batch_size, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5e3);
