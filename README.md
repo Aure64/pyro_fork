@@ -17,18 +17,18 @@ Pyrometer is a tool for monitoring events on
 
 - Install:
 
-``` shell
+```shell
 sudo dpkg -i pyrometer_0.8.0_all.deb
 ```
 
 - If Pyrometer is installed on a machine where Tezos baker is [set up
-with tezos-packaging](https://github.com/serokell/tezos-packaging/blob/master/docs/baking.md)
-then status UI will be automatically enabled and available at
-<http://localhost:2020>, configured to monitor local node and baker.
-Otherwise edit config file `/etc/pyrometer.toml`
-to specify bakers and nodes to monitor, for example:
+  with tezos-packaging](https://github.com/serokell/tezos-packaging/blob/master/docs/baking.md)
+  then status UI will be automatically enabled and available at
+  <http://localhost:2020>, configured to monitor local node and baker.
+  Otherwise edit config file `/etc/pyrometer.toml`
+  to specify bakers and nodes to monitor, for example:
 
-``` shell
+```shell
 sudo nano /etc/pyrometer.toml
 ```
 
@@ -37,13 +37,13 @@ sudo nano /etc/pyrometer.toml
 
 - If config file was edited - restart pyrometer service:
 
-``` shell
+```shell
 sudo systemctl restart pyrometer
 ```
 
 - Check log output, e.g.:
 
-``` shell
+```shell
 journalctl -u pyrometer -f
 ```
 
@@ -52,21 +52,21 @@ journalctl -u pyrometer -f
 Lets define shell alias so that following example commands are concise
 and clear:
 
-``` shell
+```shell
 docker network create pyrometer
 alias pyrometer="docker run --network pyrometer --rm -v $PWD:$PWD registry.gitlab.com/tezos-kiln/pyrometer"
 ```
 
 Lets also create a directory for pyrometer configuration and data:
 
-``` shell
+```shell
 mkdir -p ./pyrometer/data
 cd pyrometer
 ```
 
 Generate sample Pyrometer configuration and save it as `pyrometer.toml`:
 
-``` shell
+```shell
 pyrometer config sample > pyrometer.toml
 ```
 
@@ -82,7 +82,7 @@ For illustration purposes we will use
 [MailHog](https://github.com/mailhog/MailHog) as our SMTP
 server. Start MailHog:
 
-``` shell
+```shell
 docker run --rm --name mailhog --network pyrometer -d -p 8025:8025 mailhog/mailhog
 ```
 
@@ -146,7 +146,6 @@ pyrometer run --help
 > events. `baker_unhealthy` notification is generated when baker
 > misses several endorsements/bakes/bonuses in a row (5 by default), configured via
 > `--baker_monitor:missed_threshold`
->
 
 ### Run Natively
 
@@ -238,7 +237,7 @@ monitoring for test network nodes described at
 <https://teztnets.xyz/>. For example, to run Pyrometer as a visual
 status monitor for testnet nodes using Docker:
 
-``` shell
+```shell
 docker run -p 2020:2020 registry.gitlab.com/tezos-kiln/pyrometer \
     run --ui:enabled --ui:host 0.0.0.0 --teztnets
 ```
@@ -256,6 +255,7 @@ With the following configuration:
 emoji = true
 short_address = true
 ```
+
 notification looks like this:
 
 ```
@@ -266,12 +266,11 @@ tz1a…wDjM 🥖 @346707[3-6]²
     1     2       3      4
 ```
 
-1) Baker's shortened tz address
-2) Event type
-3) Block level range
-4) Event count in the level range (if less than then number of levels
-in the range)
-
+1. Baker's shortened tz address
+2. Event type
+3. Block level range
+4. Event count in the level range (if less than then number of levels
+   in the range)
 
 With `short_address = false`:
 
@@ -406,6 +405,6 @@ configure your webhook, and provide the URL to Pyrometer.
 
 #### Webhook
 
-This channel will post the raw JSON of an event to a webhook.  We
+This channel will post the raw JSON of an event to a webhook. We
 recommend this for creating custom apps and visualizations using
 Pyrometer's data.
