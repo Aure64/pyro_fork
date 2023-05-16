@@ -10,7 +10,7 @@ export type Channel = service.Service & EventLogConsumer;
 export type Seconds = number;
 
 export type NotificationsConfig = {
-  maxBatchSize: number;
+  max_batch_size: number;
   ttl: Seconds;
   interval: Seconds;
 };
@@ -20,7 +20,7 @@ export const create = async (
   send: Sender,
   storageDirectory: string,
   eventLog: EventLog<Event>,
-  { maxBatchSize, ttl, interval }: NotificationsConfig
+  { max_batch_size: maxBatchSize, ttl, interval }: NotificationsConfig
 ): Promise<Channel> => {
   const log = getLogger(name);
 

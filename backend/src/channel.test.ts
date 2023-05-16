@@ -69,7 +69,7 @@ describe("channel", () => {
 
     const batches: Event[][] = [];
 
-    const maxBatchSize = 1;
+    const max_batch_size = 1;
     const interval = 0.1;
     const ttl = Number.MAX_SAFE_INTEGER;
 
@@ -80,7 +80,7 @@ describe("channel", () => {
       },
       storageDir,
       eventLog,
-      { maxBatchSize, ttl, interval }
+      { max_batch_size, ttl, interval }
     );
 
     setTimeout(() => chan.stop(), interval * 5e3);
