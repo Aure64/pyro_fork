@@ -10,6 +10,7 @@ export type WebhookConfig = {
   user_agent: string;
   test_endpoint_port: number | undefined;
   exclude: Events[];
+  request_timeout: number;
 };
 
 export const startTestEndpoint = (port: number): Server => {
@@ -32,6 +33,7 @@ export const create = (config: WebhookConfig): Sender => {
   if (config.test_endpoint_port) {
     startTestEndpoint(config.test_endpoint_port);
   }
+  const requestTimeout = config.request_timeout * 1e3;
   const log = getLogger("http-sender");
   return async (events: Event[]) => {
     const url = config.url;
@@ -41,7 +43,11 @@ export const create = (config: WebhookConfig): Sender => {
       "Content-Type": "application/json",
       "User-Agent": config.user_agent,
     };
-    const result = await fetchTimeout(url, 30e3, { body, method, headers });
+    const result = await fetchTimeout(url, requestTimeout, {
+      body,
+      method,
+      headers,
+    });
     if (!result.ok) {
       log.error(result);
       throw new Error(result.statusText);

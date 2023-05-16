@@ -601,6 +601,17 @@ const WEBHOOK_ONLY_BAKERS = mkOnlyBakersPref(
   WEBHOOK_GROUP
 );
 
+const WEBHOOK_REQUEST_TIMEOUT: UserPref = {
+  key: `${WEBHOOK_KEY}:request_timeout`,
+  default: 30,
+  description: "Webhook request timeout in seconds",
+  alias: undefined,
+  type: "number",
+  group: WEBHOOK_GROUP,
+  isArray: false,
+  validationRule: ["numeric", "min:0"],
+};
+
 const configDirectory =
   process.env.CONFIGURATION_DIRECTORY ||
   envPaths(APP_NAME, { suffix: "" }).config;
@@ -811,6 +822,7 @@ const userPrefs = [
   WEBHOOK_TEST_ENDPOINT_PORT,
   WEBHOOK_EXCLUDED_EVENTS,
   WEBHOOK_ONLY_BAKERS,
+  WEBHOOK_REQUEST_TIMEOUT,
   CONFIG_FILE,
   NOTIFICATIONS_INTERVAL,
   NOTIFICATIONS_MAX_BATCH_SIZE,
