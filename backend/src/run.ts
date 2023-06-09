@@ -141,23 +141,21 @@ const run = async (config: Config.Config) => {
       }
     }
 
-    if (tezosClientBakers.length > 0) {
-      for (const dir of tezosClientBaseDir) {
-        if (!dir) continue;
-        const tzClientConfigFile = joinPath(dir, "config");
-        try {
-          info(`Reading tezos client config from ${tzClientConfigFile}...`);
-          const tzClientConfig = (await readJson(
-            tzClientConfigFile
-          )) as TzClientConfig;
-          if (tzClientConfig.endpoint) {
-            info(`Found tezos client endpoint ${tzClientConfig.endpoint}`);
-            tezosClientEndpoints.push(tzClientConfig.endpoint);
-          }
-        } catch (err) {
-          info(`Could not read ${tzClientConfigFile}`);
-          debug(err);
+    for (const dir of tezosClientBaseDir) {
+      if (!dir) continue;
+      const tzClientConfigFile = joinPath(dir, "config");
+      try {
+        info(`Reading tezos client config from ${tzClientConfigFile}...`);
+        const tzClientConfig = (await readJson(
+          tzClientConfigFile
+        )) as TzClientConfig;
+        if (tzClientConfig.endpoint) {
+          info(`Found tezos client endpoint ${tzClientConfig.endpoint}`);
+          tezosClientEndpoints.push(tzClientConfig.endpoint);
         }
+      } catch (err) {
+        info(`Could not read ${tzClientConfigFile}`);
+        debug(err);
       }
     }
   }
@@ -171,17 +169,11 @@ const run = async (config: Config.Config) => {
   const bakers = [...tezosClientBakers, ...bakerMonitorConfig.bakers];
   bakerMonitorConfig.bakers = bakers;
 
-  console.error(config.ui);
-
+  const nodes = [...tezosClientEndpoints, ...nodeMonitorConfig.nodes];
   //if there are bakers to monitor also monitor rpc node
-  const nodes =
-    bakers.length === 0
-      ? nodeMonitorConfig.nodes
-      : [
-          bakerMonitorConfig.rpc,
-          ...tezosClientEndpoints,
-          ...nodeMonitorConfig.nodes,
-        ];
+  if (bakers.length > 0) {
+    nodes.push(bakerMonitorConfig.rpc);
+  }
 
   if (bakers.length === 0 && nodes.length === 0 && !teztnets) {
     console.error("You must specify nodes or bakers to watch.");
