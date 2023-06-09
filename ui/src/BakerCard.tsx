@@ -157,7 +157,8 @@ export default ({
 
   const [errorsWithNodeErrors, otherErrors] = partition(
     errors,
-    (x) => (x.extensions as any).error?.nodeErrors,
+    // types claim x is never null or undefined, but somehow that's not what happens in runtime
+    (x) => (x?.extensions as any).error?.nodeErrors,
   );
 
   return (
@@ -286,7 +287,7 @@ export default ({
           Object.keys(
             groupBy(
               errorsWithNodeErrors.flatMap(
-                (x) => (x.extensions as any).error?.nodeErrors || [],
+                (x) => (x?.extensions as any).error?.nodeErrors || [],
               ),
               'id',
             ),
@@ -304,7 +305,7 @@ export default ({
             groupBy(
               otherErrors.map(
                 (x) =>
-                  (x.extensions as any).error || {
+                  (x?.extensions as any).error || {
                     statusText: 'Unknown error',
                   },
               ),
