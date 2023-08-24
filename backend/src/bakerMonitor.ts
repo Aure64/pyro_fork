@@ -38,7 +38,7 @@ import protocolN from "./bm-proto-n";
 const name = "bm";
 
 export type BakerMonitorConfig = {
-  bakers: string[];
+  bakers: { [address: string]: string };
   rpc: URL;
   max_catchup_blocks: number;
   head_distance: number;
