@@ -136,6 +136,7 @@ export const Baker = objectType({
 
   definition(t) {
     t.nonNull.string("address");
+    t.string("alias");
     t.string("explorerUrl");
     t.field("lastProcessed", { type: LastProcessed });
     t.nonNull.int("headDistance");

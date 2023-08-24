@@ -70,6 +70,7 @@ const isHealthy = (recentEvents: LevelEvents[]) =>
 
 export default ({
   baker: {
+    alias,
     address,
     explorerUrl,
     balance,
@@ -181,6 +182,7 @@ export default ({
                   {ellipsifyMiddle(address, 12)}
                 </Text>
               </Link>
+<Box mt={2}>Alias: {alias}</Box>
             </Tooltip>
           </HStack>
 

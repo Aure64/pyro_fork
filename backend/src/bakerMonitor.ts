@@ -52,6 +52,7 @@ type ChainPositionInfo = {
 };
 
 export type BakerInfo = {
+  alias?: string;
   address: string;
   recentEvents: () => Promise<BakerBlockEvent[]>;
 };
